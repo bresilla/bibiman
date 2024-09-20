@@ -1,0 +1,15 @@
+[package]
+name = "bibiman"
+version = "0.1.0"
+authors = ["lukeflo <lukeflo@some.email.not>"]
+license = "GPL-3.0-or-later"
+edition = "2021"
+
+[dependencies]
+biblatex = "0.9.3"
+crossterm = { version = "0.28.1", features = ["event-stream"] }
+futures = "0.3.30"
+ratatui = "0.28.1"
+regex = "1.10.6"
+sarge = "7.2.5"
+tokio = { version = "1.39.3", features = ["full"] }
