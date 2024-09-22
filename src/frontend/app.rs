@@ -1,7 +1,8 @@
 use crate::backend::bib::*;
 use std::error;
 
-use ratatui::widgets::ListState;
+use itertools::Itertools;
+use ratatui::widgets::{ListState, TableState};
 
 // Application result type.
 pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
@@ -22,7 +23,7 @@ pub struct App {
     // list
     pub tag_list: TagList,
     // TODO: table items
-    pub entry_list: EntryList,
+    pub entry_table: EntryTable,
     // area
     pub current_area: CurrentArea,
 }
@@ -73,41 +74,56 @@ impl FromIterator<String> for TagList {
     }
 }
 
-impl FromIterator<(String, String)> for EntryList {
+impl FromIterator<(String, String)> for EntryTable {
     fn from_iter<T: IntoIterator<Item = (String, String)>>(iter: T) -> Self {
-        let entry_list_items = iter
+        // Has to be Vev<EntryTableItem>
+        let entry_table_items = iter
             .into_iter()
-            .map(|(authors, title)| EntryListItem::new(&authors, &title))
+            // .map(|(authors, title)| EntryTableItem::new(&authors, &title))
+            .map(|(authors, title)| EntryTableItem::new(&authors, &title))
+            .sorted_by(|a, b| a.authors.cmp(&b.authors))
             .collect();
-        let entry_list_state = ListState::default();
+        let entry_table_state = TableState::default().with_selected(0);
         Self {
-            entry_list_items,
-            entry_list_state,
+            entry_table_items,
+            entry_table_state,
         }
     }
 }
 
 // Define list containing entries as table
 #[derive(Debug)]
-pub struct EntryList {
-    pub entry_list_items: Vec<EntryListItem>,
-    pub entry_list_state: ListState,
+pub struct EntryTable {
+    pub entry_table_items: Vec<EntryTableItem>,
+    pub entry_table_state: TableState,
 }
 
 // Define contents of each entry table row
 #[derive(Debug)]
-pub struct EntryListItem {
+pub struct EntryTableItem {
     pub authors: String,
     pub title: String,
     // pub year: u16,
 }
 
-impl EntryListItem {
+impl EntryTableItem {
     pub fn new(authors: &str, title: &str) -> Self {
         Self {
             authors: authors.to_string(),
             title: title.to_string(),
         }
+    }
+
+    pub fn ref_vec(&self) -> Vec<&String> {
+        vec![&self.authors, &self.title]
+    }
+
+    pub fn authors(&self) -> &str {
+        &self.authors
+    }
+
+    pub fn title(&self) -> &str {
+        &self.title
     }
 }
 
@@ -128,12 +144,10 @@ impl Default for App {
             ),
             ("Zora Neale Hurston".to_string(), "Barracoon".to_string()),
         ];
-        // let mylist = ["Item 1", "Item 2"];
         Self {
             running: true,
-            // INFO: here the function(s) for creating the list has to be placed inside the parantheses -> Bib::whatever
             tag_list: TagList::from_iter(lines),
-            entry_list: EntryList::from_iter(iter),
+            entry_table: EntryTable::from_iter(iter),
             current_area: CurrentArea::EntryArea,
         }
     }
@@ -163,7 +177,7 @@ impl App {
 
     pub fn select_none(&mut self) {
         match self.current_area {
-            CurrentArea::EntryArea => self.entry_list.entry_list_state.select(None),
+            CurrentArea::EntryArea => self.entry_table.entry_table_state.select(None),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select(None),
         }
         // self.tag_list.tag_list_state.select(None);
@@ -171,14 +185,14 @@ impl App {
 
     pub fn select_next(&mut self) {
         match self.current_area {
-            CurrentArea::EntryArea => self.entry_list.entry_list_state.select_next(),
+            CurrentArea::EntryArea => self.entry_table.entry_table_state.select_next(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_next(),
         }
         // self.tag_list.tag_list_state.select_next();
     }
     pub fn select_previous(&mut self) {
         match self.current_area {
-            CurrentArea::EntryArea => self.entry_list.entry_list_state.select_previous(),
+            CurrentArea::EntryArea => self.entry_table.entry_table_state.select_previous(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_previous(),
         }
         // self.tag_list.tag_list_state.select_previous();
@@ -186,7 +200,7 @@ impl App {
 
     pub fn select_first(&mut self) {
         match self.current_area {
-            CurrentArea::EntryArea => self.entry_list.entry_list_state.select_first(),
+            CurrentArea::EntryArea => self.entry_table.entry_table_state.select_first(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_first(),
         }
         // self.tag_list.tag_list_state.select_first();
@@ -194,28 +208,28 @@ impl App {
 
     pub fn select_last(&mut self) {
         match self.current_area {
-            CurrentArea::EntryArea => self.entry_list.entry_list_state.select_last(),
+            CurrentArea::EntryArea => self.entry_table.entry_table_state.select_last(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_last(),
         }
         // self.tag_list.tag_list_state.select_last();
     }
 
     // pub fn select_none(&mut self) {
-    //     self.entry_list.entry_list_state.select(None);
+    //     self.entry_table.entry_table_state.select(None);
     // }
 
     // pub fn select_next(&mut self) {
-    //     self.entry_list.entry_list_state.select_next();
+    //     self.entry_table.entry_table_state.select_next();
     // }
     // pub fn select_previous(&mut self) {
-    //     self.entry_list.entry_list_state.select_previous();
+    //     self.entry_table.entry_table_state.select_previous();
     // }
 
     // pub fn select_first(&mut self) {
-    //     self.entry_list.entry_list_state.select_first();
+    //     self.entry_table.entry_table_state.select_first();
     // }
 
     // pub fn select_last(&mut self) {
-    //     self.entry_list.entry_list_state.select_last();
+    //     self.entry_table.entry_table_state.select_last();
     // }
 }

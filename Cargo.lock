@@ -72,6 +72,7 @@ dependencies = [
  "biblatex",
  "crossterm",
  "futures",
+ "itertools",
  "ratatui",
  "regex",
  "sarge",

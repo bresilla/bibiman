@@ -6,15 +6,16 @@ use ratatui::{
         Color, Modifier, Style, Stylize,
     },
     symbols,
-    text::Line,
+    text::{Line, Text},
     widgets::{
-        Block, HighlightSpacing, List, ListItem, Padding, Paragraph, StatefulWidget, Widget, Wrap,
+        Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, StatefulWidget,
+        Table, TableState, Widget, Wrap,
     },
 };
 
 use crate::frontend::app::{App, TagListItem};
 
-use super::app::EntryListItem;
+use super::app::EntryTableItem;
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
@@ -22,8 +23,9 @@ const BOX_BORDER_STYLE_MAIN: Style = Style::new().fg(Color::White).bg(Color::Bla
 const NORMAL_ROW_BG: Color = Color::Black;
 const ALT_ROW_BG_COLOR: Color = Color::Indexed(234);
 const SELECTED_STYLE: Style = Style::new()
-    .fg(MAIN_BLUE_COLOR)
-    .add_modifier(Modifier::BOLD);
+    // .fg(MAIN_BLUE_COLOR)
+    .add_modifier(Modifier::BOLD)
+    .add_modifier(Modifier::REVERSED);
 const TEXT_FG_COLOR: Color = SLATE.c200;
 
 pub const fn alternate_colors(i: usize) -> Color {
@@ -47,8 +49,8 @@ impl From<&TagListItem> for ListItem<'_> {
     }
 }
 
-impl From<&EntryListItem> for ListItem<'_> {
-    fn from(value: &EntryListItem) -> Self {
+impl From<&EntryTableItem> for ListItem<'_> {
+    fn from(value: &EntryTableItem) -> Self {
         let line = Line::styled(format!("{}, {}", value.authors, value.title), TEXT_FG_COLOR);
         ListItem::new(line)
     }
@@ -73,7 +75,8 @@ impl Widget for &mut App {
         App::render_header(header_area, buf);
         App::render_footer(footer_area, buf);
         // Render list area where entry gets selected
-        self.render_entry_list(list_area, buf);
+        // self.render_entry_table(list_area, buf);
+        self.render_table(list_area, buf);
         // Render infos related to selected entry
         // TODO: only placeholder at the moment, has to be impl.
         self.render_taglist(tag_area, buf);
@@ -95,7 +98,7 @@ impl App {
             .render(area, buf);
     }
 
-    pub fn render_entry_list(&mut self, area: Rect, buf: &mut Buffer) {
+    pub fn render_table(&mut self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered()
             .title(
                 Line::raw(" Selection List ")
@@ -106,33 +109,41 @@ impl App {
             .border_set(symbols::border::ROUNDED)
             .border_style(BOX_BORDER_STYLE_MAIN)
             .bg(Color::Black); // .bg(NORMAL_ROW_BG);
+        let header_style = Style::default().bold();
+        let selected_style = Style::default().add_modifier(Modifier::REVERSED);
 
-        // Iterate through all elements in the `items` and stylize them.
-        let items: Vec<ListItem> = self
-            .entry_list
-            .entry_list_items
+        let header = ["Authors".underlined(), "Title".underlined()]
+            .into_iter()
+            .map(Cell::from)
+            .collect::<Row>()
+            .style(header_style)
+            .height(1);
+        let rows = self
+            .entry_table
+            .entry_table_items
             .iter()
             .enumerate()
-            .map(|(i, todo_item)| {
-                let color = alternate_colors(i);
-                ListItem::from(todo_item).bg(color)
-            })
-            .collect();
-
-        // Create a List from all list items and highlight the currently selected one
-        let list = List::new(items)
+            .map(|(i, data)| {
+                let item = data.ref_vec();
+                item.into_iter()
+                    .map(|content| Cell::from(Text::from(format!("{content}"))))
+                    .collect::<Row>()
+                    .style(Style::new().fg(Color::White).bg(alternate_colors(i)))
+                    .height(1)
+            });
+        let entry_table = Table::new(rows, [Constraint::Percentage(20), Constraint::Fill(1)])
             .block(block)
-            .highlight_style(
-                Style::new()
-                    .fg(MAIN_PURPLE_COLOR)
-                    .add_modifier(Modifier::BOLD),
-            )
-            // .highlight_symbol("> ")
+            .header(header)
+            .column_spacing(2)
+            .highlight_style(selected_style)
+            .bg(Color::Black)
             .highlight_spacing(HighlightSpacing::Always);
-
-        // We need to disambiguate this trait method as both `Widget` and `StatefulWidget` share the
-        // same method name `render`.
-        StatefulWidget::render(list, area, buf, &mut self.entry_list.entry_list_state);
+        StatefulWidget::render(
+            entry_table,
+            area,
+            buf,
+            &mut self.entry_table.entry_table_state,
+        );
     }
 
     pub fn render_selected_item(&self, area: Rect, buf: &mut Buffer) {
@@ -191,7 +202,7 @@ impl App {
         let list = List::new(items)
             .block(block)
             .highlight_style(SELECTED_STYLE)
-            .highlight_symbol("> ")
+            // .highlight_symbol("> ")
             .highlight_spacing(HighlightSpacing::Always);
 
         // We need to disambiguate this trait method as both `Widget` and `StatefulWidget` share the

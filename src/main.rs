@@ -1,4 +1,4 @@
-use std::{fs, io};
+use std::io;
 
 use backend::cliargs::{self, CLIArgs};
 use ratatui::{backend::CrosstermBackend, Terminal};
@@ -9,8 +9,6 @@ use crate::{
     frontend::handler::handle_key_events,
     frontend::tui::Tui,
 };
-
-use sarge::prelude::*;
 
 pub mod backend;
 pub mod frontend;
@@ -26,20 +24,17 @@ async fn main() -> AppResult<()> {
         std::process::exit(0);
     }
 
+    // Print version if -v/--version flag is passed and exit
     if parsed_args.versionarg {
-        // println!("Version Zero");
         println!("{}", cliargs::version_func());
         std::process::exit(0);
     }
+
     // TODO: Implement logic for CLI arguments/options which need to be handled
     // before the TUI is started
 
     // Create an application.
     let mut app = App::new();
-
-    // TEST: Get Data from main bibliography
-    // let bibfile = fs::read_to_string("test.bib").unwrap();
-    // let biblio = Bibliography::parse(&bibfile).unwrap();
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stdout());
