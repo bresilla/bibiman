@@ -1,3 +1,20 @@
+// bibiman - a TUI for managing BibLaTeX databases
+// Copyright (C) 2024  lukeflo
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+/////
+
 use crate::backend::bib::*;
 use std::error;
 
@@ -74,13 +91,17 @@ impl FromIterator<String> for TagList {
     }
 }
 
-impl FromIterator<(String, String)> for EntryTable {
-    fn from_iter<T: IntoIterator<Item = (String, String)>>(iter: T) -> Self {
+// Iterate over vector fields with entries data to create TableItems
+// Number of Strings has to match number of fields
+impl FromIterator<[String; 5]> for EntryTable {
+    fn from_iter<T: IntoIterator<Item = [String; 5]>>(iter: T) -> Self {
         // Has to be Vev<EntryTableItem>
         let entry_table_items = iter
             .into_iter()
-            // .map(|(authors, title)| EntryTableItem::new(&authors, &title))
-            .map(|(authors, title)| EntryTableItem::new(&authors, &title))
+            // fields in map must not be named specific
+            .map(|[authors, title, year, pubtype, citekey]| {
+                EntryTableItem::new(&authors, &title, &year, &pubtype, &citekey)
+            })
             .sorted_by(|a, b| a.authors.cmp(&b.authors))
             .collect();
         let entry_table_state = TableState::default().with_selected(0);
@@ -103,19 +124,27 @@ pub struct EntryTable {
 pub struct EntryTableItem {
     pub authors: String,
     pub title: String,
+    pub year: String,
+    pub pubtype: String,
+    pub citekey: String,
     // pub year: u16,
 }
 
 impl EntryTableItem {
-    pub fn new(authors: &str, title: &str) -> Self {
+    pub fn new(authors: &str, title: &str, year: &str, pubtype: &str, citekey: &str) -> Self {
         Self {
             authors: authors.to_string(),
             title: title.to_string(),
+            year: year.to_string(),
+            pubtype: pubtype.to_string(),
+            citekey: citekey.to_string(),
         }
     }
 
+    // This functions decides which fields are rendered in the entry table
+    // Fields which should be usable but not visible can be left out
     pub fn ref_vec(&self) -> Vec<&String> {
-        vec![&self.authors, &self.title]
+        vec![&self.authors, &self.title, &self.year, &self.pubtype]
     }
 
     pub fn authors(&self) -> &str {
@@ -125,24 +154,60 @@ impl EntryTableItem {
     pub fn title(&self) -> &str {
         &self.title
     }
+
+    pub fn year(&self) -> &str {
+        &self.year
+    }
+
+    pub fn pubtype(&self) -> &str {
+        &self.pubtype
+    }
+
+    pub fn citekey(&self) -> &str {
+        &self.citekey
+    }
 }
 
 impl Default for App {
     fn default() -> Self {
         // TEST: read file
-        let lines = Bibi::new().citekeys;
+        let lines = BibiMain::new().citekeys;
         let iter = vec![
-            (
+            [
                 "Mrs. Doubtfire".to_string(),
                 "A great book of great length".to_string(),
-            ),
-            ("Veye Tatah".to_string(), "Modern economy".to_string()),
-            ("Joseph Conrad".to_string(), "Heart of Darkness".to_string()),
-            (
+                "2003".to_string(),
+                "book".to_string(),
+                "doubtfire_2003".to_string(),
+            ],
+            [
+                "Veye Tatah".to_string(),
+                "Modern economy".to_string(),
+                1995.to_string(),
+                "article".to_string(),
+                "tatah_1995".to_string(),
+            ],
+            [
+                "Joseph Conrad".to_string(),
+                "Heart of Darkness".to_string(),
+                1899.to_string(),
+                "book".to_string(),
+                "conrad_1899".to_string(),
+            ],
+            [
                 "Michelle-Rolpg Trouillot".to_string(),
                 "Silencing the Past".to_string(),
-            ),
-            ("Zora Neale Hurston".to_string(), "Barracoon".to_string()),
+                "1995".to_string(),
+                "book".to_string(),
+                "trouillot_1995".to_string(),
+            ],
+            [
+                "Zora Neale Hurston".to_string(),
+                "Barracoon".to_string(),
+                "1919".to_string(),
+                "book".to_string(),
+                "hurston_1919".to_string(),
+            ],
         ];
         Self {
             running: true,

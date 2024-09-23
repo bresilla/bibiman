@@ -1,3 +1,20 @@
+// bibiman - a TUI for managing BibLaTeX databases
+// Copyright (C) 2024  lukeflo
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+/////
+
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -49,17 +66,10 @@ impl From<&TagListItem> for ListItem<'_> {
     }
 }
 
-impl From<&EntryTableItem> for ListItem<'_> {
-    fn from(value: &EntryTableItem) -> Self {
-        let line = Line::styled(format!("{}, {}", value.authors, value.title), TEXT_FG_COLOR);
-        ListItem::new(line)
-    }
-}
-
 impl Widget for &mut App {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let [header_area, main_area, footer_area] = Layout::vertical([
-            Constraint::Length(2),
+            Constraint::Length(1),
             Constraint::Fill(1),
             Constraint::Length(1),
         ])
@@ -76,7 +86,7 @@ impl Widget for &mut App {
         App::render_footer(footer_area, buf);
         // Render list area where entry gets selected
         // self.render_entry_table(list_area, buf);
-        self.render_table(list_area, buf);
+        self.render_entrytable(list_area, buf);
         // Render infos related to selected entry
         // TODO: only placeholder at the moment, has to be impl.
         self.render_taglist(tag_area, buf);
@@ -86,8 +96,9 @@ impl Widget for &mut App {
 
 impl App {
     pub fn render_header(area: Rect, buf: &mut Buffer) {
-        Paragraph::new("Ratatui List Example")
+        Paragraph::new("BIBIMAN – BibLaTeX manager TUI")
             .bold()
+            .fg(MAIN_BLUE_COLOR)
             .centered()
             .render(area, buf);
     }
@@ -98,26 +109,32 @@ impl App {
             .render(area, buf);
     }
 
-    pub fn render_table(&mut self, area: Rect, buf: &mut Buffer) {
-        let block = Block::bordered()
+    pub fn render_entrytable(&mut self, area: Rect, buf: &mut Buffer) {
+        let block = Block::bordered() // can also be Block::new
             .title(
                 Line::raw(" Selection List ")
                     .centered()
                     .fg(Color::Indexed(39)),
             )
-            // .borders(Borders::TOP)
+            // .borders(Borders::TOP) // set borders for Block::new
             .border_set(symbols::border::ROUNDED)
             .border_style(BOX_BORDER_STYLE_MAIN)
             .bg(Color::Black); // .bg(NORMAL_ROW_BG);
         let header_style = Style::default().bold();
         let selected_style = Style::default().add_modifier(Modifier::REVERSED);
 
-        let header = ["Authors".underlined(), "Title".underlined()]
-            .into_iter()
-            .map(Cell::from)
-            .collect::<Row>()
-            .style(header_style)
-            .height(1);
+        let header = [
+            "Authors".underlined(),
+            "Title".underlined(),
+            "Year".underlined(),
+            "Type".underlined(),
+        ]
+        .into_iter()
+        .map(Cell::from)
+        .collect::<Row>()
+        .style(header_style)
+        .height(1);
+        // Iterate over vector storing each entries data fields
         let rows = self
             .entry_table
             .entry_table_items
@@ -131,13 +148,21 @@ impl App {
                     .style(Style::new().fg(Color::White).bg(alternate_colors(i)))
                     .height(1)
             });
-        let entry_table = Table::new(rows, [Constraint::Percentage(20), Constraint::Fill(1)])
-            .block(block)
-            .header(header)
-            .column_spacing(2)
-            .highlight_style(selected_style)
-            .bg(Color::Black)
-            .highlight_spacing(HighlightSpacing::Always);
+        let entry_table = Table::new(
+            rows,
+            [
+                Constraint::Percentage(20),
+                Constraint::Fill(1),
+                Constraint::Length(4),
+                Constraint::Percentage(10),
+            ],
+        )
+        .block(block)
+        .header(header)
+        .column_spacing(2)
+        .highlight_style(selected_style)
+        .bg(Color::Black)
+        .highlight_spacing(HighlightSpacing::Always);
         StatefulWidget::render(
             entry_table,
             area,
