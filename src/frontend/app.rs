@@ -112,6 +112,23 @@ impl FromIterator<[String; 5]> for EntryTable {
     }
 }
 
+// // Also possible with vector. TODO: Decide whats better
+// impl FromIterator<Vec<String>> for EntryTable {
+//     fn from_iter<T: IntoIterator<Item = Vec<String>>>(iter: T) -> Self {
+//         // Has to be Vev<EntryTableItem>
+//         let entry_table_items = iter
+//             .into_iter()
+//             .sorted()
+//             .map(|i| EntryTableItem::new(&i[0], &i[1], &i[2], &i[3], &i[4]))
+//             .collect();
+//         let entry_table_state = TableState::default().with_selected(0);
+//         Self {
+//             entry_table_items,
+//             entry_table_state,
+//         }
+//     }
+// }
+
 // Define list containing entries as table
 #[derive(Debug)]
 pub struct EntryTable {
@@ -209,6 +226,43 @@ impl Default for App {
                 "hurston_1919".to_string(),
             ],
         ];
+        // let iter = vec![
+        //     vec![
+        //         "Mrs. Doubtfire".to_string(),
+        //         "A great book of great length".to_string(),
+        //         "2003".to_string(),
+        //         "book".to_string(),
+        //         "doubtfire_2003".to_string(),
+        //     ],
+        //     vec![
+        //         "Veye Tatah".to_string(),
+        //         "Modern economy".to_string(),
+        //         1995.to_string(),
+        //         "article".to_string(),
+        //         "tatah_1995".to_string(),
+        //     ],
+        //     vec![
+        //         "Joseph Conrad".to_string(),
+        //         "Heart of Darkness".to_string(),
+        //         1899.to_string(),
+        //         "book".to_string(),
+        //         "conrad_1899".to_string(),
+        //     ],
+        //     vec![
+        //         "Michelle-Rolpg Trouillot".to_string(),
+        //         "Silencing the Past".to_string(),
+        //         "1995".to_string(),
+        //         "book".to_string(),
+        //         "trouillot_1995".to_string(),
+        //     ],
+        //     vec![
+        //         "Zora Neale Hurston".to_string(),
+        //         "Barracoon".to_string(),
+        //         "1919".to_string(),
+        //         "book".to_string(),
+        //         "hurston_1919".to_string(),
+        //     ],
+        // ];
         Self {
             running: true,
             tag_list: TagList::from_iter(lines),
