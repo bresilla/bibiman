@@ -15,10 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use biblatex::{Bibliography, ChunksExt, Type};
+use super::cliargs::PosArgs;
 use std::{fs, path::PathBuf};
 
-use super::cliargs::PosArgs;
+use biblatex::PermissiveType;
+use biblatex::{self, Bibliography};
+use biblatex::{ChunksExt, Type};
 
 // Set necessary fields
 // TODO: can surely be made more efficient/simpler
@@ -36,11 +38,13 @@ impl BibiMain {
         let bibfilestring = fs::read_to_string(&bibfile).unwrap();
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
         let citekeys = Self::get_citekeys(&bibliography);
+        // let bibentries = BibiDataSets::from_iter(citekeys.clone());
         Self {
             bibfile,
             bibfilestring,
             bibliography,
             citekeys,
+            // bibentries,
         }
     }
 
@@ -55,11 +59,39 @@ impl BibiMain {
     }
 }
 
+#[derive(Debug)]
 pub struct BibiData {
+    pub entry_list: BibiDataSets,
+}
+
+impl BibiData {
+    pub fn new() -> Self {
+        let citekeys = BibiMain::new().citekeys;
+        Self {
+            entry_list: BibiDataSets::from_iter(citekeys),
+        }
+    }
+}
+
+// Parent struct which keeps the Vector of all bibentries
+// Necessary for implementing FromIterator
+#[derive(Debug)]
+pub struct BibiDataSets {
     pub bibentries: Vec<BibiEntry>,
 }
 
+impl FromIterator<String> for BibiDataSets {
+    fn from_iter<T: IntoIterator<Item = String>>(iter: T) -> Self {
+        let bibentries = iter
+            .into_iter()
+            .map(|citekey| BibiEntry::new(&citekey))
+            .collect();
+        Self { bibentries }
+    }
+}
+
 // Struct which has to be created for every entry of bibdatabase
+#[derive(Debug)]
 pub struct BibiEntry {
     pub authors: String,
     pub title: String,
@@ -69,7 +101,7 @@ pub struct BibiEntry {
     pub citekey: String,
 }
 
-// INFO & TODO: Iterator needs to process all citekeys (Vec<String>) and should output another vector which holds every single entry as BibiEntry struct (Vec<BibiEntry>). Maybe the BibiEntry struct has to be wrapped inside a larger BibiEntryVec/BibiData struct or similar -> Iterator for BibiData!
+// INFO & TODO: Iterator needs to process all citekeys (Vec<String>) and should output another vector which holds every single entry as BibiEntry struct (Vec<BibiEntry>). Maybe the BibiEntry struct has to be wrapped inside a larger BibiEntryVec/BibiDataSets struct or similar. -> Iterator for BibiDataSets!
 
 impl BibiEntry {
     pub fn new(citekey: &str) -> Self {
@@ -85,15 +117,51 @@ impl BibiEntry {
 
     fn get_authors(citekey: &str) -> String {
         let biblio = BibiMain::new().bibliography;
-        let authors = biblio.get(&citekey).unwrap().author().unwrap();
         let authors = {
-            if authors.len() > 1 {
-                let authors = format!("{} et al.", authors[0].name);
-                authors
+            if biblio.get(&citekey).unwrap().author().is_ok() {
+                let authors = biblio.get(&citekey).unwrap().author().unwrap();
+                if authors.len() > 1 {
+                    let authors = format!("{} et al.", authors[0].name);
+                    authors
+                } else if authors.len() == 1 {
+                    let authors = authors[0].name.to_string();
+                    authors
+                } else {
+                    let editors_authors = format!("empty");
+                    editors_authors
+                }
             } else {
-                let authors = authors[0].name.to_string();
-                authors
+                if biblio.get(&citekey).unwrap().editors().is_ok() {
+                    let editors = biblio.get(&citekey).unwrap().editors().unwrap();
+                    if editors.len() > 1 {
+                        let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
+                        editors
+                    } else if editors.len() == 1 {
+                        let editors = format!("{} (ed.)", editors[0].0[0].name);
+                        editors
+                    } else {
+                        let editors_authors = format!("empty");
+                        editors_authors
+                    }
+                } else {
+                    let editors_authors = format!("empty");
+                    editors_authors
+                }
             }
+
+            // if biblio.get(&citekey).unwrap().editors().is_ok() {
+            //     let editors = biblio.get(&citekey).unwrap().editors().unwrap();
+            //     if editors.len() > 1 {
+            //         let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
+            //         editors
+            //     } else {
+            //         let editors = editors[0].0[0].name.to_string();
+            //         editors
+            //     }
+            // } else {
+            //     let editors_authors = format!("empty");
+            //     editors_authors
+            // }
         };
         authors
     }
@@ -111,16 +179,30 @@ impl BibiEntry {
 
     fn get_year(citekey: &str) -> String {
         let biblio = BibiMain::new().bibliography;
-        let year = biblio
-            .get(&citekey)
-            .unwrap()
-            .date()
-            .unwrap()
-            .to_chunks()
-            .format_verbatim();
+        let year = biblio.get(&citekey).unwrap();
+        let year = {
+            if year.date().is_ok() {
+                let year = year.date().unwrap().to_chunks().format_verbatim();
+                let year = year[..4].to_string();
+                year
+            } else {
+                let year = format!("emtpy");
+                year
+            }
+        };
+        year
 
-        let year = &year[..4];
-        year.to_string()
+        // let year = &year[..4].to_string();
+        // let year = {
+        //     if year.is_empty() {
+        //         let year = format!("empty");
+        //         year
+        //     } else {
+        //         let year = year.to_string();
+        //         year
+        //     }
+        // };
+        // year
     }
 
     fn get_pubtype(citekey: &str) -> String {

@@ -104,7 +104,7 @@ impl App {
     }
 
     pub fn render_footer(area: Rect, buf: &mut Buffer) {
-        Paragraph::new("Use g/h to move, h to unselect, g/G to go top/bottom.")
+        Paragraph::new("Use j/k to move, h to unselect, g/G to go top/bottom.")
             .centered()
             .render(area, buf);
     }
