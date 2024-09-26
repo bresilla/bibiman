@@ -29,10 +29,6 @@ sarge! {
 
     // Show version and exit. TODO: Write version...
     'v' version: bool,
-
-    // Option for file: -b - short option; --bibfile - long option
-    // #ok makes it optional
-    #ok 'b' bibfile: String,
 }
 
 // struct for CLIArgs

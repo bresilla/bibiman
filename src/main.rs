@@ -17,7 +17,10 @@
 
 use std::io;
 
-use backend::cliargs::{self, CLIArgs};
+use backend::{
+    bib::{BibiData, BibiMain},
+    cliargs::{self, CLIArgs},
+};
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 use crate::{
@@ -50,8 +53,11 @@ async fn main() -> AppResult<()> {
     // TODO: Implement logic for CLI arguments/options which need to be handled
     // before the TUI is started
 
+    let mut bib_main = BibiMain::new();
+    let mut bib_data = BibiData::new(&bib_main.bibliography, &bib_main.citekeys);
+
     // Create an application.
-    let mut app = App::new();
+    let mut app = App::new(&mut bib_main, &mut bib_data);
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stdout());
@@ -75,5 +81,7 @@ async fn main() -> AppResult<()> {
 
     // Exit the user interface.
     tui.exit()?;
+    // let idx = &app.entry_table.entry_table_state.selected().unwrap();
+    // println!("{:#?}", &app.entry_table.entry_table_items[*idx].citekey);
     Ok(())
 }

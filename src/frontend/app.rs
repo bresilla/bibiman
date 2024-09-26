@@ -93,33 +93,16 @@ impl FromIterator<String> for TagList {
 
 // Iterate over vector fields with entries data to create TableItems
 // Number of Strings has to match number of fields
-impl FromIterator<[String; 5]> for EntryTable {
-    fn from_iter<T: IntoIterator<Item = [String; 5]>>(iter: T) -> Self {
-        // Has to be Vev<EntryTableItem>
-        let entry_table_items = iter
-            .into_iter()
-            // fields in map must not be named specific
-            .map(|[authors, title, year, pubtype, citekey]| {
-                EntryTableItem::new(&authors, &title, &year, &pubtype, &citekey)
-            })
-            .sorted_by(|a, b| a.authors.cmp(&b.authors))
-            .collect();
-        let entry_table_state = TableState::default().with_selected(0);
-        Self {
-            entry_table_items,
-            entry_table_state,
-        }
-    }
-}
-
-// // Also possible with vector. TODO: Decide whats better
-// impl FromIterator<Vec<String>> for EntryTable {
-//     fn from_iter<T: IntoIterator<Item = Vec<String>>>(iter: T) -> Self {
+// impl FromIterator<[String; 5]> for EntryTable {
+//     fn from_iter<T: IntoIterator<Item = [String; 5]>>(iter: T) -> Self {
 //         // Has to be Vev<EntryTableItem>
 //         let entry_table_items = iter
 //             .into_iter()
-//             .sorted()
-//             .map(|i| EntryTableItem::new(&i[0], &i[1], &i[2], &i[3], &i[4]))
+//             // fields in map must not be named specific
+//             .map(|[authors, title, year, pubtype, citekey]| {
+//                 EntryTableItem::new(&authors, &title, &year, &pubtype, &citekey)
+//             })
+//             .sorted_by(|a, b| a.authors.cmp(&b.authors))
 //             .collect();
 //         let entry_table_state = TableState::default().with_selected(0);
 //         Self {
@@ -128,6 +111,23 @@ impl FromIterator<[String; 5]> for EntryTable {
 //         }
 //     }
 // }
+
+// // Also possible with vector. TODO: Decide whats better
+impl FromIterator<Vec<String>> for EntryTable {
+    fn from_iter<T: IntoIterator<Item = Vec<String>>>(iter: T) -> Self {
+        // Has to be Vev<EntryTableItem>
+        let entry_table_items = iter
+            .into_iter()
+            .sorted()
+            .map(|i| EntryTableItem::new(&i[0], &i[1], &i[2], &i[3], &i[4]))
+            .collect();
+        let entry_table_state = TableState::default().with_selected(0);
+        Self {
+            entry_table_items,
+            entry_table_state,
+        }
+    }
+}
 
 // Define list containing entries as table
 #[derive(Debug)]
@@ -185,101 +185,38 @@ impl EntryTableItem {
     }
 }
 
-impl Default for App {
-    fn default() -> Self {
-        // TEST: read file
-        let lines = BibiMain::new().citekeys;
-        let iter = vec![
-            [
-                "Mrs. Doubtfire".to_string(),
-                "A great book of great length".to_string(),
-                "2003".to_string(),
-                "book".to_string(),
-                "doubtfire_2003".to_string(),
-            ],
-            [
-                "Veye Tatah".to_string(),
-                "Modern economy".to_string(),
-                1995.to_string(),
-                "article".to_string(),
-                "tatah_1995".to_string(),
-            ],
-            [
-                "Joseph Conrad".to_string(),
-                "Heart of Darkness".to_string(),
-                1899.to_string(),
-                "book".to_string(),
-                "conrad_1899".to_string(),
-            ],
-            [
-                "Michelle-Rolpg Trouillot".to_string(),
-                "Silencing the Past".to_string(),
-                "1995".to_string(),
-                "book".to_string(),
-                "trouillot_1995".to_string(),
-            ],
-            [
-                "Zora Neale Hurston".to_string(),
-                "Barracoon".to_string(),
-                "1919".to_string(),
-                "book".to_string(),
-                "hurston_1919".to_string(),
-            ],
-        ];
-        // let iter = vec![
-        //     vec![
-        //         "Mrs. Doubtfire".to_string(),
-        //         "A great book of great length".to_string(),
-        //         "2003".to_string(),
-        //         "book".to_string(),
-        //         "doubtfire_2003".to_string(),
-        //     ],
-        //     vec![
-        //         "Veye Tatah".to_string(),
-        //         "Modern economy".to_string(),
-        //         1995.to_string(),
-        //         "article".to_string(),
-        //         "tatah_1995".to_string(),
-        //     ],
-        //     vec![
-        //         "Joseph Conrad".to_string(),
-        //         "Heart of Darkness".to_string(),
-        //         1899.to_string(),
-        //         "book".to_string(),
-        //         "conrad_1899".to_string(),
-        //     ],
-        //     vec![
-        //         "Michelle-Rolpg Trouillot".to_string(),
-        //         "Silencing the Past".to_string(),
-        //         "1995".to_string(),
-        //         "book".to_string(),
-        //         "trouillot_1995".to_string(),
-        //     ],
-        //     vec![
-        //         "Zora Neale Hurston".to_string(),
-        //         "Barracoon".to_string(),
-        //         "1919".to_string(),
-        //         "book".to_string(),
-        //         "hurston_1919".to_string(),
-        //     ],
-        // ];
-        Self {
-            running: true,
-            tag_list: TagList::from_iter(lines),
-            entry_table: EntryTable::from_iter(iter),
-            current_area: CurrentArea::EntryArea,
-        }
-    }
-}
+// impl Default for App {
+//     fn default(bib_main: &BibiMain, bib_data: &BibiData) -> Self {
+//         // TEST: read file
+//         let keyword_list = BibiMain::new().citekeys;
+//         let entry_vec = BibiData::new().entry_list.bibentries;
+//         Self {
+//             running: true,
+//             tag_list: TagList::from_iter(keyword_list),
+//             entry_table: EntryTable::from_iter(entry_vec),
+//             current_area: CurrentArea::EntryArea,
+//         }
+//     }
+// }
 
 impl App {
     // Constructs a new instance of [`App`].
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(bib_main: &BibiMain, bib_data: &BibiData) -> Self {
+        Self {
+            running: true,
+            tag_list: TagList::from_iter(bib_main.citekeys.clone()),
+            entry_table: EntryTable::from_iter(bib_data.entry_list.bibentries.clone()),
+            current_area: CurrentArea::EntryArea,
+        }
     }
 
     // Handles the tick event of the terminal.
     pub fn tick(&self) {}
+
+    // TODO: Create process to do something with selected entry
+    // The logic getting e.g. the citekey of the selected entry is:
+    // let idx = self.entry_table.entry_table_state.selected().unwrap();
+    // println!("{:#?}", self.entry_table.entry_table_items[*idx].citekey);
 
     // Set running to false to quit the application.
     pub fn quit(&mut self) {

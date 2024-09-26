@@ -18,7 +18,6 @@
 use super::cliargs::PosArgs;
 use std::{fs, path::PathBuf};
 
-use biblatex::PermissiveType;
 use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
 
@@ -29,6 +28,7 @@ pub struct BibiMain {
     pub bibfilestring: String,      // content of bibfile as string
     pub bibliography: Bibliography, // parsed bibliography
     pub citekeys: Vec<String>,      // list of all citekeys
+                                    // pub bibentries: BibiDataSets,
 }
 
 impl BibiMain {
@@ -38,13 +38,11 @@ impl BibiMain {
         let bibfilestring = fs::read_to_string(&bibfile).unwrap();
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
         let citekeys = Self::get_citekeys(&bibliography);
-        // let bibentries = BibiDataSets::from_iter(citekeys.clone());
         Self {
             bibfile,
             bibfilestring,
             bibliography,
             citekeys,
-            // bibentries,
         }
     }
 
@@ -65,10 +63,15 @@ pub struct BibiData {
 }
 
 impl BibiData {
-    pub fn new() -> Self {
-        let citekeys = BibiMain::new().citekeys;
+    pub fn new(biblio: &Bibliography, citekeys: &Vec<String>) -> Self {
         Self {
-            entry_list: BibiDataSets::from_iter(citekeys),
+            entry_list: {
+                let bibentries = citekeys
+                    .into_iter()
+                    .map(|citekey| BibiEntry::new(&citekey, &biblio))
+                    .collect();
+                BibiDataSets { bibentries }
+            },
         }
     }
 }
@@ -77,17 +80,7 @@ impl BibiData {
 // Necessary for implementing FromIterator
 #[derive(Debug)]
 pub struct BibiDataSets {
-    pub bibentries: Vec<BibiEntry>,
-}
-
-impl FromIterator<String> for BibiDataSets {
-    fn from_iter<T: IntoIterator<Item = String>>(iter: T) -> Self {
-        let bibentries = iter
-            .into_iter()
-            .map(|citekey| BibiEntry::new(&citekey))
-            .collect();
-        Self { bibentries }
-    }
+    pub bibentries: Vec<Vec<String>>,
 }
 
 // Struct which has to be created for every entry of bibdatabase
@@ -101,22 +94,18 @@ pub struct BibiEntry {
     pub citekey: String,
 }
 
-// INFO & TODO: Iterator needs to process all citekeys (Vec<String>) and should output another vector which holds every single entry as BibiEntry struct (Vec<BibiEntry>). Maybe the BibiEntry struct has to be wrapped inside a larger BibiEntryVec/BibiDataSets struct or similar. -> Iterator for BibiDataSets!
-
 impl BibiEntry {
-    pub fn new(citekey: &str) -> Self {
-        Self {
-            authors: Self::get_authors(citekey),
-            title: Self::get_title(citekey),
-            year: Self::get_year(citekey),
-            pubtype: Self::get_pubtype(citekey),
-            // keywords: Self::get_keywords(citekey),
-            citekey: citekey.to_string(),
-        }
+    pub fn new(citekey: &str, biblio: &Bibliography) -> Vec<String> {
+        vec![
+            Self::get_authors(&citekey, &biblio),
+            Self::get_title(&citekey, &biblio),
+            Self::get_year(&citekey, &biblio),
+            Self::get_pubtype(&citekey, &biblio),
+            citekey.to_string(),
+        ]
     }
 
-    fn get_authors(citekey: &str) -> String {
-        let biblio = BibiMain::new().bibliography;
+    fn get_authors(citekey: &str, biblio: &Bibliography) -> String {
         let authors = {
             if biblio.get(&citekey).unwrap().author().is_ok() {
                 let authors = biblio.get(&citekey).unwrap().author().unwrap();
@@ -148,37 +137,29 @@ impl BibiEntry {
                     editors_authors
                 }
             }
-
-            // if biblio.get(&citekey).unwrap().editors().is_ok() {
-            //     let editors = biblio.get(&citekey).unwrap().editors().unwrap();
-            //     if editors.len() > 1 {
-            //         let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
-            //         editors
-            //     } else {
-            //         let editors = editors[0].0[0].name.to_string();
-            //         editors
-            //     }
-            // } else {
-            //     let editors_authors = format!("empty");
-            //     editors_authors
-            // }
         };
         authors
     }
 
-    fn get_title(citekey: &str) -> String {
-        let biblio = BibiMain::new().bibliography;
-        let title = biblio
-            .get(&citekey)
-            .unwrap()
-            .title()
-            .unwrap()
-            .format_verbatim();
+    fn get_title(citekey: &str, biblio: &Bibliography) -> String {
+        let title = {
+            if biblio.get(&citekey).unwrap().title().is_ok() {
+                let title = biblio
+                    .get(&citekey)
+                    .unwrap()
+                    .title()
+                    .unwrap()
+                    .format_verbatim();
+                title
+            } else {
+                let title = format!("no title");
+                title
+            }
+        };
         title
     }
 
-    fn get_year(citekey: &str) -> String {
-        let biblio = BibiMain::new().bibliography;
+    fn get_year(citekey: &str, biblio: &Bibliography) -> String {
         let year = biblio.get(&citekey).unwrap();
         let year = {
             if year.date().is_ok() {
@@ -186,33 +167,19 @@ impl BibiEntry {
                 let year = year[..4].to_string();
                 year
             } else {
-                let year = format!("emtpy");
+                let year = format!("n.d.");
                 year
             }
         };
         year
-
-        // let year = &year[..4].to_string();
-        // let year = {
-        //     if year.is_empty() {
-        //         let year = format!("empty");
-        //         year
-        //     } else {
-        //         let year = year.to_string();
-        //         year
-        //     }
-        // };
-        // year
     }
 
-    fn get_pubtype(citekey: &str) -> String {
-        let biblio = BibiMain::new().bibliography;
+    fn get_pubtype(citekey: &str, biblio: &Bibliography) -> String {
         let pubtype = biblio.get(&citekey).unwrap().entry_type.to_string();
         pubtype
     }
 
-    fn get_keywords(citekey: &str) -> String {
-        let biblio = BibiMain::new().bibliography;
+    fn get_keywords(citekey: &str, biblio: &Bibliography) -> String {
         let keywords = biblio
             .get(&citekey)
             .unwrap()
