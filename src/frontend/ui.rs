@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use biblatex::ChunksExt;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -23,14 +24,17 @@ use ratatui::{
         Color, Modifier, Style, Stylize,
     },
     symbols,
-    text::{Line, Text},
+    text::{Line, Span, Text},
     widgets::{
         Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, StatefulWidget,
         Table, TableState, Widget, Wrap,
     },
 };
 
-use crate::frontend::app::{App, TagListItem};
+use crate::{
+    backend::bib::BibiEntry,
+    frontend::app::{App, TagListItem},
+};
 
 use super::app::EntryTableItem;
 
@@ -171,24 +175,54 @@ impl App {
         );
     }
 
-    pub fn render_selected_item(&self, area: Rect, buf: &mut Buffer) {
+    pub fn render_selected_item(&mut self, area: Rect, buf: &mut Buffer) {
         // We get the info depending on the item's state.
-        // INFO: Only a placeholder at the moment:
-        let info = "Infor for selected item".to_string();
         // TODO: Implement logic showin informations for selected entry:
-        // let info = if let Some(i) = self.tag_list.state.selected() {
-        //     "Infor for selected item".to_string()
-        //     // match self.todo_list.items[i].status {
-        //     //     Status::Completed => format!("✓ DONE: {}", self.todo_list.items[i].info),
-        //     //     Status::Todo => format!("☐ TODO: {}", self.todo_list.items[i].info),
-        //     // }
-        // } else {
-        //     "Nothing selected...".to_string()
-        // };
+        let style_value = Style::new().bold();
+        let mut lines = vec![];
+        lines.push(Line::from(vec![
+            Span::styled("Authors: ", style_value),
+            Span::styled(
+                String::from(BibiEntry::get_authors(
+                    &self.get_selected_citekey(),
+                    &self.main_biblio.bibliography,
+                )),
+                Style::new().green(),
+            ),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled("Title: ", style_value),
+            Span::styled(
+                String::from(BibiEntry::get_title(
+                    &self.get_selected_citekey(),
+                    &self.main_biblio.bibliography,
+                )),
+                Style::new().magenta(),
+            ),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled("Year: ", style_value),
+            Span::styled(
+                String::from(BibiEntry::get_year(
+                    &self.get_selected_citekey(),
+                    &self.main_biblio.bibliography,
+                )),
+                Style::new().light_magenta(),
+            ),
+        ]));
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![Span::styled(
+            String::from(BibiEntry::get_abstract(
+                &self.get_selected_citekey(),
+                &self.main_biblio.bibliography,
+            )),
+            Style::default(),
+        )]));
+        let info = Text::from(lines);
 
         // We show the list item's info under the list in this paragraph
         let block = Block::bordered()
-            .title(Line::raw(" Item Info ").centered())
+            .title(Line::raw(" Entry Information ").centered())
             // .borders(Borders::TOP)
             .border_set(symbols::border::ROUNDED)
             .border_style(BOX_BORDER_STYLE_MAIN)
@@ -198,8 +232,9 @@ impl App {
         // We can now render the item info
         Paragraph::new(info)
             .block(block)
-            .fg(TEXT_FG_COLOR)
+            // .fg(TEXT_FG_COLOR)
             .wrap(Wrap { trim: false })
+            .scroll((self.scroll_info, 0))
             .render(area, buf);
     }
 
@@ -208,8 +243,7 @@ impl App {
             .title(Line::raw(" Tag List ").centered())
             .border_set(symbols::border::ROUNDED)
             .border_style(BOX_BORDER_STYLE_MAIN)
-            .bg(Color::Black)
-            .padding(Padding::horizontal(1));
+            .bg(Color::Black);
 
         // Iterate through all elements in the `items` and stylize them.
         let items: Vec<ListItem> = self

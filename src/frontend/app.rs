@@ -18,6 +18,7 @@
 use crate::backend::bib::*;
 use std::error;
 
+use arboard::Clipboard;
 use itertools::Itertools;
 use ratatui::widgets::{ListState, TableState};
 
@@ -37,10 +38,16 @@ pub enum CurrentArea {
 pub struct App {
     // Is the application running?
     pub running: bool,
+    // main bibliography
+    pub main_biblio: BibiMain,
+    // bibliographic data
+    pub biblio_data: BibiData,
     // list
     pub tag_list: TagList,
     // TODO: table items
     pub entry_table: EntryTable,
+    // scroll state info buffer
+    pub scroll_info: u16,
     // area
     pub current_area: CurrentArea,
 }
@@ -185,38 +192,34 @@ impl EntryTableItem {
     }
 }
 
-// impl Default for App {
-//     fn default(bib_main: &BibiMain, bib_data: &BibiData) -> Self {
-//         // TEST: read file
-//         let keyword_list = BibiMain::new().citekeys;
-//         let entry_vec = BibiData::new().entry_list.bibentries;
-//         Self {
-//             running: true,
-//             tag_list: TagList::from_iter(keyword_list),
-//             entry_table: EntryTable::from_iter(entry_vec),
-//             current_area: CurrentArea::EntryArea,
-//         }
-//     }
-// }
+impl Default for App {
+    fn default() -> Self {
+        let running = true;
+        let main_biblio = BibiMain::new();
+        let biblio_data = BibiData::new(&main_biblio.bibliography, &main_biblio.citekeys);
+        let tag_list = TagList::from_iter(main_biblio.citekeys.clone());
+        let entry_table = EntryTable::from_iter(biblio_data.entry_list.bibentries.clone());
+        let current_area = CurrentArea::EntryArea;
+        Self {
+            running,
+            main_biblio,
+            biblio_data,
+            tag_list,
+            entry_table,
+            scroll_info: 0,
+            current_area,
+        }
+    }
+}
 
 impl App {
     // Constructs a new instance of [`App`].
-    pub fn new(bib_main: &BibiMain, bib_data: &BibiData) -> Self {
-        Self {
-            running: true,
-            tag_list: TagList::from_iter(bib_main.citekeys.clone()),
-            entry_table: EntryTable::from_iter(bib_data.entry_list.bibentries.clone()),
-            current_area: CurrentArea::EntryArea,
-        }
+    pub fn new() -> Self {
+        Self::default()
     }
 
     // Handles the tick event of the terminal.
     pub fn tick(&self) {}
-
-    // TODO: Create process to do something with selected entry
-    // The logic getting e.g. the citekey of the selected entry is:
-    // let idx = self.entry_table.entry_table_state.selected().unwrap();
-    // println!("{:#?}", self.entry_table.entry_table_items[*idx].citekey);
 
     // Set running to false to quit the application.
     pub fn quit(&mut self) {
@@ -228,6 +231,18 @@ impl App {
         match self.current_area {
             CurrentArea::EntryArea => self.current_area = CurrentArea::TagArea,
             CurrentArea::TagArea => self.current_area = CurrentArea::EntryArea,
+        }
+    }
+
+    pub fn scroll_info_down(&mut self) {
+        self.scroll_info = (self.scroll_info + 1) % 10;
+    }
+
+    pub fn scroll_info_up(&mut self) {
+        if self.scroll_info == 0 {
+            {}
+        } else {
+            self.scroll_info = (self.scroll_info - 1) % 10;
         }
     }
 
@@ -270,22 +285,17 @@ impl App {
         // self.tag_list.tag_list_state.select_last();
     }
 
-    // pub fn select_none(&mut self) {
-    //     self.entry_table.entry_table_state.select(None);
-    // }
+    // Get the citekey of the selected entry
+    pub fn get_selected_citekey(&self) -> &str {
+        let idx = self.entry_table.entry_table_state.selected().unwrap();
+        let citekey = &self.entry_table.entry_table_items[idx].citekey;
+        citekey
+    }
 
-    // pub fn select_next(&mut self) {
-    //     self.entry_table.entry_table_state.select_next();
-    // }
-    // pub fn select_previous(&mut self) {
-    //     self.entry_table.entry_table_state.select_previous();
-    // }
-
-    // pub fn select_first(&mut self) {
-    //     self.entry_table.entry_table_state.select_first();
-    // }
-
-    // pub fn select_last(&mut self) {
-    //     self.entry_table.entry_table_state.select_last();
-    // }
+    // Yank the passed string to system clipboard
+    pub fn yank_text(selection: &str) {
+        let mut clipboard = Clipboard::new().unwrap();
+        let yanked_text = selection.to_string();
+        clipboard.set_text(yanked_text).unwrap();
+    }
 }

@@ -50,14 +50,8 @@ async fn main() -> AppResult<()> {
         std::process::exit(0);
     }
 
-    // TODO: Implement logic for CLI arguments/options which need to be handled
-    // before the TUI is started
-
-    let mut bib_main = BibiMain::new();
-    let mut bib_data = BibiData::new(&bib_main.bibliography, &bib_main.citekeys);
-
     // Create an application.
-    let mut app = App::new(&mut bib_main, &mut bib_data);
+    let mut app = App::new();
 
     // Initialize the terminal user interface.
     let backend = CrosstermBackend::new(io::stdout());

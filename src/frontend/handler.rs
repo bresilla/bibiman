@@ -34,6 +34,12 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.quit();
             }
         }
+        KeyCode::PageDown => {
+            app.scroll_info_down();
+        }
+        KeyCode::PageUp => {
+            app.scroll_info_up();
+        }
         _ => {}
     }
     // Keycodes for specific areas
@@ -76,6 +82,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             }
             KeyCode::Char('G') | KeyCode::End => {
                 app.select_last();
+            }
+            KeyCode::Char('y') => {
+                App::yank_text(&app.get_selected_citekey());
             }
             KeyCode::Tab | KeyCode::BackTab => {
                 app.toggle_area();

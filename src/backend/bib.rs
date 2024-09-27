@@ -23,6 +23,7 @@ use biblatex::{ChunksExt, Type};
 
 // Set necessary fields
 // TODO: can surely be made more efficient/simpler
+#[derive(Debug)]
 pub struct BibiMain {
     pub bibfile: PathBuf,           // path to bibfile
     pub bibfilestring: String,      // content of bibfile as string
@@ -105,7 +106,7 @@ impl BibiEntry {
         ]
     }
 
-    fn get_authors(citekey: &str, biblio: &Bibliography) -> String {
+    pub fn get_authors(citekey: &str, biblio: &Bibliography) -> String {
         let authors = {
             if biblio.get(&citekey).unwrap().author().is_ok() {
                 let authors = biblio.get(&citekey).unwrap().author().unwrap();
@@ -141,7 +142,7 @@ impl BibiEntry {
         authors
     }
 
-    fn get_title(citekey: &str, biblio: &Bibliography) -> String {
+    pub fn get_title(citekey: &str, biblio: &Bibliography) -> String {
         let title = {
             if biblio.get(&citekey).unwrap().title().is_ok() {
                 let title = biblio
@@ -159,7 +160,7 @@ impl BibiEntry {
         title
     }
 
-    fn get_year(citekey: &str, biblio: &Bibliography) -> String {
+    pub fn get_year(citekey: &str, biblio: &Bibliography) -> String {
         let year = biblio.get(&citekey).unwrap();
         let year = {
             if year.date().is_ok() {
@@ -174,12 +175,12 @@ impl BibiEntry {
         year
     }
 
-    fn get_pubtype(citekey: &str, biblio: &Bibliography) -> String {
+    pub fn get_pubtype(citekey: &str, biblio: &Bibliography) -> String {
         let pubtype = biblio.get(&citekey).unwrap().entry_type.to_string();
         pubtype
     }
 
-    fn get_keywords(citekey: &str, biblio: &Bibliography) -> String {
+    pub fn get_keywords(citekey: &str, biblio: &Bibliography) -> String {
         let keywords = biblio
             .get(&citekey)
             .unwrap()
@@ -187,5 +188,23 @@ impl BibiEntry {
             .unwrap()
             .format_verbatim();
         keywords
+    }
+
+    pub fn get_abstract(citekey: &str, biblio: &Bibliography) -> String {
+        let text = {
+            if biblio.get(&citekey).unwrap().abstract_().is_ok() {
+                let abstract_text = biblio
+                    .get(&citekey)
+                    .unwrap()
+                    .abstract_()
+                    .unwrap()
+                    .format_verbatim();
+                abstract_text
+            } else {
+                let abstract_text = format!("No abstract");
+                abstract_text
+            }
+        };
+        text
     }
 }
