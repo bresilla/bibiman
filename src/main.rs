@@ -17,10 +17,7 @@
 
 use std::io;
 
-use backend::{
-    bib::{BibiData, BibiMain},
-    cliargs::{self, CLIArgs},
-};
+use backend::cliargs::{self, CLIArgs};
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 use crate::{

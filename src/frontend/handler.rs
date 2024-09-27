@@ -25,7 +25,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
     // Keycodes activated for every area (high priority)
     match key_event.code {
         // Exit application on `ESC` or `q`
-        KeyCode::Esc | KeyCode::Char('q') => {
+        KeyCode::Char('Q') | KeyCode::Char('q') => {
             app.quit();
         }
         // Exit application on `Ctrl-C`

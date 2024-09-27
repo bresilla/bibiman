@@ -229,12 +229,32 @@ impl App {
             .bg(Color::Black)
             .padding(Padding::horizontal(1));
 
+        // INFO: '.line_count' method only possible with unstable-rendered-line-info feature -> API might change: https://github.com/ratatui/ratatui/issues/293#ref-pullrequest-2027056434
+        let box_height = Paragraph::new(info.clone())
+            .block(block.clone())
+            .wrap(Wrap { trim: false })
+            .line_count(area.width);
+        // Make sure to allow scroll only if text is larger than the rendered area and stop scrolling when last line is reached
+        let scroll_height = {
+            if self.scroll_info == 0 {
+                self.scroll_info
+            } else if area.height > box_height as u16 {
+                self.scroll_info = 0;
+                self.scroll_info
+            } else if self.scroll_info > (box_height as u16 + 1 - area.height) {
+                self.scroll_info = box_height as u16 + 1 - area.height;
+                self.scroll_info
+            } else {
+                self.scroll_info
+            }
+        };
+
         // We can now render the item info
         Paragraph::new(info)
             .block(block)
             // .fg(TEXT_FG_COLOR)
             .wrap(Wrap { trim: false })
-            .scroll((self.scroll_info, 0))
+            .scroll((scroll_height, 0))
             .render(area, buf);
     }
 

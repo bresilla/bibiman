@@ -11,7 +11,8 @@ biblatex = "0.9.3"
 crossterm = { version = "0.28.1", features = ["event-stream"] }
 futures = "0.3.30"
 itertools = "0.13.0"
-ratatui = "0.28.1"
+# ratatui = "0.28.1"
+ratatui = { version = "0.28.1", features = ["unstable-rendered-line-info"]}
 regex = "1.10.6"
 sarge = "7.2.5"
 tokio = { version = "1.39.3", features = ["full"] }

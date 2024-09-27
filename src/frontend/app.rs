@@ -42,9 +42,9 @@ pub struct App {
     pub main_biblio: BibiMain,
     // bibliographic data
     pub biblio_data: BibiData,
-    // list
+    // tag list
     pub tag_list: TagList,
-    // TODO: table items
+    // table items
     pub entry_table: EntryTable,
     // scroll state info buffer
     pub scroll_info: u16,
@@ -59,14 +59,7 @@ pub struct TagList {
     pub tag_list_state: ListState,
 }
 
-// Structure of the list items. Can be a simple string or something more elaborated
-// eg:
-// struct TagListItem {
-//     todo: String,
-//     info: String,
-//     status: Status,
-// }
-// where Status has to be defined explicitly somewhere else
+// Structure of the list items.
 #[derive(Debug)]
 pub struct TagListItem {
     pub info: String,
@@ -81,13 +74,10 @@ impl TagListItem {
     }
 }
 
-// INFO: in the original template it was <&'static str> instead of <String>
 impl FromIterator<String> for TagList {
-    // INFO: Here to originally <&'static str>
     fn from_iter<I: IntoIterator<Item = String>>(iter: I) -> Self {
         let tag_list_items = iter
             .into_iter()
-            // INFO: here originally not borrowed (without Ampersand'&')
             .map(|info| TagListItem::new(&info))
             .collect();
         let tag_list_state = ListState::default(); // for preselection: .with_selected(Some(0));
@@ -98,31 +88,9 @@ impl FromIterator<String> for TagList {
     }
 }
 
-// Iterate over vector fields with entries data to create TableItems
-// Number of Strings has to match number of fields
-// impl FromIterator<[String; 5]> for EntryTable {
-//     fn from_iter<T: IntoIterator<Item = [String; 5]>>(iter: T) -> Self {
-//         // Has to be Vev<EntryTableItem>
-//         let entry_table_items = iter
-//             .into_iter()
-//             // fields in map must not be named specific
-//             .map(|[authors, title, year, pubtype, citekey]| {
-//                 EntryTableItem::new(&authors, &title, &year, &pubtype, &citekey)
-//             })
-//             .sorted_by(|a, b| a.authors.cmp(&b.authors))
-//             .collect();
-//         let entry_table_state = TableState::default().with_selected(0);
-//         Self {
-//             entry_table_items,
-//             entry_table_state,
-//         }
-//     }
-// }
-
-// // Also possible with vector. TODO: Decide whats better
+// // Also possible with vector.
 impl FromIterator<Vec<String>> for EntryTable {
     fn from_iter<T: IntoIterator<Item = Vec<String>>>(iter: T) -> Self {
-        // Has to be Vev<EntryTableItem>
         let entry_table_items = iter
             .into_iter()
             .sorted()
@@ -235,14 +203,14 @@ impl App {
     }
 
     pub fn scroll_info_down(&mut self) {
-        self.scroll_info = (self.scroll_info + 1) % 10;
+        self.scroll_info = (self.scroll_info + 1);
     }
 
     pub fn scroll_info_up(&mut self) {
         if self.scroll_info == 0 {
             {}
         } else {
-            self.scroll_info = (self.scroll_info - 1) % 10;
+            self.scroll_info = (self.scroll_info - 1);
         }
     }
 
@@ -255,6 +223,7 @@ impl App {
     }
 
     pub fn select_next(&mut self) {
+        self.scroll_info = 0;
         match self.current_area {
             CurrentArea::EntryArea => self.entry_table.entry_table_state.select_next(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_next(),
@@ -262,6 +231,7 @@ impl App {
         // self.tag_list.tag_list_state.select_next();
     }
     pub fn select_previous(&mut self) {
+        self.scroll_info = 0;
         match self.current_area {
             CurrentArea::EntryArea => self.entry_table.entry_table_state.select_previous(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_previous(),
@@ -270,6 +240,7 @@ impl App {
     }
 
     pub fn select_first(&mut self) {
+        self.scroll_info = 0;
         match self.current_area {
             CurrentArea::EntryArea => self.entry_table.entry_table_state.select_first(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_first(),
@@ -278,6 +249,7 @@ impl App {
     }
 
     pub fn select_last(&mut self) {
+        self.scroll_info = 0;
         match self.current_area {
             CurrentArea::EntryArea => self.entry_table.entry_table_state.select_last(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_last(),
