@@ -18,7 +18,7 @@
 use crate::frontend::app::{App, AppResult};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use super::app::CurrentArea;
+use super::app::{CurrentArea, FormerArea};
 
 /// Handles the key events and updates the state of [`App`].
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
@@ -61,6 +61,10 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             KeyCode::Char('G') | KeyCode::End => {
                 app.select_last();
             }
+            KeyCode::Char('/') => {
+                app.former_area = Some(FormerArea::TagArea);
+                app.current_area = CurrentArea::SearchArea;
+            }
             KeyCode::Tab | KeyCode::BackTab => {
                 app.toggle_area();
             }
@@ -86,8 +90,44 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             KeyCode::Char('y') => {
                 App::yank_text(&app.get_selected_citekey());
             }
+            KeyCode::Char('/') => {
+                app.former_area = Some(FormerArea::EntryArea);
+                app.current_area = CurrentArea::SearchArea;
+            }
             KeyCode::Tab | KeyCode::BackTab => {
                 app.toggle_area();
+            }
+            _ => {}
+        },
+        // Keycodes for the search area (popup)
+        CurrentArea::SearchArea => match key_event.code {
+            KeyCode::Esc => {
+                app.toggle_area();
+                app.former_area = None;
+                app.search_string.clear();
+            }
+            KeyCode::Enter => {
+                // TODO: run function for filtering the list
+                app.toggle_area();
+                app.former_area = None;
+                app.search_string.clear();
+            }
+            KeyCode::Backspace => {
+                app.search_string.pop();
+            }
+            KeyCode::Char(search_pattern) => {
+                app.search_string.push(search_pattern);
+            }
+            _ => {}
+        },
+        // Keycodes for the help area (popup)
+        CurrentArea::HelpArea => match key_event.code {
+            KeyCode::Char('q') => {
+                app.quit();
+            }
+            KeyCode::Esc => {
+                app.toggle_area();
+                app.former_area = None;
             }
             _ => {}
         },

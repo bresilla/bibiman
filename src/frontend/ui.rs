@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use biblatex::ChunksExt;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -26,8 +25,8 @@ use ratatui::{
     symbols,
     text::{Line, Span, Text},
     widgets::{
-        Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, StatefulWidget,
-        Table, TableState, Widget, Wrap,
+        Block, Borders, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row,
+        StatefulWidget, Table, Widget, Wrap,
     },
 };
 
@@ -36,7 +35,7 @@ use crate::{
     frontend::app::{App, TagListItem},
 };
 
-use super::app::EntryTableItem;
+use super::app::CurrentArea;
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
@@ -75,7 +74,7 @@ impl Widget for &mut App {
         let [header_area, main_area, footer_area] = Layout::vertical([
             Constraint::Length(1),
             Constraint::Fill(1),
-            Constraint::Length(1),
+            Constraint::Length(3),
         ])
         .areas(area);
 
@@ -87,7 +86,7 @@ impl Widget for &mut App {
 
         // Render header and footer
         App::render_header(header_area, buf);
-        App::render_footer(footer_area, buf);
+        self.render_footer(footer_area, buf);
         // Render list area where entry gets selected
         // self.render_entry_table(list_area, buf);
         self.render_entrytable(list_area, buf);
@@ -107,10 +106,28 @@ impl App {
             .render(area, buf);
     }
 
-    pub fn render_footer(area: Rect, buf: &mut Buffer) {
-        Paragraph::new("Use j/k to move, h to unselect, g/G to go top/bottom.")
-            .centered()
-            .render(area, buf);
+    pub fn render_footer(&mut self, area: Rect, buf: &mut Buffer) {
+        match &self.current_area {
+            CurrentArea::SearchArea => {
+                let block = Block::bordered()
+                    .title(" Search Entries ")
+                    .border_set(symbols::border::ROUNDED);
+                Paragraph::new(self.search_string.clone())
+                    .block(block)
+                    .render(area, buf);
+            }
+            _ => {
+                let block = Block::bordered()
+                    .title(Line::raw(" Basic Commands ").centered())
+                    .border_set(symbols::border::ROUNDED);
+                Paragraph::new(
+                    "Use j/k to move, g/G to go top/bottom, y to yank the current citekey",
+                )
+                .block(block)
+                .centered()
+                .render(area, buf);
+            }
+        }
     }
 
     pub fn render_entrytable(&mut self, area: Rect, buf: &mut Buffer) {

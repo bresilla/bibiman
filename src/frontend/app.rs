@@ -30,7 +30,15 @@ pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 pub enum CurrentArea {
     EntryArea,
     TagArea,
-    // SearchArea,
+    SearchArea,
+    HelpArea,
+}
+
+// Check which area was active when popup set active
+#[derive(Debug)]
+pub enum FormerArea {
+    EntryArea,
+    TagArea,
 }
 
 // Application.
@@ -50,6 +58,10 @@ pub struct App {
     pub scroll_info: u16,
     // area
     pub current_area: CurrentArea,
+    // mode for popup window
+    pub former_area: Option<FormerArea>,
+    // search string
+    pub search_string: String,
 }
 
 // Define the fundamental List
@@ -176,6 +188,8 @@ impl Default for App {
             entry_table,
             scroll_info: 0,
             current_area,
+            former_area: None,
+            search_string: String::new(),
         }
     }
 }
@@ -199,18 +213,34 @@ impl App {
         match self.current_area {
             CurrentArea::EntryArea => self.current_area = CurrentArea::TagArea,
             CurrentArea::TagArea => self.current_area = CurrentArea::EntryArea,
+            CurrentArea::SearchArea => {
+                if let Some(former_area) = &self.former_area {
+                    match former_area {
+                        FormerArea::EntryArea => self.current_area = CurrentArea::EntryArea,
+                        FormerArea::TagArea => self.current_area = CurrentArea::TagArea,
+                    }
+                }
+            }
+            CurrentArea::HelpArea => {
+                if let Some(former_area) = &self.former_area {
+                    match former_area {
+                        FormerArea::EntryArea => self.current_area = CurrentArea::EntryArea,
+                        FormerArea::TagArea => self.current_area = CurrentArea::TagArea,
+                    }
+                }
+            }
         }
     }
 
     pub fn scroll_info_down(&mut self) {
-        self.scroll_info = (self.scroll_info + 1);
+        self.scroll_info = self.scroll_info + 1;
     }
 
     pub fn scroll_info_up(&mut self) {
         if self.scroll_info == 0 {
             {}
         } else {
-            self.scroll_info = (self.scroll_info - 1);
+            self.scroll_info = self.scroll_info - 1;
         }
     }
 
@@ -218,6 +248,7 @@ impl App {
         match self.current_area {
             CurrentArea::EntryArea => self.entry_table.entry_table_state.select(None),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select(None),
+            _ => {}
         }
         // self.tag_list.tag_list_state.select(None);
     }
@@ -227,6 +258,7 @@ impl App {
         match self.current_area {
             CurrentArea::EntryArea => self.entry_table.entry_table_state.select_next(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_next(),
+            _ => {}
         }
         // self.tag_list.tag_list_state.select_next();
     }
@@ -235,6 +267,7 @@ impl App {
         match self.current_area {
             CurrentArea::EntryArea => self.entry_table.entry_table_state.select_previous(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_previous(),
+            _ => {}
         }
         // self.tag_list.tag_list_state.select_previous();
     }
@@ -244,6 +277,7 @@ impl App {
         match self.current_area {
             CurrentArea::EntryArea => self.entry_table.entry_table_state.select_first(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_first(),
+            _ => {}
         }
         // self.tag_list.tag_list_state.select_first();
     }
@@ -253,6 +287,7 @@ impl App {
         match self.current_area {
             CurrentArea::EntryArea => self.entry_table.entry_table_state.select_last(),
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_last(),
+            _ => {}
         }
         // self.tag_list.tag_list_state.select_last();
     }
