@@ -18,7 +18,7 @@
 use crate::frontend::app::{App, AppResult};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use super::app::{CurrentArea, FormerArea};
+use super::app::{CurrentArea, EntryTable, FormerArea};
 
 /// Handles the key events and updates the state of [`App`].
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
@@ -97,6 +97,11 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             KeyCode::Tab | KeyCode::BackTab => {
                 app.toggle_area();
             }
+            KeyCode::Esc => {
+                if let Some(FormerArea::SearchArea) = app.former_area {
+                    app.reset_entry_table();
+                }
+            }
             _ => {}
         },
         // Keycodes for the search area (popup)
@@ -105,18 +110,21 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.toggle_area();
                 app.former_area = None;
                 app.search_string.clear();
+                app.reset_entry_table();
             }
             KeyCode::Enter => {
                 // TODO: run function for filtering the list
                 app.toggle_area();
-                app.former_area = None;
+                app.former_area = Some(FormerArea::SearchArea);
                 app.search_string.clear();
             }
             KeyCode::Backspace => {
                 app.search_string.pop();
+                app.search_entries();
             }
             KeyCode::Char(search_pattern) => {
                 app.search_string.push(search_pattern);
+                app.search_entries();
             }
             _ => {}
         },

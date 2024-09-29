@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use futures::SinkExt;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -35,7 +36,7 @@ use crate::{
     frontend::app::{App, TagListItem},
 };
 
-use super::app::CurrentArea;
+use super::app::{CurrentArea, FormerArea};
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
@@ -47,6 +48,7 @@ const SELECTED_STYLE: Style = Style::new()
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const TEXT_FG_COLOR: Color = SLATE.c200;
+const TEXT_CONFIRMED: Style = Style::new().fg(Color::Green);
 
 pub const fn alternate_colors(i: usize) -> Color {
     if i % 2 == 0 {
@@ -109,8 +111,25 @@ impl App {
     pub fn render_footer(&mut self, area: Rect, buf: &mut Buffer) {
         match &self.current_area {
             CurrentArea::SearchArea => {
+                let search_title = {
+                    match self.former_area {
+                        Some(FormerArea::EntryArea) => {
+                            let search_title = " Search Entries ".to_string();
+                            search_title
+                        }
+                        Some(FormerArea::TagArea) => {
+                            let search_title = " Search Keywords ".to_string();
+                            search_title
+                        }
+                        _ => {
+                            let search_title = " Search ".to_string();
+                            search_title
+                        }
+                    }
+                };
+
                 let block = Block::bordered()
-                    .title(" Search Entries ")
+                    .title(search_title)
                     .border_set(symbols::border::ROUNDED);
                 Paragraph::new(self.search_string.clone())
                     .block(block)
@@ -196,45 +215,57 @@ impl App {
         // We get the info depending on the item's state.
         // TODO: Implement logic showin informations for selected entry:
         let style_value = Style::new().bold();
-        let mut lines = vec![];
-        lines.push(Line::from(vec![
-            Span::styled("Authors: ", style_value),
-            Span::styled(
-                String::from(BibiEntry::get_authors(
-                    &self.get_selected_citekey(),
-                    &self.main_biblio.bibliography,
-                )),
-                Style::new().green(),
-            ),
-        ]));
-        lines.push(Line::from(vec![
-            Span::styled("Title: ", style_value),
-            Span::styled(
-                String::from(BibiEntry::get_title(
-                    &self.get_selected_citekey(),
-                    &self.main_biblio.bibliography,
-                )),
-                Style::new().magenta(),
-            ),
-        ]));
-        lines.push(Line::from(vec![
-            Span::styled("Year: ", style_value),
-            Span::styled(
-                String::from(BibiEntry::get_year(
-                    &self.get_selected_citekey(),
-                    &self.main_biblio.bibliography,
-                )),
-                Style::new().light_magenta(),
-            ),
-        ]));
-        lines.push(Line::from(""));
-        lines.push(Line::from(vec![Span::styled(
-            String::from(BibiEntry::get_abstract(
-                &self.get_selected_citekey(),
-                &self.main_biblio.bibliography,
-            )),
-            Style::default(),
-        )]));
+        let lines = {
+            // if self.entry_table.entry_table_items.len() > 0 {
+            if self.entry_table.entry_table_state.selected().is_some() {
+                let mut lines = vec![];
+                lines.push(Line::from(vec![
+                    Span::styled("Authors: ", style_value),
+                    Span::styled(
+                        String::from(BibiEntry::get_authors(
+                            &self.get_selected_citekey(),
+                            &self.main_biblio.bibliography,
+                        )),
+                        Style::new().green(),
+                    ),
+                ]));
+                lines.push(Line::from(vec![
+                    Span::styled("Title: ", style_value),
+                    Span::styled(
+                        String::from(BibiEntry::get_title(
+                            &self.get_selected_citekey(),
+                            &self.main_biblio.bibliography,
+                        )),
+                        Style::new().magenta(),
+                    ),
+                ]));
+                lines.push(Line::from(vec![
+                    Span::styled("Year: ", style_value),
+                    Span::styled(
+                        String::from(BibiEntry::get_year(
+                            &self.get_selected_citekey(),
+                            &self.main_biblio.bibliography,
+                        )),
+                        Style::new().light_magenta(),
+                    ),
+                ]));
+                lines.push(Line::from(""));
+                lines.push(Line::from(vec![Span::styled(
+                    String::from(BibiEntry::get_abstract(
+                        &self.get_selected_citekey(),
+                        &self.main_biblio.bibliography,
+                    )),
+                    Style::default(),
+                )]));
+                lines
+            } else {
+                let lines = vec![
+                    Line::from(" "),
+                    Line::from("No entry selected".bold().into_centered_line().red()),
+                ];
+                lines
+            }
+        };
         let info = Text::from(lines);
 
         // We show the list item's info under the list in this paragraph

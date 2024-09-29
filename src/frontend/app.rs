@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::backend::bib::*;
+use crate::backend::{bib::*, search};
 use std::error;
 
 use arboard::Clipboard;
@@ -39,6 +39,7 @@ pub enum CurrentArea {
 pub enum FormerArea {
     EntryArea,
     TagArea,
+    SearchArea,
 }
 
 // Application.
@@ -211,13 +212,20 @@ impl App {
     // Toggle moveable list between entries and tags
     pub fn toggle_area(&mut self) {
         match self.current_area {
-            CurrentArea::EntryArea => self.current_area = CurrentArea::TagArea,
-            CurrentArea::TagArea => self.current_area = CurrentArea::EntryArea,
+            CurrentArea::EntryArea => {
+                self.current_area = CurrentArea::TagArea;
+                self.tag_list.tag_list_state.select(Some(0))
+            }
+            CurrentArea::TagArea => {
+                self.current_area = CurrentArea::EntryArea;
+                self.tag_list.tag_list_state.select(None)
+            }
             CurrentArea::SearchArea => {
                 if let Some(former_area) = &self.former_area {
                     match former_area {
                         FormerArea::EntryArea => self.current_area = CurrentArea::EntryArea,
                         FormerArea::TagArea => self.current_area = CurrentArea::TagArea,
+                        _ => {}
                     }
                 }
             }
@@ -226,6 +234,7 @@ impl App {
                     match former_area {
                         FormerArea::EntryArea => self.current_area = CurrentArea::EntryArea,
                         FormerArea::TagArea => self.current_area = CurrentArea::TagArea,
+                        FormerArea::SearchArea => self.current_area = CurrentArea::SearchArea,
                     }
                 }
             }
@@ -273,9 +282,11 @@ impl App {
     }
 
     pub fn select_first(&mut self) {
-        self.scroll_info = 0;
         match self.current_area {
-            CurrentArea::EntryArea => self.entry_table.entry_table_state.select_first(),
+            CurrentArea::EntryArea => {
+                self.scroll_info = 0;
+                self.entry_table.entry_table_state.select_first();
+            }
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_first(),
             _ => {}
         }
@@ -283,9 +294,11 @@ impl App {
     }
 
     pub fn select_last(&mut self) {
-        self.scroll_info = 0;
         match self.current_area {
-            CurrentArea::EntryArea => self.entry_table.entry_table_state.select_last(),
+            CurrentArea::EntryArea => {
+                self.scroll_info = 0;
+                self.entry_table.entry_table_state.select_last();
+            }
             CurrentArea::TagArea => self.tag_list.tag_list_state.select_last(),
             _ => {}
         }
@@ -304,5 +317,16 @@ impl App {
         let mut clipboard = Clipboard::new().unwrap();
         let yanked_text = selection.to_string();
         clipboard.set_text(yanked_text).unwrap();
+    }
+
+    // Search entry list
+    pub fn search_entries(&mut self) {
+        let orig_list = &self.biblio_data.entry_list.bibentries;
+        let filtered_list = search::search_entry_list(&self.search_string, orig_list.clone());
+        self.entry_table = EntryTable::from_iter(filtered_list)
+    }
+
+    pub fn reset_entry_table(&mut self) {
+        self.entry_table = EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone())
     }
 }
