@@ -47,19 +47,16 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         // Keycodes for the tag area
         CurrentArea::TagArea => match key_event.code {
             KeyCode::Char('j') | KeyCode::Down => {
-                app.select_next();
+                app.select_next_tag();
             }
             KeyCode::Char('k') | KeyCode::Up => {
-                app.select_previous();
-            }
-            KeyCode::Char('h') | KeyCode::Left => {
-                app.select_none();
+                app.select_previous_tag();
             }
             KeyCode::Char('g') | KeyCode::Home => {
-                app.select_first();
+                app.select_first_tag();
             }
             KeyCode::Char('G') | KeyCode::End => {
-                app.select_last();
+                app.select_last_tag();
             }
             KeyCode::Char('/') => {
                 app.former_area = Some(FormerArea::TagArea);
@@ -68,24 +65,26 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             KeyCode::Tab | KeyCode::BackTab => {
                 app.toggle_area();
             }
+            KeyCode::Esc => {
+                if let Some(FormerArea::SearchArea) = app.former_area {
+                    app.reset_taglist();
+                }
+            }
             _ => {}
         },
         // Keycodes for the entry area
         CurrentArea::EntryArea => match key_event.code {
             KeyCode::Char('j') | KeyCode::Down => {
-                app.select_next();
+                app.select_next_entry();
             }
             KeyCode::Char('k') | KeyCode::Up => {
-                app.select_previous();
-            }
-            KeyCode::Char('h') | KeyCode::Left => {
-                app.select_none();
+                app.select_previous_entry();
             }
             KeyCode::Char('g') | KeyCode::Home => {
-                app.select_first();
+                app.select_first_entry();
             }
             KeyCode::Char('G') | KeyCode::End => {
-                app.select_last();
+                app.select_last_entry();
             }
             KeyCode::Char('y') => {
                 App::yank_text(&app.get_selected_citekey());
@@ -104,13 +103,17 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             }
             _ => {}
         },
-        // Keycodes for the search area (popup)
+        // Keycodes for the search area (rendered in footer)
         CurrentArea::SearchArea => match key_event.code {
             KeyCode::Esc => {
                 app.toggle_area();
+                if let Some(FormerArea::EntryArea) = app.former_area {
+                    app.reset_entry_table();
+                } else if let Some(FormerArea::TagArea) = app.former_area {
+                    app.reset_taglist();
+                }
                 app.former_area = None;
                 app.search_string.clear();
-                app.reset_entry_table();
             }
             KeyCode::Enter => {
                 // TODO: run function for filtering the list

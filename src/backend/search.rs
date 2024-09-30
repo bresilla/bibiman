@@ -38,3 +38,16 @@ pub fn search_entry_list(search_pattern: &str, orig_list: Vec<Vec<String>>) -> V
     }
     filtered_list
 }
+
+pub fn search_tag_list(search_pattern: &str, orig_list: Vec<String>) -> Vec<String> {
+    // Set up matcher (TODO: One time needed only)
+    let mut matcher = Matcher::new(Config::DEFAULT);
+
+    // Filter the list items by search pattern
+    let filtered_matches: Vec<String> = {
+        let matches = Pattern::parse(search_pattern, CaseMatching::Ignore, Normalization::Smart)
+            .match_list(orig_list, &mut matcher);
+        matches.into_iter().map(|f| f.0.to_string()).collect()
+    };
+    filtered_matches
+}

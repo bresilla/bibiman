@@ -72,7 +72,5 @@ async fn main() -> AppResult<()> {
 
     // Exit the user interface.
     tui.exit()?;
-    // let idx = &app.entry_table.entry_table_state.selected().unwrap();
-    // println!("{:#?}", &app.entry_table.entry_table_items[*idx].citekey);
     Ok(())
 }

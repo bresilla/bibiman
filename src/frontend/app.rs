@@ -204,6 +204,8 @@ impl App {
     // Handles the tick event of the terminal.
     pub fn tick(&self) {}
 
+    // General commands
+
     // Set running to false to quit the application.
     pub fn quit(&mut self) {
         self.running = false;
@@ -241,6 +243,13 @@ impl App {
         }
     }
 
+    // Yank the passed string to system clipboard
+    pub fn yank_text(selection: &str) {
+        let mut clipboard = Clipboard::new().unwrap();
+        let yanked_text = selection.to_string();
+        clipboard.set_text(yanked_text).unwrap();
+    }
+
     pub fn scroll_info_down(&mut self) {
         self.scroll_info = self.scroll_info + 1;
     }
@@ -262,47 +271,50 @@ impl App {
         // self.tag_list.tag_list_state.select(None);
     }
 
-    pub fn select_next(&mut self) {
-        self.scroll_info = 0;
-        match self.current_area {
-            CurrentArea::EntryArea => self.entry_table.entry_table_state.select_next(),
-            CurrentArea::TagArea => self.tag_list.tag_list_state.select_next(),
-            _ => {}
-        }
-        // self.tag_list.tag_list_state.select_next();
-    }
-    pub fn select_previous(&mut self) {
-        self.scroll_info = 0;
-        match self.current_area {
-            CurrentArea::EntryArea => self.entry_table.entry_table_state.select_previous(),
-            CurrentArea::TagArea => self.tag_list.tag_list_state.select_previous(),
-            _ => {}
-        }
-        // self.tag_list.tag_list_state.select_previous();
+    // Tag List commands
+
+    // Movement
+    pub fn select_next_tag(&mut self) {
+        self.tag_list.tag_list_state.select_next();
     }
 
-    pub fn select_first(&mut self) {
-        match self.current_area {
-            CurrentArea::EntryArea => {
-                self.scroll_info = 0;
-                self.entry_table.entry_table_state.select_first();
-            }
-            CurrentArea::TagArea => self.tag_list.tag_list_state.select_first(),
-            _ => {}
-        }
-        // self.tag_list.tag_list_state.select_first();
+    pub fn select_previous_tag(&mut self) {
+        self.tag_list.tag_list_state.select_previous();
     }
 
-    pub fn select_last(&mut self) {
-        match self.current_area {
-            CurrentArea::EntryArea => {
-                self.scroll_info = 0;
-                self.entry_table.entry_table_state.select_last();
-            }
-            CurrentArea::TagArea => self.tag_list.tag_list_state.select_last(),
-            _ => {}
-        }
-        // self.tag_list.tag_list_state.select_last();
+    pub fn select_first_tag(&mut self) {
+        self.tag_list.tag_list_state.select_first();
+    }
+
+    pub fn select_last_tag(&mut self) {
+        self.tag_list.tag_list_state.select_last();
+    }
+
+    pub fn reset_taglist(&mut self) {
+        self.tag_list = TagList::from_iter(self.main_biblio.citekeys.clone())
+    }
+
+    // Entry Table commands
+
+    // Movement
+    pub fn select_next_entry(&mut self) {
+        self.scroll_info = 0;
+        self.entry_table.entry_table_state.select_next();
+    }
+
+    pub fn select_previous_entry(&mut self) {
+        self.scroll_info = 0;
+        self.entry_table.entry_table_state.select_previous();
+    }
+
+    pub fn select_first_entry(&mut self) {
+        self.scroll_info = 0;
+        self.entry_table.entry_table_state.select_first();
+    }
+
+    pub fn select_last_entry(&mut self) {
+        self.scroll_info = 0;
+        self.entry_table.entry_table_state.select_last();
     }
 
     // Get the citekey of the selected entry
@@ -312,21 +324,26 @@ impl App {
         citekey
     }
 
-    // Yank the passed string to system clipboard
-    pub fn yank_text(selection: &str) {
-        let mut clipboard = Clipboard::new().unwrap();
-        let yanked_text = selection.to_string();
-        clipboard.set_text(yanked_text).unwrap();
+    // Reset Entry Table to initial state
+    pub fn reset_entry_table(&mut self) {
+        self.entry_table = EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone())
     }
 
     // Search entry list
     pub fn search_entries(&mut self) {
-        let orig_list = &self.biblio_data.entry_list.bibentries;
-        let filtered_list = search::search_entry_list(&self.search_string, orig_list.clone());
-        self.entry_table = EntryTable::from_iter(filtered_list)
-    }
-
-    pub fn reset_entry_table(&mut self) {
-        self.entry_table = EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone())
+        match self.former_area {
+            Some(FormerArea::EntryArea) => {
+                let orig_list = &self.biblio_data.entry_list.bibentries;
+                let filtered_list =
+                    search::search_entry_list(&self.search_string, orig_list.clone());
+                self.entry_table = EntryTable::from_iter(filtered_list)
+            }
+            Some(FormerArea::TagArea) => {
+                let orig_list = &self.main_biblio.citekeys;
+                let filtered_list = search::search_tag_list(&self.search_string, orig_list.clone());
+                self.tag_list = TagList::from_iter(filtered_list)
+            }
+            _ => {}
+        }
     }
 }

@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use futures::SinkExt;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -90,7 +89,6 @@ impl Widget for &mut App {
         App::render_header(header_area, buf);
         self.render_footer(footer_area, buf);
         // Render list area where entry gets selected
-        // self.render_entry_table(list_area, buf);
         self.render_entrytable(list_area, buf);
         // Render infos related to selected entry
         // TODO: only placeholder at the moment, has to be impl.
@@ -152,11 +150,11 @@ impl App {
     pub fn render_entrytable(&mut self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered() // can also be Block::new
             .title(
-                Line::raw(" Selection List ")
+                Line::raw(" Bibliographic Entries ")
                     .centered()
+                    .bold()
                     .fg(Color::Indexed(39)),
             )
-            // .borders(Borders::TOP) // set borders for Block::new
             .border_set(symbols::border::ROUNDED)
             .border_style(BOX_BORDER_STYLE_MAIN)
             .bg(Color::Black); // .bg(NORMAL_ROW_BG);
@@ -270,7 +268,7 @@ impl App {
 
         // We show the list item's info under the list in this paragraph
         let block = Block::bordered()
-            .title(Line::raw(" Entry Information ").centered())
+            .title(Line::raw(" Entry Information ").centered().bold())
             // .borders(Borders::TOP)
             .border_set(symbols::border::ROUNDED)
             .border_style(BOX_BORDER_STYLE_MAIN)
@@ -308,7 +306,7 @@ impl App {
 
     pub fn render_taglist(&mut self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered()
-            .title(Line::raw(" Tag List ").centered())
+            .title(Line::raw(" Keywords ").centered().bold())
             .border_set(symbols::border::ROUNDED)
             .border_style(BOX_BORDER_STYLE_MAIN)
             .bg(Color::Black);
