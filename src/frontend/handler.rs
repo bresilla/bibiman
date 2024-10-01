@@ -15,10 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::frontend::app::{App, AppResult};
+use crate::{
+    backend::search::BibiSearch,
+    frontend::app::{App, AppResult},
+};
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use super::app::{CurrentArea, EntryTable, FormerArea};
+use super::app::{CurrentArea, FormerArea};
 
 /// Handles the key events and updates the state of [`App`].
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
@@ -61,14 +64,19 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
             KeyCode::Char('/') => {
                 app.former_area = Some(FormerArea::TagArea);
                 app.current_area = CurrentArea::SearchArea;
+                // app.search_struct.is_search = true;
             }
             KeyCode::Tab | KeyCode::BackTab => {
                 app.toggle_area();
             }
             KeyCode::Esc => {
-                if let Some(FormerArea::SearchArea) = app.former_area {
-                    app.reset_taglist();
-                }
+                app.reset_taglist();
+            }
+            KeyCode::Enter => {
+                app.filter_for_tags();
+                app.toggle_area();
+                // app.reset_taglist();
+                app.former_area = Some(FormerArea::TagArea);
             }
             _ => {}
         },
@@ -90,6 +98,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 App::yank_text(&app.get_selected_citekey());
             }
             KeyCode::Char('/') => {
+                if let Some(FormerArea::TagArea) = app.former_area {
+                    app.search_struct.inner_search = true;
+                }
                 app.former_area = Some(FormerArea::EntryArea);
                 app.current_area = CurrentArea::SearchArea;
             }
@@ -97,9 +108,11 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.toggle_area();
             }
             KeyCode::Esc => {
-                if let Some(FormerArea::SearchArea) = app.former_area {
-                    app.reset_entry_table();
+                app.reset_entry_table();
+                if app.search_struct.inner_search {
+                    app.reset_taglist();
                 }
+                app.former_area = None;
             }
             _ => {}
         },
@@ -113,21 +126,34 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                     app.reset_taglist();
                 }
                 app.former_area = None;
-                app.search_string.clear();
+                // If search is canceled, reset default status of struct
+                BibiSearch::default();
+                // app.search_struct.search_string.clear();
+                // app.search_struct.is_search = false;
+                // app.search_struct.filtered_entry_list.clear();
             }
             KeyCode::Enter => {
                 // TODO: run function for filtering the list
                 app.toggle_area();
                 app.former_area = Some(FormerArea::SearchArea);
-                app.search_string.clear();
+                // app.search_string.clear();
+                app.search_struct.search_string.clear();
             }
             KeyCode::Backspace => {
-                app.search_string.pop();
-                app.search_entries();
+                app.search_struct.search_string.pop();
+                if let Some(FormerArea::EntryArea) = app.former_area {
+                    app.search_entries();
+                } else if let Some(FormerArea::TagArea) = app.former_area {
+                    app.search_tags();
+                }
             }
             KeyCode::Char(search_pattern) => {
-                app.search_string.push(search_pattern);
-                app.search_entries();
+                app.search_struct.search_string.push(search_pattern);
+                if let Some(FormerArea::EntryArea) = app.former_area {
+                    app.search_entries();
+                } else if let Some(FormerArea::TagArea) = app.former_area {
+                    app.search_tags();
+                }
             }
             _ => {}
         },

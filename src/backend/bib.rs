@@ -29,7 +29,7 @@ pub struct BibiMain {
     pub bibfilestring: String,      // content of bibfile as string
     pub bibliography: Bibliography, // parsed bibliography
     pub citekeys: Vec<String>,      // list of all citekeys
-                                    // pub bibentries: BibiDataSets,
+    pub keyword_list: Vec<String>,  // list of all available keywords
 }
 
 impl BibiMain {
@@ -39,11 +39,13 @@ impl BibiMain {
         let bibfilestring = fs::read_to_string(&bibfile).unwrap();
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
         let citekeys = Self::get_citekeys(&bibliography);
+        let keyword_list = Self::collect_tag_list(&citekeys, &bibliography);
         Self {
             bibfile,
             bibfilestring,
             bibliography,
             citekeys,
+            keyword_list,
         }
     }
 
@@ -55,6 +57,40 @@ impl BibiMain {
             bibstring.iter().map(|entry| entry.to_owned().key).collect();
         citekeys.sort_by_key(|name| name.to_lowercase());
         citekeys
+    }
+
+    // collect all keywords present in the bibliography
+    // sort them and remove duplicates
+    // this list is for fast filtering entries by topics/keyowrds
+    pub fn collect_tag_list(citekeys: &Vec<String>, biblio: &Bibliography) -> Vec<String> {
+        // Initialize vector collecting all keywords
+        let mut keyword_list = vec![];
+
+        // Loop over entries and collect all keywords
+        for i in citekeys {
+            if biblio.get(&i).unwrap().keywords().is_ok() {
+                let items = biblio
+                    .get(&i)
+                    .unwrap()
+                    .keywords()
+                    .unwrap()
+                    .format_verbatim();
+                // Split keyword string into slices, trim leading and trailing
+                // whitespaces, remove empty slices, and collect them
+                let mut key_vec: Vec<String> = items
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect();
+                // Append keywords to vector
+                keyword_list.append(&mut key_vec);
+            }
+        }
+
+        // Sort the vector and remove duplicates
+        keyword_list.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+        keyword_list.dedup();
+        keyword_list
     }
 }
 
@@ -91,7 +127,7 @@ pub struct BibiEntry {
     pub title: String,
     pub year: String,
     pub pubtype: String,
-    // pub keywords: Vec<String>,
+    pub keywords: String,
     pub citekey: String,
 }
 
@@ -102,6 +138,7 @@ impl BibiEntry {
             Self::get_title(&citekey, &biblio),
             Self::get_year(&citekey, &biblio),
             Self::get_pubtype(&citekey, &biblio),
+            Self::get_keywords(&citekey, &biblio),
             citekey.to_string(),
         ]
     }
@@ -181,12 +218,20 @@ impl BibiEntry {
     }
 
     pub fn get_keywords(citekey: &str, biblio: &Bibliography) -> String {
-        let keywords = biblio
-            .get(&citekey)
-            .unwrap()
-            .keywords()
-            .unwrap()
-            .format_verbatim();
+        let keywords = {
+            if biblio.get(&citekey).unwrap().keywords().is_ok() {
+                let keywords = biblio
+                    .get(&citekey)
+                    .unwrap()
+                    .keywords()
+                    .unwrap()
+                    .format_verbatim();
+                keywords
+            } else {
+                let keywords = String::from("");
+                keywords
+            }
+        };
         keywords
     }
 

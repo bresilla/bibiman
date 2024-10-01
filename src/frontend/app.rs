@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::backend::{bib::*, search};
+use crate::backend::{bib::*, search::BibiSearch};
 use std::error;
 
 use arboard::Clipboard;
@@ -51,6 +51,8 @@ pub struct App {
     pub main_biblio: BibiMain,
     // bibliographic data
     pub biblio_data: BibiData,
+    // search struct:
+    pub search_struct: BibiSearch,
     // tag list
     pub tag_list: TagList,
     // table items
@@ -62,7 +64,7 @@ pub struct App {
     // mode for popup window
     pub former_area: Option<FormerArea>,
     // search string
-    pub search_string: String,
+    // pub search_string: String,
 }
 
 // Define the fundamental List
@@ -75,14 +77,14 @@ pub struct TagList {
 // Structure of the list items.
 #[derive(Debug)]
 pub struct TagListItem {
-    pub info: String,
+    pub keyword: String,
 }
 
 // Function to process inputed characters and convert them (to string, or more complex function)
 impl TagListItem {
     pub fn new(info: &str) -> Self {
         Self {
-            info: info.to_string(),
+            keyword: info.to_string(),
         }
     }
 }
@@ -107,7 +109,7 @@ impl FromIterator<Vec<String>> for EntryTable {
         let entry_table_items = iter
             .into_iter()
             .sorted()
-            .map(|i| EntryTableItem::new(&i[0], &i[1], &i[2], &i[3], &i[4]))
+            .map(|i| EntryTableItem::new(&i[0], &i[1], &i[2], &i[3], &i[4], &i[5]))
             .collect();
         let entry_table_state = TableState::default().with_selected(0);
         Self {
@@ -131,17 +133,26 @@ pub struct EntryTableItem {
     pub title: String,
     pub year: String,
     pub pubtype: String,
+    pub keywords: String,
     pub citekey: String,
     // pub year: u16,
 }
 
 impl EntryTableItem {
-    pub fn new(authors: &str, title: &str, year: &str, pubtype: &str, citekey: &str) -> Self {
+    pub fn new(
+        authors: &str,
+        title: &str,
+        year: &str,
+        pubtype: &str,
+        keywords: &str,
+        citekey: &str,
+    ) -> Self {
         Self {
             authors: authors.to_string(),
             title: title.to_string(),
             year: year.to_string(),
             pubtype: pubtype.to_string(),
+            keywords: keywords.to_string(),
             citekey: citekey.to_string(),
         }
     }
@@ -178,7 +189,8 @@ impl Default for App {
         let running = true;
         let main_biblio = BibiMain::new();
         let biblio_data = BibiData::new(&main_biblio.bibliography, &main_biblio.citekeys);
-        let tag_list = TagList::from_iter(main_biblio.citekeys.clone());
+        let tag_list = TagList::from_iter(main_biblio.keyword_list.clone());
+        let search_struct = BibiSearch::default();
         let entry_table = EntryTable::from_iter(biblio_data.entry_list.bibentries.clone());
         let current_area = CurrentArea::EntryArea;
         Self {
@@ -186,11 +198,12 @@ impl Default for App {
             main_biblio,
             biblio_data,
             tag_list,
+            search_struct,
             entry_table,
             scroll_info: 0,
             current_area,
             former_area: None,
-            search_string: String::new(),
+            // search_string: String::new(),
         }
     }
 }
@@ -290,8 +303,40 @@ impl App {
         self.tag_list.tag_list_state.select_last();
     }
 
+    pub fn get_selected_tag(&self) -> &str {
+        let idx = self.tag_list.tag_list_state.selected().unwrap();
+        let keyword = &self.tag_list.tag_list_items[idx].keyword;
+        keyword
+    }
+
+    pub fn search_tags(&mut self) {
+        let orig_list = &self.main_biblio.keyword_list;
+        let filtered_list =
+            BibiSearch::search_tag_list(&self.search_struct.search_string, orig_list.clone());
+        self.tag_list = TagList::from_iter(filtered_list)
+    }
+
     pub fn reset_taglist(&mut self) {
-        self.tag_list = TagList::from_iter(self.main_biblio.citekeys.clone())
+        self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone())
+    }
+
+    // Filter the entry list by tags
+    // If already inside a filtered tag or entry list, apply the filtering
+    // to the already filtered list only
+    pub fn filter_for_tags(&mut self) {
+        let orig_list = {
+            if self.search_struct.inner_search {
+                let orig_list = &self.search_struct.filtered_entry_list;
+                orig_list
+            } else {
+                let orig_list = &self.biblio_data.entry_list.bibentries;
+                orig_list
+            }
+        };
+        let keyword = self.get_selected_tag();
+        let filtered_list = BibiSearch::filter_entries_by_tag(&keyword, &orig_list);
+        self.search_struct.filtered_entry_list = filtered_list;
+        self.entry_table = EntryTable::from_iter(self.search_struct.filtered_entry_list.clone());
     }
 
     // Entry Table commands
@@ -331,19 +376,18 @@ impl App {
 
     // Search entry list
     pub fn search_entries(&mut self) {
-        match self.former_area {
-            Some(FormerArea::EntryArea) => {
+        let orig_list = {
+            if self.search_struct.inner_search {
+                let orig_list = &self.search_struct.filtered_entry_list;
+                orig_list
+            } else {
                 let orig_list = &self.biblio_data.entry_list.bibentries;
-                let filtered_list =
-                    search::search_entry_list(&self.search_string, orig_list.clone());
-                self.entry_table = EntryTable::from_iter(filtered_list)
+                orig_list
             }
-            Some(FormerArea::TagArea) => {
-                let orig_list = &self.main_biblio.citekeys;
-                let filtered_list = search::search_tag_list(&self.search_string, orig_list.clone());
-                self.tag_list = TagList::from_iter(filtered_list)
-            }
-            _ => {}
-        }
+        };
+        let filtered_list =
+            BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
+        //search::search_entry_list(&self.search_string, orig_list.clone());
+        self.entry_table = EntryTable::from_iter(filtered_list)
     }
 }

@@ -18,15 +18,12 @@
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
-    style::{
-        palette::tailwind::{GRAY, SLATE},
-        Color, Modifier, Style, Stylize,
-    },
+    style::{palette::tailwind::SLATE, Color, Modifier, Style, Stylize},
     symbols,
     text::{Line, Span, Text},
     widgets::{
-        Block, Borders, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row,
-        StatefulWidget, Table, Widget, Wrap,
+        Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, StatefulWidget,
+        Table, Widget, Wrap,
     },
 };
 
@@ -38,7 +35,7 @@ use crate::{
 use super::app::{CurrentArea, FormerArea};
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
-const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
+// const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
 const BOX_BORDER_STYLE_MAIN: Style = Style::new().fg(Color::White).bg(Color::Black);
 const NORMAL_ROW_BG: Color = Color::Black;
 const ALT_ROW_BG_COLOR: Color = Color::Indexed(234);
@@ -47,7 +44,7 @@ const SELECTED_STYLE: Style = Style::new()
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const TEXT_FG_COLOR: Color = SLATE.c200;
-const TEXT_CONFIRMED: Style = Style::new().fg(Color::Green);
+// const TEXT_CONFIRMED: Style = Style::new().fg(Color::Green);
 
 pub const fn alternate_colors(i: usize) -> Color {
     if i % 2 == 0 {
@@ -59,13 +56,7 @@ pub const fn alternate_colors(i: usize) -> Color {
 
 impl From<&TagListItem> for ListItem<'_> {
     fn from(value: &TagListItem) -> Self {
-        let line = Line::styled(format!("{}", value.info), TEXT_FG_COLOR);
-        // match value.status {
-        // Status::Todo => Line::styled(format!(" ☐ {}", value.todo), TEXT_FG_COLOR),
-        // Status::Completed => {
-        //     Line::styled(format!(" ✓ {}", value.todo), COMPLETED_TEXT_FG_COLOR)
-        // }
-        // };
+        let line = Line::styled(format!("{}", value.keyword), TEXT_FG_COLOR);
         ListItem::new(line)
     }
 }
@@ -129,7 +120,7 @@ impl App {
                 let block = Block::bordered()
                     .title(search_title)
                     .border_set(symbols::border::ROUNDED);
-                Paragraph::new(self.search_string.clone())
+                Paragraph::new(self.search_struct.search_string.clone())
                     .block(block)
                     .render(area, buf);
             }
@@ -149,12 +140,7 @@ impl App {
 
     pub fn render_entrytable(&mut self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered() // can also be Block::new
-            .title(
-                Line::raw(" Bibliographic Entries ")
-                    .centered()
-                    .bold()
-                    .fg(Color::Indexed(39)),
-            )
+            .title(Line::raw(" Bibliographic Entries ").centered().bold())
             .border_set(symbols::border::ROUNDED)
             .border_style(BOX_BORDER_STYLE_MAIN)
             .bg(Color::Black); // .bg(NORMAL_ROW_BG);
