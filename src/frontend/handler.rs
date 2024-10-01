@@ -62,21 +62,27 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 app.select_last_tag();
             }
             KeyCode::Char('/') => {
-                app.former_area = Some(FormerArea::TagArea);
-                app.current_area = CurrentArea::SearchArea;
-                // app.search_struct.is_search = true;
+                // app.former_area = Some(FormerArea::TagArea);
+                // app.current_area = CurrentArea::SearchArea;
+                app.enter_search_area();
+            }
+            KeyCode::Char('f') | KeyCode::Char('F') => {
+                if key_event.modifiers == KeyModifiers::CONTROL {
+                    app.enter_search_area();
+                }
             }
             KeyCode::Tab | KeyCode::BackTab => {
                 app.toggle_area();
             }
             KeyCode::Esc => {
-                app.reset_taglist();
+                app.reset_current_list();
+                // app.reset_taglist();
             }
             KeyCode::Enter => {
                 app.filter_for_tags();
-                app.toggle_area();
+                // app.toggle_area();
                 // app.reset_taglist();
-                app.former_area = Some(FormerArea::TagArea);
+                // app.former_area = Some(FormerArea::TagArea);
             }
             _ => {}
         },
@@ -98,46 +104,52 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
                 App::yank_text(&app.get_selected_citekey());
             }
             KeyCode::Char('/') => {
-                if let Some(FormerArea::TagArea) = app.former_area {
-                    app.search_struct.inner_search = true;
+                // if let Some(FormerArea::TagArea) = app.former_area {
+                //     app.search_struct.inner_search = true;
+                // }
+                // app.former_area = Some(FormerArea::EntryArea);
+                // app.current_area = CurrentArea::SearchArea;
+                app.enter_search_area();
+            }
+            KeyCode::Char('f') | KeyCode::Char('F') => {
+                if key_event.modifiers == KeyModifiers::CONTROL {
+                    app.enter_search_area();
                 }
-                app.former_area = Some(FormerArea::EntryArea);
-                app.current_area = CurrentArea::SearchArea;
             }
             KeyCode::Tab | KeyCode::BackTab => {
                 app.toggle_area();
             }
             KeyCode::Esc => {
-                app.reset_entry_table();
-                if app.search_struct.inner_search {
-                    app.reset_taglist();
-                }
-                app.former_area = None;
+                // app.reset_entry_table();
+                // if app.search_struct.inner_search {
+                //     app.reset_taglist();
+                // }
+                // app.former_area = None;
+                app.reset_current_list();
             }
             _ => {}
         },
         // Keycodes for the search area (rendered in footer)
         CurrentArea::SearchArea => match key_event.code {
             KeyCode::Esc => {
-                app.toggle_area();
-                if let Some(FormerArea::EntryArea) = app.former_area {
-                    app.reset_entry_table();
-                } else if let Some(FormerArea::TagArea) = app.former_area {
-                    app.reset_taglist();
-                }
-                app.former_area = None;
-                // If search is canceled, reset default status of struct
-                BibiSearch::default();
-                // app.search_struct.search_string.clear();
-                // app.search_struct.is_search = false;
-                // app.search_struct.filtered_entry_list.clear();
+                // app.toggle_area();
+                // if let Some(FormerArea::EntryArea) = app.former_area {
+                //     app.reset_entry_table();
+                // } else if let Some(FormerArea::TagArea) = app.former_area {
+                //     app.reset_taglist();
+                // }
+                // app.former_area = None;
+                // // If search is canceled, reset default status of struct
+                // BibiSearch::default();
+                app.break_search();
             }
             KeyCode::Enter => {
                 // TODO: run function for filtering the list
-                app.toggle_area();
-                app.former_area = Some(FormerArea::SearchArea);
-                // app.search_string.clear();
-                app.search_struct.search_string.clear();
+                // app.toggle_area();
+                // app.former_area = Some(FormerArea::SearchArea);
+                // // app.search_string.clear();
+                // app.search_struct.search_string.clear();
+                app.confirm_search();
             }
             KeyCode::Backspace => {
                 app.search_struct.search_string.pop();

@@ -74,7 +74,7 @@ impl Widget for &mut App {
             Layout::vertical([Constraint::Fill(1), Constraint::Fill(1)]).areas(main_area);
 
         let [tag_area, info_area] =
-            Layout::horizontal([Constraint::Percentage(30), Constraint::Fill(1)]).areas(item_area);
+            Layout::horizontal([Constraint::Max(25), Constraint::Min(35)]).areas(item_area);
 
         // Render header and footer
         App::render_header(header_area, buf);

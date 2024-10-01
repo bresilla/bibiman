@@ -16,7 +16,7 @@
 /////
 
 use crate::backend::{bib::*, search::BibiSearch};
-use std::error;
+use std::{error, net::SocketAddr};
 
 use arboard::Clipboard;
 use itertools::Itertools;
@@ -226,34 +226,81 @@ impl App {
 
     // Toggle moveable list between entries and tags
     pub fn toggle_area(&mut self) {
-        match self.current_area {
-            CurrentArea::EntryArea => {
-                self.current_area = CurrentArea::TagArea;
-                self.tag_list.tag_list_state.select(Some(0))
-            }
-            CurrentArea::TagArea => {
-                self.current_area = CurrentArea::EntryArea;
-                self.tag_list.tag_list_state.select(None)
-            }
-            CurrentArea::SearchArea => {
-                if let Some(former_area) = &self.former_area {
-                    match former_area {
-                        FormerArea::EntryArea => self.current_area = CurrentArea::EntryArea,
-                        FormerArea::TagArea => self.current_area = CurrentArea::TagArea,
-                        _ => {}
-                    }
-                }
-            }
-            CurrentArea::HelpArea => {
-                if let Some(former_area) = &self.former_area {
-                    match former_area {
-                        FormerArea::EntryArea => self.current_area = CurrentArea::EntryArea,
-                        FormerArea::TagArea => self.current_area = CurrentArea::TagArea,
-                        FormerArea::SearchArea => self.current_area = CurrentArea::SearchArea,
-                    }
-                }
-            }
+        if let CurrentArea::EntryArea = self.current_area {
+            self.current_area = CurrentArea::TagArea;
+            self.tag_list.tag_list_state.select(Some(0))
+        } else if let CurrentArea::TagArea = self.current_area {
+            self.current_area = CurrentArea::EntryArea;
+            self.tag_list.tag_list_state.select(None)
         }
+        // match self.current_area {
+        //     CurrentArea::EntryArea => {
+        //         self.current_area = CurrentArea::TagArea;
+        //         self.tag_list.tag_list_state.select(Some(0))
+        //     }
+        //     CurrentArea::TagArea => {
+        //         self.current_area = CurrentArea::EntryArea;
+        //         self.tag_list.tag_list_state.select(None)
+        //     }
+        //     CurrentArea::SearchArea => {
+        //         if let Some(former_area) = &self.former_area {
+        //             match former_area {
+        //                 FormerArea::EntryArea => self.current_area = CurrentArea::EntryArea,
+        //                 FormerArea::TagArea => self.current_area = CurrentArea::TagArea,
+        //                 _ => {}
+        //             }
+        //         }
+        //     }
+        //     CurrentArea::HelpArea => {
+        //         if let Some(former_area) = &self.former_area {
+        //             match former_area {
+        //                 FormerArea::EntryArea => self.current_area = CurrentArea::EntryArea,
+        //                 FormerArea::TagArea => self.current_area = CurrentArea::TagArea,
+        //                 FormerArea::SearchArea => self.current_area = CurrentArea::SearchArea,
+        //             }
+        //         }
+        //     }
+        // }
+    }
+
+    // Enter the search area
+    pub fn enter_search_area(&mut self) {
+        if let CurrentArea::EntryArea = self.current_area {
+            if let Some(FormerArea::TagArea) = self.former_area {
+                self.search_struct.inner_search = true
+            }
+            self.former_area = Some(FormerArea::EntryArea)
+        } else if let CurrentArea::TagArea = self.current_area {
+            self.former_area = Some(FormerArea::TagArea)
+        }
+        self.current_area = CurrentArea::SearchArea
+    }
+
+    // Confirm search: Search former list by pattern
+    pub fn confirm_search(&mut self) {
+        if let Some(FormerArea::EntryArea) = self.former_area {
+            self.current_area = CurrentArea::EntryArea;
+        } else if let Some(FormerArea::TagArea) = self.former_area {
+            self.current_area = CurrentArea::TagArea;
+            self.tag_list.tag_list_state.select(Some(0))
+        }
+        self.former_area = Some(FormerArea::SearchArea);
+        self.search_struct.search_string.clear();
+    }
+
+    // Break search: leave search area without filtering list
+    pub fn break_search(&mut self) {
+        if let Some(FormerArea::EntryArea) = self.former_area {
+            self.current_area = CurrentArea::EntryArea;
+            self.reset_entry_table();
+        } else if let Some(FormerArea::TagArea) = self.former_area {
+            self.current_area = CurrentArea::TagArea;
+            self.reset_taglist();
+            self.tag_list.tag_list_state.select(Some(0))
+        }
+        self.former_area = None;
+        // If search is canceled, reset default status of struct
+        self.search_struct.search_string.clear();
     }
 
     // Yank the passed string to system clipboard
@@ -337,6 +384,8 @@ impl App {
         let filtered_list = BibiSearch::filter_entries_by_tag(&keyword, &orig_list);
         self.search_struct.filtered_entry_list = filtered_list;
         self.entry_table = EntryTable::from_iter(self.search_struct.filtered_entry_list.clone());
+        self.toggle_area();
+        self.former_area = Some(FormerArea::TagArea);
     }
 
     // Entry Table commands
@@ -372,6 +421,20 @@ impl App {
     // Reset Entry Table to initial state
     pub fn reset_entry_table(&mut self) {
         self.entry_table = EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone())
+    }
+
+    pub fn reset_current_list(&mut self) {
+        if let CurrentArea::EntryArea = self.current_area {
+            self.entry_table =
+                EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone());
+            if self.search_struct.inner_search {
+                self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone())
+            }
+        } else if let CurrentArea::TagArea = self.current_area {
+            self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
+            self.tag_list.tag_list_state.select(Some(0))
+        }
+        self.former_area = None
     }
 
     // Search entry list
