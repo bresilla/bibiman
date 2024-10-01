@@ -263,6 +263,41 @@ impl App {
         // }
     }
 
+    pub fn reset_current_list(&mut self) {
+        if let CurrentArea::EntryArea = self.current_area {
+            self.entry_table =
+                EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone());
+            if self.search_struct.inner_search {
+                self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone())
+            }
+        } else if let CurrentArea::TagArea = self.current_area {
+            self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
+            self.tag_list.tag_list_state.select(Some(0))
+        }
+        self.former_area = None
+    }
+
+    // Yank the passed string to system clipboard
+    pub fn yank_text(selection: &str) {
+        let mut clipboard = Clipboard::new().unwrap();
+        let yanked_text = selection.to_string();
+        clipboard.set_text(yanked_text).unwrap();
+    }
+
+    pub fn scroll_info_down(&mut self) {
+        self.scroll_info = self.scroll_info + 1;
+    }
+
+    pub fn scroll_info_up(&mut self) {
+        if self.scroll_info == 0 {
+            {}
+        } else {
+            self.scroll_info = self.scroll_info - 1;
+        }
+    }
+
+    // Search Area
+
     // Enter the search area
     pub fn enter_search_area(&mut self) {
         if let CurrentArea::EntryArea = self.current_area {
@@ -292,43 +327,51 @@ impl App {
     pub fn break_search(&mut self) {
         if let Some(FormerArea::EntryArea) = self.former_area {
             self.current_area = CurrentArea::EntryArea;
-            self.reset_entry_table();
         } else if let Some(FormerArea::TagArea) = self.former_area {
             self.current_area = CurrentArea::TagArea;
-            self.reset_taglist();
             self.tag_list.tag_list_state.select(Some(0))
         }
+        self.reset_current_list();
         self.former_area = None;
         // If search is canceled, reset default status of struct
         self.search_struct.search_string.clear();
     }
 
-    // Yank the passed string to system clipboard
-    pub fn yank_text(selection: &str) {
-        let mut clipboard = Clipboard::new().unwrap();
-        let yanked_text = selection.to_string();
-        clipboard.set_text(yanked_text).unwrap();
+    // Search entry list
+    pub fn search_entries(&mut self) {
+        let orig_list = {
+            if self.search_struct.inner_search {
+                let orig_list = &self.search_struct.filtered_entry_list;
+                orig_list
+            } else {
+                let orig_list = &self.biblio_data.entry_list.bibentries;
+                orig_list
+            }
+        };
+        let filtered_list =
+            BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
+        //search::search_entry_list(&self.search_string, orig_list.clone());
+        self.entry_table = EntryTable::from_iter(filtered_list)
     }
 
-    pub fn scroll_info_down(&mut self) {
-        self.scroll_info = self.scroll_info + 1;
-    }
-
-    pub fn scroll_info_up(&mut self) {
-        if self.scroll_info == 0 {
-            {}
-        } else {
-            self.scroll_info = self.scroll_info - 1;
+    // Remove last char from search pattern and filter list immidiately
+    pub fn search_pattern_pop(&mut self) {
+        self.search_struct.search_string.pop();
+        if let Some(FormerArea::EntryArea) = self.former_area {
+            self.search_entries();
+        } else if let Some(FormerArea::TagArea) = self.former_area {
+            self.search_tags();
         }
     }
 
-    pub fn select_none(&mut self) {
-        match self.current_area {
-            CurrentArea::EntryArea => self.entry_table.entry_table_state.select(None),
-            CurrentArea::TagArea => self.tag_list.tag_list_state.select(None),
-            _ => {}
+    // Add current char to search pattern and filter list immidiatley
+    pub fn search_pattern_push(&mut self, search_pattern: char) {
+        self.search_struct.search_string.push(search_pattern);
+        if let Some(FormerArea::EntryArea) = self.former_area {
+            self.search_entries();
+        } else if let Some(FormerArea::TagArea) = self.former_area {
+            self.search_tags();
         }
-        // self.tag_list.tag_list_state.select(None);
     }
 
     // Tag List commands
@@ -361,10 +404,6 @@ impl App {
         let filtered_list =
             BibiSearch::search_tag_list(&self.search_struct.search_string, orig_list.clone());
         self.tag_list = TagList::from_iter(filtered_list)
-    }
-
-    pub fn reset_taglist(&mut self) {
-        self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone())
     }
 
     // Filter the entry list by tags
@@ -416,41 +455,5 @@ impl App {
         let idx = self.entry_table.entry_table_state.selected().unwrap();
         let citekey = &self.entry_table.entry_table_items[idx].citekey;
         citekey
-    }
-
-    // Reset Entry Table to initial state
-    pub fn reset_entry_table(&mut self) {
-        self.entry_table = EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone())
-    }
-
-    pub fn reset_current_list(&mut self) {
-        if let CurrentArea::EntryArea = self.current_area {
-            self.entry_table =
-                EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone());
-            if self.search_struct.inner_search {
-                self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone())
-            }
-        } else if let CurrentArea::TagArea = self.current_area {
-            self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
-            self.tag_list.tag_list_state.select(Some(0))
-        }
-        self.former_area = None
-    }
-
-    // Search entry list
-    pub fn search_entries(&mut self) {
-        let orig_list = {
-            if self.search_struct.inner_search {
-                let orig_list = &self.search_struct.filtered_entry_list;
-                orig_list
-            } else {
-                let orig_list = &self.biblio_data.entry_list.bibentries;
-                orig_list
-            }
-        };
-        let filtered_list =
-            BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
-        //search::search_entry_list(&self.search_string, orig_list.clone());
-        self.entry_table = EntryTable::from_iter(filtered_list)
     }
 }
