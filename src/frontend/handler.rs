@@ -15,13 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::frontend::app::{App, AppResult};
+use crate::frontend::app::App;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use super::app::{CurrentArea, FormerArea};
+use color_eyre::eyre::Result;
 
 /// Handles the key events and updates the state of [`App`].
-pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
+pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> Result<()> {
     // Keycodes activated for every area (high priority)
     match key_event.code {
         // Exit application on `ESC` or `q`

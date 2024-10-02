@@ -15,15 +15,28 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use std::io;
+
+use crate::backend::cliargs::{self, CLIArgs};
+use ratatui::{backend::CrosstermBackend, Terminal};
+
 use crate::backend::{bib::*, search::BibiSearch};
+use crate::{
+    frontend::event::{Event, EventHandler},
+    frontend::handler::handle_key_events,
+    frontend::tui::Tui,
+};
 use std::{error, net::SocketAddr};
 
 use arboard::Clipboard;
+use color_eyre::eyre::{Ok, Result};
 use itertools::Itertools;
 use ratatui::widgets::{ListState, TableState};
 
+use super::tui;
+
 // Application result type.
-pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
+// pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 // Areas in which actions are possible
 #[derive(Debug)]
@@ -47,6 +60,8 @@ pub enum FormerArea {
 pub struct App {
     // Is the application running?
     pub running: bool,
+    // // tui initialization
+    // pub tui: Tui,
     // main bibliography
     pub main_biblio: BibiMain,
     // bibliographic data
@@ -184,17 +199,45 @@ impl EntryTableItem {
     }
 }
 
-impl Default for App {
-    fn default() -> Self {
+// impl Default for App {
+//     fn default() -> Self {
+//         let running = true;
+//         let main_biblio = BibiMain::new();
+//         let biblio_data = BibiData::new(&main_biblio.bibliography, &main_biblio.citekeys);
+//         let tag_list = TagList::from_iter(main_biblio.keyword_list.clone());
+//         let search_struct = BibiSearch::default();
+//         let entry_table = EntryTable::from_iter(biblio_data.entry_list.bibentries.clone());
+//         let current_area = CurrentArea::EntryArea;
+//         Self {
+//             running,
+//             main_biblio,
+//             biblio_data,
+//             tag_list,
+//             search_struct,
+//             entry_table,
+//             scroll_info: 0,
+//             current_area,
+//             former_area: None,
+//             // search_string: String::new(),
+//         }
+//     }
+// }
+
+impl App {
+    // Constructs a new instance of [`App`].
+    pub fn new() -> Result<Self> {
+        // Self::default()
         let running = true;
+        // let tui = Tui::new()?;
         let main_biblio = BibiMain::new();
         let biblio_data = BibiData::new(&main_biblio.bibliography, &main_biblio.citekeys);
         let tag_list = TagList::from_iter(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
         let entry_table = EntryTable::from_iter(biblio_data.entry_list.bibentries.clone());
         let current_area = CurrentArea::EntryArea;
-        Self {
+        Ok(Self {
             running,
+            // tui,
             main_biblio,
             biblio_data,
             tag_list,
@@ -204,14 +247,33 @@ impl Default for App {
             current_area,
             former_area: None,
             // search_string: String::new(),
-        }
+        })
     }
-}
 
-impl App {
-    // Constructs a new instance of [`App`].
-    pub fn new() -> Self {
-        Self::default()
+    pub async fn run(&mut self) -> Result<()> {
+        // Initialize the terminal user interface.
+        // let backend = CrosstermBackend::new(io::stdout());
+        // let terminal = Terminal::new(backend)?;
+        // let events = EventHandler::new(250);
+        let mut tui = tui::Tui::new()?;
+        tui.init()?;
+
+        // Start the main loop.
+        while self.running {
+            // Render the user interface.
+            tui.draw(self)?;
+            // Handle events.
+            match tui.events.next().await? {
+                Event::Tick => self.tick(),
+                Event::Key(key_event) => handle_key_events(key_event, self)?,
+                Event::Mouse(_) => {}
+                Event::Resize(_, _) => {}
+            }
+        }
+
+        // Exit the user interface.
+        tui.exit()?;
+        Ok(())
     }
 
     // Handles the tick event of the terminal.
