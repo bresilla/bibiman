@@ -18,7 +18,7 @@
 use crate::frontend::app::App;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use super::app::{CurrentArea, FormerArea};
+use super::app::CurrentArea;
 use color_eyre::eyre::Result;
 
 /// Handles the key events and updates the state of [`App`].
@@ -94,6 +94,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> Result<()> {
             }
             KeyCode::Char('y') => {
                 App::yank_text(&app.get_selected_citekey());
+            }
+            KeyCode::Char('e') => {
+                app.run_editor()?;
             }
             KeyCode::Char('/') => {
                 app.enter_search_area();

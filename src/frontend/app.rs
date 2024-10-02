@@ -22,9 +22,8 @@ use ratatui::{backend::CrosstermBackend, Terminal};
 
 use crate::backend::{bib::*, search::BibiSearch};
 use crate::{
-    frontend::event::{Event, EventHandler},
     frontend::handler::handle_key_events,
-    frontend::tui::Tui,
+    frontend::tui::{Event, Tui},
 };
 use std::{error, net::SocketAddr};
 
@@ -61,7 +60,7 @@ pub struct App {
     // Is the application running?
     pub running: bool,
     // // tui initialization
-    // pub tui: Tui,
+    pub tui: Tui,
     // main bibliography
     pub main_biblio: BibiMain,
     // bibliographic data
@@ -228,7 +227,7 @@ impl App {
     pub fn new() -> Result<Self> {
         // Self::default()
         let running = true;
-        // let tui = Tui::new()?;
+        let tui = Tui::new()?;
         let main_biblio = BibiMain::new();
         let biblio_data = BibiData::new(&main_biblio.bibliography, &main_biblio.citekeys);
         let tag_list = TagList::from_iter(main_biblio.keyword_list.clone());
@@ -237,7 +236,7 @@ impl App {
         let current_area = CurrentArea::EntryArea;
         Ok(Self {
             running,
-            // tui,
+            tui,
             main_biblio,
             biblio_data,
             tag_list,
@@ -256,14 +255,14 @@ impl App {
         // let terminal = Terminal::new(backend)?;
         // let events = EventHandler::new(250);
         let mut tui = tui::Tui::new()?;
-        tui.init()?;
+        tui.enter()?;
 
         // Start the main loop.
         while self.running {
             // Render the user interface.
             tui.draw(self)?;
             // Handle events.
-            match tui.events.next().await? {
+            match tui.next().await? {
                 Event::Tick => self.tick(),
                 Event::Key(key_event) => handle_key_events(key_event, self)?,
                 Event::Mouse(_) => {}
@@ -517,5 +516,18 @@ impl App {
         let idx = self.entry_table.entry_table_state.selected().unwrap();
         let citekey = &self.entry_table.entry_table_items[idx].citekey;
         citekey
+    }
+
+    pub fn run_editor(&mut self) -> Result<()> {
+        self.tui.exit()?;
+        let cmd = String::from("hx");
+        let args: Vec<String> = vec!["test.bib".into()];
+        let status = std::process::Command::new(&cmd).args(&args).status()?;
+        if !status.success() {
+            eprintln!("Spawning editor failed with status {}", status);
+        }
+        self.tui.enter()?;
+        self.tui.terminal.clear()?;
+        Ok(())
     }
 }
