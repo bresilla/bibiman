@@ -35,7 +35,7 @@ use std::{
 };
 
 use color_eyre::eyre::{OptionExt, Result};
-use futures::{FutureExt, StreamExt};
+use futures::{channel::mpsc::UnboundedSender, FutureExt, StreamExt};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
@@ -91,49 +91,103 @@ impl Tui {
 
     pub fn start(&mut self) {
         let tick_rate = Duration::from_millis(1000);
+        self.cancel();
         self.cancellation_token = CancellationToken::new();
-        let _cancellation_token = self.cancellation_token.clone();
-        let _sender = self.sender.clone();
-        self.handler = tokio::spawn(async move {
-            let mut reader = crossterm::event::EventStream::new();
-            let mut tick = tokio::time::interval(tick_rate);
-            loop {
-                let tick_delay = tick.tick();
-                let crossterm_event = reader.next().fuse();
-                tokio::select! {
-                    // _ = _sender.closed() => {
-                    //   break;
-                    // }
-                    _ = _cancellation_token.cancelled() => {
-                      break;
-                    }
-                    Some(Ok(evt)) = crossterm_event => {
-                        match evt {
-                            CrosstermEvent::Key(key) => {
-                                if key.kind == crossterm::event::KeyEventKind::Press {
-                                    _sender.send(Event::Key(key)).unwrap();
-                                }
-                            },
-                            CrosstermEvent::Mouse(mouse) => {
-                                _sender.send(Event::Mouse(mouse)).unwrap();
-                            },
-                            CrosstermEvent::Resize(x, y) => {
-                                _sender.send(Event::Resize(x, y)).unwrap();
-                            },
-                            CrosstermEvent::FocusLost => {
-                            },
-                            CrosstermEvent::FocusGained => {
-                            },
-                            CrosstermEvent::Paste(_) => {
-                            },
-                        }
-                    }
-                    _ = tick_delay => {
-                        _sender.send(Event::Tick).unwrap();
-                    }
-                };
-            }
+        let event_loop = Self::event_loop(
+            self.sender.clone(),
+            self.cancellation_token.clone(),
+            tick_rate,
+        );
+        // let _cancellation_token = self.cancellation_token.clone();
+        // let _sender = self.sender.clone();
+        self.handler = tokio::spawn(async {
+            event_loop.await;
+            //     let mut reader = crossterm::event::EventStream::new();
+            //     let mut tick = tokio::time::interval(tick_rate);
+            //     loop {
+            //         let tick_delay = tick.tick();
+            //         let crossterm_event = reader.next().fuse();
+            //         tokio::select! {
+            //             // _ = _sender.closed() => {
+            //             //   break;
+            //             // }
+            //             _ = _cancellation_token.cancelled() => {
+            //               break;
+            //             }
+            //             Some(Ok(evt)) = crossterm_event => {
+            //                 match evt {
+            //                     CrosstermEvent::Key(key) => {
+            //                         if key.kind == crossterm::event::KeyEventKind::Press {
+            //                             _sender.send(Event::Key(key)).unwrap();
+            //                         }
+            //                     },
+            //                     CrosstermEvent::Mouse(mouse) => {
+            //                         _sender.send(Event::Mouse(mouse)).unwrap();
+            //                     },
+            //                     CrosstermEvent::Resize(x, y) => {
+            //                         _sender.send(Event::Resize(x, y)).unwrap();
+            //                     },
+            //                     CrosstermEvent::FocusLost => {
+            //                     },
+            //                     CrosstermEvent::FocusGained => {
+            //                     },
+            //                     CrosstermEvent::Paste(_) => {
+            //                     },
+            //                 }
+            //             }
+            //             _ = tick_delay => {
+            //                 _sender.send(Event::Tick).unwrap();
+            //             }
+            //         };
+            //     }
+            //     _cancellation_token.cancel();
         });
+    }
+
+    async fn event_loop(
+        sender: mpsc::UnboundedSender<Event>,
+        cancellation_token: CancellationToken,
+        tick_rate: Duration,
+    ) {
+        let mut reader = crossterm::event::EventStream::new();
+        let mut tick = tokio::time::interval(tick_rate);
+        loop {
+            let tick_delay = tick.tick();
+            let crossterm_event = reader.next().fuse();
+            tokio::select! {
+                // _ = sender.closed() => {
+                //   break;
+                // }
+                _ = cancellation_token.cancelled() => {
+                  break;
+                }
+                Some(Ok(evt)) = crossterm_event => {
+                    match evt {
+                        CrosstermEvent::Key(key) => {
+                            if key.kind == crossterm::event::KeyEventKind::Press {
+                                sender.send(Event::Key(key)).unwrap();
+                            }
+                        },
+                        CrosstermEvent::Mouse(mouse) => {
+                            sender.send(Event::Mouse(mouse)).unwrap();
+                        },
+                        CrosstermEvent::Resize(x, y) => {
+                            sender.send(Event::Resize(x, y)).unwrap();
+                        },
+                        CrosstermEvent::FocusLost => {
+                        },
+                        CrosstermEvent::FocusGained => {
+                        },
+                        CrosstermEvent::Paste(_) => {
+                        },
+                    }
+                }
+                _ = tick_delay => {
+                    sender.send(Event::Tick).unwrap();
+                }
+            };
+        }
+        cancellation_token.cancel();
     }
 
     /// Initializes the terminal interface.
@@ -167,6 +221,10 @@ impl Tui {
         // }
         self.start();
         Ok(())
+    }
+
+    pub fn cancel(&self) {
+        self.cancellation_token.cancel();
     }
 
     pub fn suspend(&mut self) -> Result<()> {

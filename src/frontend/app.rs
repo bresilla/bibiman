@@ -526,8 +526,8 @@ impl App {
         if !status.success() {
             eprintln!("Spawning editor failed with status {}", status);
         }
-        self.tui.enter()?;
-        self.tui.terminal.clear()?;
+        self.tui.resume()?;
+        // self.tui.terminal.clear()?;
         Ok(())
     }
 }
