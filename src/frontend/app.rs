@@ -60,7 +60,7 @@ pub struct App {
     // Is the application running?
     pub running: bool,
     // // tui initialization
-    pub tui: Tui,
+    // pub tui: Tui,
     // main bibliography
     pub main_biblio: BibiMain,
     // bibliographic data
@@ -227,7 +227,7 @@ impl App {
     pub fn new() -> Result<Self> {
         // Self::default()
         let running = true;
-        let tui = Tui::new()?;
+        // let tui = Tui::new()?;
         let main_biblio = BibiMain::new();
         let biblio_data = BibiData::new(&main_biblio.bibliography, &main_biblio.citekeys);
         let tag_list = TagList::from_iter(main_biblio.keyword_list.clone());
@@ -236,7 +236,7 @@ impl App {
         let current_area = CurrentArea::EntryArea;
         Ok(Self {
             running,
-            tui,
+            // tui,
             main_biblio,
             biblio_data,
             tag_list,
@@ -264,7 +264,7 @@ impl App {
             // Handle events.
             match tui.next().await? {
                 Event::Tick => self.tick(),
-                Event::Key(key_event) => handle_key_events(key_event, self)?,
+                Event::Key(key_event) => handle_key_events(key_event, self, &mut tui)?,
                 Event::Mouse(_) => {}
                 Event::Resize(_, _) => {}
             }
@@ -518,16 +518,16 @@ impl App {
         citekey
     }
 
-    pub fn run_editor(&mut self) -> Result<()> {
-        self.tui.exit()?;
+    pub fn run_editor(&mut self, tui: &mut Tui) -> Result<()> {
+        tui.exit()?;
         let cmd = String::from("hx");
         let args: Vec<String> = vec!["test.bib".into()];
         let status = std::process::Command::new(&cmd).args(&args).status()?;
         if !status.success() {
             eprintln!("Spawning editor failed with status {}", status);
         }
-        self.tui.resume()?;
-        // self.tui.terminal.clear()?;
+        tui.enter()?;
+        tui.terminal.clear()?;
         Ok(())
     }
 }

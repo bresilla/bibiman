@@ -16,13 +16,14 @@
 /////
 
 use crate::frontend::app::App;
+use crate::frontend::tui::Tui;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use super::app::CurrentArea;
 use color_eyre::eyre::Result;
 
 /// Handles the key events and updates the state of [`App`].
-pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> Result<()> {
+pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> Result<()> {
     // Keycodes activated for every area (high priority)
     match key_event.code {
         // Exit application on `ESC` or `q`
@@ -96,7 +97,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> Result<()> {
                 App::yank_text(&app.get_selected_citekey());
             }
             KeyCode::Char('e') => {
-                app.run_editor()?;
+                app.run_editor(tui)?;
             }
             KeyCode::Char('/') => {
                 app.enter_search_area();
