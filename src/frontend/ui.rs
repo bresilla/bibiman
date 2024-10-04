@@ -37,7 +37,9 @@ use super::app::{CurrentArea, FormerArea};
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 // const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
-const BOX_BORDER_STYLE_MAIN: Style = Style::new().fg(Color::White).bg(Color::Black);
+const BOX_BORDER_STYLE_MAIN: Style = Style::new().fg(Color::White); //.bg(Color::Black);
+const BOX_SELECTED_BOX_STYLE: Style = Style::new().fg(Color::White);
+const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(Color::DarkGray);
 const NORMAL_ROW_BG: Color = Color::Black;
 const ALT_ROW_BG_COLOR: Color = Color::Indexed(234);
 const SELECTED_STYLE: Style = Style::new()
@@ -120,6 +122,7 @@ impl App {
 
                 let block = Block::bordered()
                     .title(search_title)
+                    .border_style(BOX_SELECTED_BOX_STYLE)
                     .border_set(symbols::border::ROUNDED);
                 Paragraph::new(self.search_struct.search_string.clone())
                     .block(block)
@@ -129,21 +132,20 @@ impl App {
                 let style_emph = Style::new().bold();
                 let block = Block::bordered()
                     .title(Line::raw(" Basic Commands ").centered())
+                    .border_style(BOX_UNSELECTED_BORDER_STYLE)
                     .border_set(symbols::border::ROUNDED);
-                Paragraph::new(
-                    Line::from(vec![
-                        Span::styled("j/k: ", style_emph),
-                        Span::raw("to move | "),
-                        Span::styled("g/G: ", style_emph),
-                        Span::raw("go top/bottom | "),
-                        Span::styled("TAB: ", style_emph),
-                        Span::raw("switch fields | "),
-                        Span::styled("y: ", style_emph),
-                        Span::raw("yank citekey | "),
-                        Span::styled("e: ", style_emph),
-                        Span::raw("edit entry"),
-                    ]), // "Use j/k to move, g/G to go top/bottom, y to yank the current citekey, e to edit the current entry",
-                )
+                Paragraph::new(Line::from(vec![
+                    Span::styled("j/k: ", style_emph),
+                    Span::raw("to move | "),
+                    Span::styled("g/G: ", style_emph),
+                    Span::raw("go top/bottom | "),
+                    Span::styled("TAB: ", style_emph),
+                    Span::raw("switch fields | "),
+                    Span::styled("y: ", style_emph),
+                    Span::raw("yank citekey | "),
+                    Span::styled("e: ", style_emph),
+                    Span::raw("edit entry"),
+                ]))
                 .block(block)
                 .centered()
                 .render(area, buf);
@@ -155,8 +157,12 @@ impl App {
         let block = Block::bordered() // can also be Block::new
             .title(Line::raw(" Bibliographic Entries ").centered().bold())
             .border_set(symbols::border::ROUNDED)
-            .border_style(BOX_BORDER_STYLE_MAIN)
-            .bg(Color::Black); // .bg(NORMAL_ROW_BG);
+            .border_style(if let CurrentArea::EntryArea = self.current_area {
+                BOX_SELECTED_BOX_STYLE
+            } else {
+                BOX_UNSELECTED_BORDER_STYLE
+            });
+        // .bg(Color::Black); // .bg(NORMAL_ROW_BG);
         let header_style = Style::default().bold();
         let selected_style = Style::default().add_modifier(Modifier::REVERSED);
 
@@ -182,7 +188,7 @@ impl App {
                 item.into_iter()
                     .map(|content| Cell::from(Text::from(format!("{content}"))))
                     .collect::<Row>()
-                    .style(Style::new().fg(Color::White).bg(alternate_colors(i)))
+                    .style(Style::new().fg(Color::White)) //.bg(alternate_colors(i)))
                     .height(1)
             });
         let entry_table = Table::new(
@@ -198,7 +204,7 @@ impl App {
         .header(header)
         .column_spacing(2)
         .highlight_style(selected_style)
-        .bg(Color::Black)
+        // .bg(Color::Black)
         .highlight_spacing(HighlightSpacing::Always);
         StatefulWidget::render(
             entry_table,
@@ -270,8 +276,8 @@ impl App {
             .title(Line::raw(" Entry Information ").centered().bold())
             // .borders(Borders::TOP)
             .border_set(symbols::border::ROUNDED)
-            .border_style(BOX_BORDER_STYLE_MAIN)
-            .bg(Color::Black)
+            .border_style(BOX_UNSELECTED_BORDER_STYLE)
+            // .bg(Color::Black)
             .padding(Padding::horizontal(1));
 
         // INFO: '.line_count' method only possible with unstable-rendered-line-info feature -> API might change: https://github.com/ratatui/ratatui/issues/293#ref-pullrequest-2027056434
@@ -307,8 +313,12 @@ impl App {
         let block = Block::bordered()
             .title(Line::raw(" Keywords ").centered().bold())
             .border_set(symbols::border::ROUNDED)
-            .border_style(BOX_BORDER_STYLE_MAIN)
-            .bg(Color::Black);
+            .border_style(if let CurrentArea::TagArea = self.current_area {
+                BOX_SELECTED_BOX_STYLE
+            } else {
+                BOX_UNSELECTED_BORDER_STYLE
+            });
+        // .bg(Color::Black);
 
         // Iterate through all elements in the `items` and stylize them.
         let items: Vec<ListItem> = self
@@ -317,8 +327,8 @@ impl App {
             .iter()
             .enumerate()
             .map(|(i, todo_item)| {
-                let color = alternate_colors(i);
-                ListItem::from(todo_item).bg(color)
+                // let color = alternate_colors(i);
+                ListItem::from(todo_item) //.bg(color)
             })
             .collect();
 
