@@ -19,15 +19,14 @@ use crate::frontend::app::App;
 use crossterm::{
     cursor,
     event::{
-        DisableBracketedPaste, DisableMouseCapture, EnableBracketedPaste, EnableMouseCapture,
-        Event as CrosstermEvent, EventStream, KeyEvent, KeyEventKind, MouseEvent,
+        DisableMouseCapture, EnableMouseCapture,
+        Event as CrosstermEvent, KeyEvent, MouseEvent,
     },
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
 // use ratatui::backend::{Backend, CrosstermBackend};
 use ratatui::backend::CrosstermBackend as Backend;
-use ratatui::Terminal;
-use std::io::{self, stdout, Stdout};
+use std::io::{stdout, Stdout};
 use std::panic;
 use std::{
     ops::{Deref, DerefMut},
@@ -35,7 +34,7 @@ use std::{
 };
 
 use color_eyre::eyre::{OptionExt, Result};
-use futures::{channel::mpsc::UnboundedSender, FutureExt, StreamExt};
+use futures::{FutureExt, StreamExt};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 

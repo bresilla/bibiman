@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use color_eyre::owo_colors::OwoColorize;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -37,7 +36,6 @@ use super::app::{CurrentArea, FormerArea};
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 // const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
-const BOX_BORDER_STYLE_MAIN: Style = Style::new().fg(Color::White); //.bg(Color::Black);
 const BOX_SELECTED_BOX_STYLE: Style = Style::new().fg(Color::White);
 const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(Color::DarkGray);
 const NORMAL_ROW_BG: Color = Color::Black;

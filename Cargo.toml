@@ -15,7 +15,6 @@ futures = "0.3.30"
 itertools = "0.13.0"
 nucleo-matcher = "0.3.1"
 ratatui = { version = "0.28.1", features = ["unstable-rendered-line-info"]}
-regex = "1.10.6"
 sarge = "7.2.5"
 signal-hook = "0.3.17"
 tokio = { version = "1.39.3", features = ["full"] }
