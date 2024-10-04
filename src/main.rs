@@ -15,14 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use std::io;
-
 use backend::cliargs::{self, CLIArgs};
-use ratatui::{backend::CrosstermBackend, Terminal};
-
-use crate::{frontend::app::App, frontend::handler::handle_key_events, frontend::tui::Tui};
-
 use color_eyre::eyre::Result;
+use frontend::app::App;
 
 pub mod backend;
 pub mod frontend;

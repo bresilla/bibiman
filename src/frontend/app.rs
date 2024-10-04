@@ -15,17 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use std::io;
+use std::process::Command;
 
-use crate::backend::cliargs::{self, CLIArgs};
-use ratatui::{backend::CrosstermBackend, Terminal};
+use editor_command::EditorBuilder;
 
 use crate::backend::{bib::*, search::BibiSearch};
 use crate::{
     frontend::handler::handle_key_events,
     frontend::tui::{Event, Tui},
 };
-use std::{error, net::SocketAddr};
 
 use arboard::Clipboard;
 use color_eyre::eyre::{Ok, Result};
@@ -33,9 +31,6 @@ use itertools::Itertools;
 use ratatui::widgets::{ListState, TableState};
 
 use super::tui;
-
-// Application result type.
-// pub type AppResult<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 // Areas in which actions are possible
 #[derive(Debug)]
@@ -59,8 +54,6 @@ pub enum FormerArea {
 pub struct App {
     // Is the application running?
     pub running: bool,
-    // // tui initialization
-    // pub tui: Tui,
     // main bibliography
     pub main_biblio: BibiMain,
     // bibliographic data
@@ -77,8 +70,6 @@ pub struct App {
     pub current_area: CurrentArea,
     // mode for popup window
     pub former_area: Option<FormerArea>,
-    // search string
-    // pub search_string: String,
 }
 
 // Define the fundamental List
@@ -149,7 +140,6 @@ pub struct EntryTableItem {
     pub pubtype: String,
     pub keywords: String,
     pub citekey: String,
-    // pub year: u16,
 }
 
 impl EntryTableItem {
@@ -227,7 +217,6 @@ impl App {
     pub fn new() -> Result<Self> {
         // Self::default()
         let running = true;
-        // let tui = Tui::new()?;
         let main_biblio = BibiMain::new();
         let biblio_data = BibiData::new(&main_biblio.bibliography, &main_biblio.citekeys);
         let tag_list = TagList::from_iter(main_biblio.keyword_list.clone());
@@ -236,7 +225,6 @@ impl App {
         let current_area = CurrentArea::EntryArea;
         Ok(Self {
             running,
-            // tui,
             main_biblio,
             biblio_data,
             tag_list,
@@ -245,15 +233,10 @@ impl App {
             scroll_info: 0,
             current_area,
             former_area: None,
-            // search_string: String::new(),
         })
     }
 
     pub async fn run(&mut self) -> Result<()> {
-        // Initialize the terminal user interface.
-        // let backend = CrosstermBackend::new(io::stdout());
-        // let terminal = Terminal::new(backend)?;
-        // let events = EventHandler::new(250);
         let mut tui = tui::Tui::new()?;
         tui.enter()?;
 
@@ -283,6 +266,14 @@ impl App {
     // Set running to false to quit the application.
     pub fn quit(&mut self) {
         self.running = false;
+    }
+
+    pub fn update_lists(&mut self) {
+        self.main_biblio = BibiMain::new();
+        self.biblio_data =
+            BibiData::new(&self.main_biblio.bibliography, &self.main_biblio.citekeys);
+        self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
+        self.entry_table = EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone());
     }
 
     // Toggle moveable list between entries and tags
@@ -519,15 +510,49 @@ impl App {
     }
 
     pub fn run_editor(&mut self, tui: &mut Tui) -> Result<()> {
+        // get filecontent and citekey for calculating line number
+        let citekey = self.get_selected_citekey();
+        let filepath = self.main_biblio.bibfile.display().to_string();
+        let filecontent = self.main_biblio.bibfilestring.clone();
+        let mut line_count = 0;
+
+        for line in filecontent.lines() {
+            line_count = line_count + 1;
+            // if reaching the citekey break the loop
+            // if reaching end of lines without match, reset to 0
+            if line.contains(&citekey) {
+                break;
+            } else if line_count == filecontent.len() {
+                eprintln!(
+                    "Citekey {} not found, opening file {} at line 1",
+                    &citekey, &filepath
+                );
+                line_count = 0;
+                break;
+            }
+        }
+
+        // Exit TUI to enter editor
         tui.exit()?;
-        let cmd = String::from("hx");
-        let args: Vec<String> = vec!["test.bib".into()];
-        let status = std::process::Command::new(&cmd).args(&args).status()?;
+        // Use VISUAL or EDITOR. Set "vi" as last fallback
+        let mut cmd: Command = EditorBuilder::new()
+            .environment()
+            .source(Some("vi"))
+            .build()
+            .unwrap();
+        // Prepare arguments to open file at specific line
+        let args: Vec<String> = vec![format!("+{}", line_count), filepath];
+        let status = cmd.args(&args).status()?;
         if !status.success() {
             eprintln!("Spawning editor failed with status {}", status);
         }
+
+        // Enter TUI again
         tui.enter()?;
         tui.terminal.clear()?;
+
+        // Update the database and the lists to show changes
+        self.update_lists();
         Ok(())
     }
 }

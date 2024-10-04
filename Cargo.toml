@@ -10,6 +10,7 @@ arboard = { version = "3.4.1", features = ["wayland-data-control"] }
 biblatex = "0.9.3"
 color-eyre = "0.6.3"
 crossterm = { version = "0.28.1", features = ["event-stream"] }
+editor-command = "0.1.1"
 futures = "0.3.30"
 itertools = "0.13.0"
 nucleo-matcher = "0.3.1"

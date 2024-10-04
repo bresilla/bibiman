@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use color_eyre::owo_colors::OwoColorize;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -125,11 +126,23 @@ impl App {
                     .render(area, buf);
             }
             _ => {
+                let style_emph = Style::new().bold();
                 let block = Block::bordered()
                     .title(Line::raw(" Basic Commands ").centered())
                     .border_set(symbols::border::ROUNDED);
                 Paragraph::new(
-                    "Use j/k to move, g/G to go top/bottom, y to yank the current citekey",
+                    Line::from(vec![
+                        Span::styled("j/k: ", style_emph),
+                        Span::raw("to move | "),
+                        Span::styled("g/G: ", style_emph),
+                        Span::raw("go top/bottom | "),
+                        Span::styled("TAB: ", style_emph),
+                        Span::raw("switch fields | "),
+                        Span::styled("y: ", style_emph),
+                        Span::raw("yank citekey | "),
+                        Span::styled("e: ", style_emph),
+                        Span::raw("edit entry"),
+                    ]), // "Use j/k to move, g/G to go top/bottom, y to yank the current citekey, e to edit the current entry",
                 )
                 .block(block)
                 .centered()
