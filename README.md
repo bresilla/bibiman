@@ -42,9 +42,9 @@ For now, `bibiman` only has some very basic features implemented which are impor
 
 Furthermore, I want to implement the following features:
 
-- [] **Open PDF**: Open related PDF file (`file` BibLaTeX key) with keypress.
-- [] **Open URL/DOI**: Open related DOI/URL with keypress.
-- [] **Add Entry via DOI**: Download bibliographic metadata for inserted DOI and add it to `.bib` file
+- [ ] **Open PDF**: Open related PDF file (`file` BibLaTeX key) with keypress.
+- [ ] **Open URL/DOI**: Open related DOI/URL with keypress.
+- [ ] **Add Entry via DOI**: Download bibliographic metadata for inserted DOI and add it to `.bib` file
 
 ## Keybindings
 
@@ -78,7 +78,7 @@ Since this behaviour most likely supports UNIX-based systems (Linux, MacOS) it m
 
 ## Issues and code improvement
 
-This is my first Rust project and, thus, also a learning process. If you find any issues or code flaws, please open an issue. PRs are also welcome, but I would prefer an issue first to discuss things.
+This is my first Rust project and, thus, also a learning process. If you find any issues or code flaws, please open an issue. I plan to open PRs in the future when its a little bit less early alpha state.
 
 ## Alternatives
 
