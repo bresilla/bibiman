@@ -36,16 +36,14 @@ use super::app::{CurrentArea, FormerArea};
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 // const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
-const BOX_SELECTED_BOX_STYLE: Style = Style::new().fg(Color::White);
+const BOX_SELECTED_BOX_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
 const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(Color::DarkGray);
 const NORMAL_ROW_BG: Color = Color::Black;
 const ALT_ROW_BG_COLOR: Color = Color::Indexed(234);
 const SELECTED_STYLE: Style = Style::new()
-    // .fg(MAIN_BLUE_COLOR)
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
-const TEXT_FG_COLOR: Color = SLATE.c200;
-// const TEXT_CONFIRMED: Style = Style::new().fg(Color::Green);
+const TEXT_FG_COLOR: Color = Color::Indexed(252);
 
 pub const fn alternate_colors(i: usize) -> Color {
     if i % 2 == 0 {
@@ -121,13 +119,13 @@ impl App {
                 let block = Block::bordered()
                     .title(search_title)
                     .border_style(BOX_SELECTED_BOX_STYLE)
-                    .border_set(symbols::border::ROUNDED);
+                    .border_set(symbols::border::THICK);
                 Paragraph::new(self.search_struct.search_string.clone())
                     .block(block)
                     .render(area, buf);
             }
             _ => {
-                let style_emph = Style::new().bold();
+                let style_emph = Style::new().bold().fg(TEXT_FG_COLOR);
                 let block = Block::bordered()
                     .title(Line::raw(" Basic Commands ").centered())
                     .border_style(BOX_UNSELECTED_BORDER_STYLE)
@@ -154,15 +152,21 @@ impl App {
     pub fn render_entrytable(&mut self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered() // can also be Block::new
             .title(Line::raw(" Bibliographic Entries ").centered().bold())
-            .border_set(symbols::border::ROUNDED)
+            .border_set(if let CurrentArea::EntryArea = self.current_area {
+                symbols::border::THICK
+            } else {
+                symbols::border::PLAIN
+            })
             .border_style(if let CurrentArea::EntryArea = self.current_area {
                 BOX_SELECTED_BOX_STYLE
             } else {
                 BOX_UNSELECTED_BORDER_STYLE
             });
         // .bg(Color::Black); // .bg(NORMAL_ROW_BG);
-        let header_style = Style::default().bold();
-        let selected_style = Style::default().add_modifier(Modifier::REVERSED);
+        let header_style = Style::default().bold().fg(TEXT_FG_COLOR);
+        // let selected_style = Style::default()
+        //     .add_modifier(Modifier::REVERSED)
+        //     .add_modifier(Modifier::BOLD);
 
         let header = [
             "Authors".underlined(),
@@ -181,12 +185,12 @@ impl App {
             .entry_table_items
             .iter()
             .enumerate()
-            .map(|(i, data)| {
+            .map(|(_i, data)| {
                 let item = data.ref_vec();
                 item.into_iter()
                     .map(|content| Cell::from(Text::from(format!("{content}"))))
                     .collect::<Row>()
-                    .style(Style::new().fg(Color::White)) //.bg(alternate_colors(i)))
+                    .style(Style::new().fg(TEXT_FG_COLOR)) //.bg(alternate_colors(i)))
                     .height(1)
             });
         let entry_table = Table::new(
@@ -201,7 +205,7 @@ impl App {
         .block(block)
         .header(header)
         .column_spacing(2)
-        .highlight_style(selected_style)
+        .highlight_style(SELECTED_STYLE)
         // .bg(Color::Black)
         .highlight_spacing(HighlightSpacing::Always);
         StatefulWidget::render(
@@ -215,7 +219,7 @@ impl App {
     pub fn render_selected_item(&mut self, area: Rect, buf: &mut Buffer) {
         // We get the info depending on the item's state.
         // TODO: Implement logic showin informations for selected entry:
-        let style_value = Style::new().bold();
+        let style_value = Style::new().bold().fg(TEXT_FG_COLOR);
         let lines = {
             // if self.entry_table.entry_table_items.len() > 0 {
             if self.entry_table.entry_table_state.selected().is_some() {
@@ -256,7 +260,7 @@ impl App {
                         &self.get_selected_citekey(),
                         &self.main_biblio.bibliography,
                     )),
-                    Style::default(),
+                    Style::default().fg(TEXT_FG_COLOR),
                 )]));
                 lines
             } else {
@@ -273,7 +277,7 @@ impl App {
         let block = Block::bordered()
             .title(Line::raw(" Entry Information ").centered().bold())
             // .borders(Borders::TOP)
-            .border_set(symbols::border::ROUNDED)
+            .border_set(symbols::border::PLAIN)
             .border_style(BOX_UNSELECTED_BORDER_STYLE)
             // .bg(Color::Black)
             .padding(Padding::horizontal(1));
@@ -310,7 +314,11 @@ impl App {
     pub fn render_taglist(&mut self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered()
             .title(Line::raw(" Keywords ").centered().bold())
-            .border_set(symbols::border::ROUNDED)
+            .border_set(if let CurrentArea::TagArea = self.current_area {
+                symbols::border::THICK
+            } else {
+                symbols::border::PLAIN
+            })
             .border_style(if let CurrentArea::TagArea = self.current_area {
                 BOX_SELECTED_BOX_STYLE
             } else {
@@ -324,7 +332,7 @@ impl App {
             .tag_list_items
             .iter()
             .enumerate()
-            .map(|(i, todo_item)| {
+            .map(|(_i, todo_item)| {
                 // let color = alternate_colors(i);
                 ListItem::from(todo_item) //.bg(color)
             })
