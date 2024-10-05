@@ -18,7 +18,7 @@
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
-    style::{palette::tailwind::SLATE, Color, Modifier, Style, Stylize},
+    style::{Color, Modifier, Style, Stylize},
     symbols,
     text::{Line, Span, Text},
     widgets::{
