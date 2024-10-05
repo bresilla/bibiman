@@ -27,23 +27,25 @@ use ratatui::{
     },
 };
 
-use crate::{
-    backend::bib::BibiEntry,
-    frontend::app::{App, TagListItem},
-};
+use crate::{backend::bib::BibiEntry, frontend::app::App, frontend::keywords::TagListItem};
 
 use super::app::{CurrentArea, FormerArea};
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 // const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
 const BOX_SELECTED_BOX_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
-const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(Color::DarkGray);
+const BOX_SELECTED_TITLE_STYLE: Style = Style::new().fg(TEXT_FG_COLOR).add_modifier(Modifier::BOLD);
+const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_UNSELECTED_FG_COLOR);
+const BOX_UNSELECTED_TITLE_STYLE: Style = Style::new()
+    .fg(TEXT_UNSELECTED_FG_COLOR)
+    .add_modifier(Modifier::BOLD);
 const NORMAL_ROW_BG: Color = Color::Black;
 const ALT_ROW_BG_COLOR: Color = Color::Indexed(234);
 const SELECTED_STYLE: Style = Style::new()
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const TEXT_FG_COLOR: Color = Color::Indexed(252);
+const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(250);
 
 pub const fn alternate_colors(i: usize) -> Color {
     if i % 2 == 0 {
@@ -117,7 +119,7 @@ impl App {
                 };
 
                 let block = Block::bordered()
-                    .title(search_title)
+                    .title(Line::styled(search_title, BOX_SELECTED_TITLE_STYLE))
                     .border_style(BOX_SELECTED_BOX_STYLE)
                     .border_set(symbols::border::THICK);
                 Paragraph::new(self.search_struct.search_string.clone())
@@ -151,7 +153,17 @@ impl App {
 
     pub fn render_entrytable(&mut self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered() // can also be Block::new
-            .title(Line::raw(" Bibliographic Entries ").centered().bold())
+            .title(
+                Line::styled(
+                    " Bibliographic Entries ",
+                    if let CurrentArea::EntryArea = self.current_area {
+                        BOX_SELECTED_TITLE_STYLE
+                    } else {
+                        BOX_UNSELECTED_TITLE_STYLE
+                    },
+                )
+                .centered(),
+            )
             .border_set(if let CurrentArea::EntryArea = self.current_area {
                 symbols::border::THICK
             } else {
@@ -313,7 +325,17 @@ impl App {
 
     pub fn render_taglist(&mut self, area: Rect, buf: &mut Buffer) {
         let block = Block::bordered()
-            .title(Line::raw(" Keywords ").centered().bold())
+            .title(
+                Line::styled(
+                    " Keywords ",
+                    if let CurrentArea::TagArea = self.current_area {
+                        BOX_SELECTED_TITLE_STYLE
+                    } else {
+                        BOX_UNSELECTED_TITLE_STYLE
+                    },
+                )
+                .centered(),
+            )
             .border_set(if let CurrentArea::TagArea = self.current_area {
                 symbols::border::THICK
             } else {

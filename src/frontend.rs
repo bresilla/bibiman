@@ -16,6 +16,8 @@
 /////
 
 pub mod app;
+pub mod entries;
 pub mod handler;
+pub mod keywords;
 pub mod tui;
 pub mod ui;

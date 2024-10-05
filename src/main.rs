@@ -25,7 +25,7 @@ pub mod frontend;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Parse CLI arguments
-    let parsed_args = CLIArgs::parse_cli_args();
+    let parsed_args = CLIArgs::new();
 
     // Print help if -h/--help flag is passed and exit
     if parsed_args.helparg {
@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
     }
 
     // Create an application.
-    let mut app = App::new()?;
+    let mut app = App::new(parsed_args)?;
 
     app.run().await?;
     Ok(())

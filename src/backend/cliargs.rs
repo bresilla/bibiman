@@ -27,7 +27,7 @@ sarge! {
     // Show help and exit.
     'h' help: bool,
 
-    // Show version and exit. TODO: Write version...
+    // Show version and exit.
     'v' version: bool,
 }
 
@@ -35,37 +35,45 @@ sarge! {
 pub struct CLIArgs {
     pub helparg: bool,
     pub versionarg: bool,
+    pub bibfilearg: PathBuf,
 }
 
 impl CLIArgs {
-    pub fn parse_cli_args() -> Self {
-        let (cli_args, _) = ArgumentsCLI::parse().expect("Could not parse CLI arguments");
+    pub fn new() -> Self {
+        let (cli_args, pos_args) = ArgumentsCLI::parse().expect("Could not parse CLI arguments");
+        let bibfilearg = if pos_args.len() > 1 {
+            PathBuf::from(&pos_args[1])
+            // pos_args[1].to_string()
+        } else {
+            panic!("No path to bibfile provided as argument")
+        };
         Self {
             helparg: cli_args.help,
             versionarg: cli_args.version,
+            bibfilearg,
         }
     }
 }
 
 // Struct for positional arguments
 // TODO: Can surely be improved!!
-pub struct PosArgs {
-    pub bibfilearg: PathBuf,
-}
+// pub struct PosArgs {
+//     pub bibfilearg: PathBuf,
+// }
 
-impl PosArgs {
-    pub fn parse_pos_args() -> Self {
-        let (_, pos_args) = ArgumentsCLI::parse().expect("Could not parse positional arguments");
-        Self {
-            bibfilearg: if pos_args.len() > 1 {
-                PathBuf::from(&pos_args[1])
-                // pos_args[1].to_string()
-            } else {
-                panic!("No path to bibfile provided as argument")
-            }, // bibfilearg: pos_args[1].to_string(),
-        }
-    }
-}
+// impl PosArgs {
+//     pub fn parse_pos_args() -> Self {
+//         let (_, pos_args) = ArgumentsCLI::parse().expect("Could not parse positional arguments");
+//         Self {
+//             bibfilearg: if pos_args.len() > 1 {
+//                 PathBuf::from(&pos_args[1])
+//                 // pos_args[1].to_string()
+//             } else {
+//                 panic!("No path to bibfile provided as argument")
+//             }, // bibfilearg: pos_args[1].to_string(),
+//         }
+//     }
+// }
 
 pub fn help_func() -> String {
     let help = format!(

@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use super::cliargs::PosArgs;
 use std::{fs, path::PathBuf};
 
 use biblatex::{self, Bibliography};
@@ -33,9 +32,9 @@ pub struct BibiMain {
 }
 
 impl BibiMain {
-    pub fn new() -> Self {
+    pub fn new(main_bibfile: PathBuf) -> Self {
         // TODO: Needs check for config file path as soon as config file is impl
-        let bibfile = PosArgs::parse_pos_args().bibfilearg;
+        let bibfile = main_bibfile;
         let bibfilestring = fs::read_to_string(&bibfile).unwrap();
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
         let citekeys = Self::get_citekeys(&bibliography);
