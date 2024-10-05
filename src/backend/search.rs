@@ -9,6 +9,7 @@ pub struct BibiSearch {
     pub search_string: String, // Search string show in footer, used for search
     pub inner_search: bool,    // True, if we trigger a search for already filtered list
     pub filtered_entry_list: Vec<Vec<String>>, // Temporary holds filtered entry list to refilter it
+    pub filtered_tag_list: Vec<String>,
 }
 
 impl Default for BibiSearch {
@@ -17,6 +18,7 @@ impl Default for BibiSearch {
             search_string: String::new(),
             inner_search: false,
             filtered_entry_list: Vec::new(),
+            filtered_tag_list: Vec::new(),
         }
     }
 }

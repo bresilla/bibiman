@@ -146,16 +146,14 @@ impl App {
     }
 
     pub fn reset_current_list(&mut self) {
-        if let CurrentArea::EntryArea = self.current_area {
-            self.entry_table =
-                EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone());
-            if self.search_struct.inner_search {
-                self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone())
-            }
-        } else if let CurrentArea::TagArea = self.current_area {
-            self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
+        self.entry_table = EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone());
+        self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
+        if let CurrentArea::TagArea = self.current_area {
             self.tag_list.tag_list_state.select(Some(0))
         }
+        self.search_struct.filtered_entry_list.clear();
+        self.search_struct.filtered_tag_list.clear();
+        self.search_struct.inner_search = false;
         self.former_area = None
     }
 
@@ -224,6 +222,7 @@ impl App {
         self.search_struct.search_string.pop();
         if let Some(FormerArea::EntryArea) = self.former_area {
             self.search_entries();
+            self.filter_tags_by_entries();
         } else if let Some(FormerArea::TagArea) = self.former_area {
             self.search_tags();
         }
@@ -234,6 +233,7 @@ impl App {
         self.search_struct.search_string.push(search_pattern);
         if let Some(FormerArea::EntryArea) = self.former_area {
             self.search_entries();
+            self.filter_tags_by_entries();
         } else if let Some(FormerArea::TagArea) = self.former_area {
             self.search_tags();
         }
