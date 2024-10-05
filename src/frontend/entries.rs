@@ -17,6 +17,7 @@
 
 use super::app::App;
 use super::tui::Tui;
+use crate::backend::search::BibiSearch;
 use color_eyre::eyre::Result;
 use editor_command::EditorBuilder;
 use itertools::Itertools;
@@ -178,5 +179,22 @@ impl App {
         // Update the database and the lists to show changes
         self.update_lists();
         Ok(())
+    }
+
+    // Search entry list
+    pub fn search_entries(&mut self) {
+        let orig_list = {
+            if self.search_struct.inner_search {
+                let orig_list = &self.search_struct.filtered_entry_list;
+                orig_list
+            } else {
+                let orig_list = &self.biblio_data.entry_list.bibentries;
+                orig_list
+            }
+        };
+        let filtered_list =
+            BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
+        //search::search_entry_list(&self.search_string, orig_list.clone());
+        self.entry_table = EntryTable::from_iter(filtered_list)
     }
 }

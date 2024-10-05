@@ -45,7 +45,7 @@ const SELECTED_STYLE: Style = Style::new()
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const TEXT_FG_COLOR: Color = Color::Indexed(252);
-const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(250);
+const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(245);
 
 pub const fn alternate_colors(i: usize) -> Color {
     if i % 2 == 0 {
@@ -142,7 +142,9 @@ impl App {
                     Span::styled("y: ", style_emph),
                     Span::raw("yank citekey | "),
                     Span::styled("e: ", style_emph),
-                    Span::raw("edit entry"),
+                    Span::raw("edit entry | "),
+                    Span::styled("/: ", style_emph),
+                    Span::raw("search"),
                 ]))
                 .block(block)
                 .centered()
