@@ -13,7 +13,13 @@ For now, `bibiman` is only available via Codeberg. You have to build it from sou
 ```bash
 git clone https://codeberg.org/lukeflo/bibiman
 cd bibiman
+
+# Build the binary to /target/release
 cargo build --release
+
+# OR
+# Install the binary to CARGO_HOME which normally is in PATH
+cargo install --path=. --locked
 
 # optional: create symlink:
 ln -sf /target/release/bibiman ~/.local/bin
