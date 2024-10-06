@@ -211,7 +211,10 @@ impl App {
             self.current_area = CurrentArea::TagArea;
             self.tag_list.tag_list_state.select(Some(0))
         }
-        self.reset_current_list();
+        // But keep filtering by tag if applied before entering search area
+        if !self.search_struct.inner_search {
+            self.reset_current_list();
+        }
         self.former_area = None;
         // If search is canceled, reset default status of struct
         self.search_struct.search_string.clear();

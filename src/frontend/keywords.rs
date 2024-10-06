@@ -90,7 +90,8 @@ impl App {
 
     pub fn filter_tags_by_entries(&mut self) {
         if !self.search_struct.filtered_entry_list.is_empty() {
-            let orig_list = &self.search_struct.filtered_entry_list;
+            self.search_struct.filtered_tag_list.clear();
+            let orig_list = self.search_struct.filtered_entry_list.clone();
             let mut filtered_keywords: Vec<String> = Vec::new();
 
             for e in orig_list {

@@ -195,7 +195,7 @@ impl App {
         let filtered_list =
             BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
         //search::search_entry_list(&self.search_string, orig_list.clone());
-        self.search_struct.filtered_entry_list = filtered_list.clone();
+        // self.search_struct.filtered_entry_list = filtered_list.clone();
         self.entry_table = EntryTable::from_iter(filtered_list)
     }
 }

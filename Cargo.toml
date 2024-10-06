@@ -1,6 +1,6 @@
 [package]
 name = "bibiman"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["lukeflo <lukeflo@some.email.not>"]
 license = "GPL-3.0-or-later"
 edition = "2021"
