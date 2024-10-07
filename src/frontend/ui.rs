@@ -27,7 +27,7 @@ use ratatui::{
     },
 };
 
-use crate::{backend::bib::BibiEntry, frontend::app::App, frontend::keywords::TagListItem};
+use crate::{frontend::app::App, frontend::keywords::TagListItem};
 
 use super::app::{CurrentArea, FormerArea};
 

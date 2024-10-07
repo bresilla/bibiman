@@ -18,11 +18,14 @@
 use super::app::App;
 use super::tui::Tui;
 use crate::backend::search::BibiSearch;
-use color_eyre::eyre::Result;
+use color_eyre::eyre::{Context, Ok, Result};
 use editor_command::EditorBuilder;
 use itertools::Itertools;
 use ratatui::widgets::TableState;
-use std::process::Command;
+use std::{
+    io::Stderr,
+    process::{Command, Stdio},
+};
 
 impl FromIterator<Vec<String>> for EntryTable {
     fn from_iter<T: IntoIterator<Item = Vec<String>>>(iter: T) -> Self {
@@ -213,5 +216,23 @@ impl App {
         //search::search_entry_list(&self.search_string, orig_list.clone());
         // self.search_struct.filtered_entry_list = filtered_list.clone();
         self.entry_table = EntryTable::from_iter(filtered_list)
+    }
+
+    // Open file connected with entry through 'file' or 'pdf' field
+    pub fn open_connected_file(&mut self) -> Result<()> {
+        let idx = self.entry_table.entry_table_state.selected().unwrap();
+        let filepath = &self.entry_table.entry_table_items[idx].filepath.clone();
+
+        // Build command to execute pdf-reader. 'xdg-open' is Linux standard
+        // TODO: need to implement for MacOS ('opener'). Windows, I don't know...
+        let _ = Command::new("xdg-open")
+            .arg(&filepath)
+            // Pipe output produced by opener to /dev/null
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .wrap_err("Opening file not possible");
+
+        Ok(())
     }
 }
