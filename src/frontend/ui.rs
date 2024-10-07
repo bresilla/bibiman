@@ -232,48 +232,66 @@ impl App {
 
     pub fn render_selected_item(&mut self, area: Rect, buf: &mut Buffer) {
         // We get the info depending on the item's state.
-        // TODO: Implement logic showin informations for selected entry:
         let style_value = Style::new().bold().fg(TEXT_FG_COLOR);
+        let style_value_sec = Style::new()
+            .add_modifier(Modifier::ITALIC)
+            .fg(TEXT_FG_COLOR);
         let lines = {
+            let idx = self.entry_table.entry_table_state.selected().unwrap();
+            let cur_entry = &self.entry_table.entry_table_items[idx];
             // if self.entry_table.entry_table_items.len() > 0 {
             if self.entry_table.entry_table_state.selected().is_some() {
                 let mut lines = vec![];
                 lines.push(Line::from(vec![
                     Span::styled("Authors: ", style_value),
                     Span::styled(
-                        String::from(BibiEntry::get_authors(
-                            &self.get_selected_citekey(),
-                            &self.main_biblio.bibliography,
-                        )),
+                        // String::from(BibiEntry::get_authors(
+                        //     &self.get_selected_citekey(),
+                        //     &self.main_biblio.bibliography,
+                        // )),
+                        // Style::new().green(),
+                        cur_entry.authors.clone(),
                         Style::new().green(),
                     ),
                 ]));
                 lines.push(Line::from(vec![
                     Span::styled("Title: ", style_value),
                     Span::styled(
-                        String::from(BibiEntry::get_title(
-                            &self.get_selected_citekey(),
-                            &self.main_biblio.bibliography,
-                        )),
+                        // String::from(BibiEntry::get_title(
+                        //     &self.get_selected_citekey(),
+                        //     &self.main_biblio.bibliography,
+                        // )),
+                        // Style::new().magenta(),
+                        cur_entry.title.clone(),
                         Style::new().magenta(),
                     ),
                 ]));
                 lines.push(Line::from(vec![
                     Span::styled("Year: ", style_value),
-                    Span::styled(
-                        String::from(BibiEntry::get_year(
-                            &self.get_selected_citekey(),
-                            &self.main_biblio.bibliography,
-                        )),
-                        Style::new().light_magenta(),
-                    ),
+                    Span::styled(cur_entry.year.clone(), Style::new().light_magenta()),
                 ]));
+                if !cur_entry.doi_url.is_empty() {
+                    lines.push(Line::raw(""));
+                    lines.push(Line::from(vec![
+                        Span::styled("DOI/URL: ", style_value_sec),
+                        Span::styled(
+                            cur_entry.doi_url.clone(),
+                            Style::default().fg(TEXT_FG_COLOR).underlined(),
+                        ),
+                    ]));
+                }
+                if !cur_entry.filepath.is_empty() {
+                    lines.push(Line::from(vec![
+                        Span::styled("File: ", style_value_sec),
+                        Span::styled(
+                            cur_entry.filepath.clone(),
+                            Style::default().fg(TEXT_FG_COLOR),
+                        ),
+                    ]));
+                }
                 lines.push(Line::from(""));
                 lines.push(Line::from(vec![Span::styled(
-                    String::from(BibiEntry::get_abstract(
-                        &self.get_selected_citekey(),
-                        &self.main_biblio.bibliography,
-                    )),
+                    cur_entry.abstract_text.clone(),
                     Style::default().fg(TEXT_FG_COLOR),
                 )]));
                 lines

@@ -29,7 +29,14 @@ impl FromIterator<Vec<String>> for EntryTable {
         let entry_table_items = iter
             .into_iter()
             .sorted()
-            .map(|i| EntryTableItem::new(&i[0], &i[1], &i[2], &i[3], &i[4], &i[5]))
+            // 0: authors, 1: title, 2: date, 3: pubtype, 4: keywords, 5: citekey
+            // 6: abstract, 7: doi/url, 8: pdf filepath
+            // See backend/bib.rs BibiEntry impl
+            .map(|i| {
+                EntryTableItem::new(
+                    &i[0], &i[1], &i[2], &i[3], &i[4], &i[5], &i[6], &i[7], &i[8],
+                )
+            })
             .collect();
         let entry_table_state = TableState::default().with_selected(0);
         Self {
@@ -55,6 +62,9 @@ pub struct EntryTableItem {
     pub pubtype: String,
     pub keywords: String,
     pub citekey: String,
+    pub abstract_text: String,
+    pub doi_url: String,
+    pub filepath: String,
 }
 
 impl EntryTableItem {
@@ -65,6 +75,9 @@ impl EntryTableItem {
         pubtype: &str,
         keywords: &str,
         citekey: &str,
+        abstract_text: &str,
+        doi_url: &str,
+        filepath: &str,
     ) -> Self {
         Self {
             authors: authors.to_string(),
@@ -73,6 +86,9 @@ impl EntryTableItem {
             pubtype: pubtype.to_string(),
             keywords: keywords.to_string(),
             citekey: citekey.to_string(),
+            abstract_text: abstract_text.to_string(),
+            doi_url: doi_url.to_string(),
+            filepath: filepath.to_string(),
         }
     }
 

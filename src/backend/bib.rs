@@ -15,10 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use std::{fs, path::PathBuf};
-
 use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
+use color_eyre::eyre::ErrReport;
+use std::{fs, path::PathBuf};
 
 // Set necessary fields
 // TODO: can surely be made more efficient/simpler
@@ -128,6 +128,8 @@ pub struct BibiEntry {
     pub pubtype: String,
     pub keywords: String,
     pub citekey: String,
+    pub weblink: String,
+    pub filepath: String,
 }
 
 impl BibiEntry {
@@ -139,6 +141,9 @@ impl BibiEntry {
             Self::get_pubtype(&citekey, &biblio),
             Self::get_keywords(&citekey, &biblio),
             citekey.to_string(),
+            Self::get_abstract(&citekey, &biblio),
+            Self::get_weblink(&citekey, &biblio),
+            Self::get_filepath(&citekey, &biblio),
         ]
     }
 
@@ -265,13 +270,13 @@ impl BibiEntry {
         }
     }
 
-    pub fn get_filepath(citekey: &str, biblio: &Bibliography) -> PathBuf {
+    pub fn get_filepath(citekey: &str, biblio: &Bibliography) -> String {
         if let true = biblio.get(&citekey).unwrap().file().is_ok() {
             let file = biblio.get(&citekey).unwrap().file().unwrap();
-            file.into()
+            file
         } else {
             let file = "".to_string();
-            file.into()
+            file
         }
     }
 }

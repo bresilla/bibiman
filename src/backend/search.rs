@@ -26,7 +26,7 @@ impl Default for BibiSearch {
 impl BibiSearch {
     // Stringify inner Vec<String> by joining/concat
     fn convert_to_string(inner_vec: &Vec<String>) -> String {
-        inner_vec.join(" ")
+        inner_vec[0..6].join(" ")
     }
 
     // Return a filtered entry list
@@ -87,5 +87,32 @@ impl BibiSearch {
         }
 
         filtered_list
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_vector_join() {
+        let bibvec = vec![
+            "Author".to_string(),
+            "Title".to_string(),
+            "1999".to_string(),
+            "article".to_string(),
+            "hello, bye".to_string(),
+            "author_1999".to_string(),
+            "An abstract with multiple sentences. Sometimes thats necessary".to_string(),
+            "www.bibiman.org".to_string(),
+            "/home/file/path.pdf".to_string(),
+        ];
+
+        let joined_vec = BibiSearch::convert_to_string(&bibvec);
+
+        assert_eq!(
+            joined_vec,
+            "Author Title 1999 article hello, bye author_1999"
+        )
     }
 }
