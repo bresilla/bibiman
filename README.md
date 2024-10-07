@@ -66,17 +66,17 @@ Furthermore, I want to implement the following features:
 
 Use the following keybindings to manage the TUI:
 
-| Key                                                     | Action                                      |
-| ------------------------------------------------------- | ------------------------------------------- |
-| **<kbd>j</kbd>/<kbd>k</kbd>** \| **<kbd>Down/Up</kbd>** | Move selected list                          |
-| **<kbd>g</kbd>/<kbd>G</kbd>**                           | Go to first/last entry                      |
-| **<kbd>y</kbd>**                                        | Yank/copy citekey of selected entry         |
-| **<kbd>e</kbd>**                                        | Open editor at selected entry               |
-| **<kbd>TAB</kbd>**                                      | Switch between entries and keywords         |
-| **<kbd>/</kbd>** \| **<kbd>Ctrl+f</kbd>**               | Enter search mode                           |
-| **<kbd>Enter</kbd>**                                    | Filter by selected keyword / Confirm search |
-| **<kbd>ESC</kbd>**                                      | Abort search / Reset current list           |
-| **<kbd>q</kbd>** \| **<kbd>Ctrl-C</kbd>**               | Quit TUI                                    |
+| Key                                                              | Action                                      |
+| ---------------------------------------------------------------- | ------------------------------------------- |
+| **<kbd>j</kbd><kbd>k</kbd>** \| **<kbd>Down</kbd><kbd>Up</kbd>** | Move selected list                          |
+| **<kbd>g</kbd><kbd>G</kbd>**                                     | Go to first/last entry                      |
+| **<kbd>y</kbd>**                                                 | Yank/copy citekey of selected entry         |
+| **<kbd>e</kbd>**                                                 | Open editor at selected entry               |
+| **<kbd>TAB</kbd>**                                               | Switch between entries and keywords         |
+| **<kbd>/</kbd>** \| **<kbd>Ctrl+f</kbd>**                        | Enter search mode                           |
+| **<kbd>Enter</kbd>**                                             | Filter by selected keyword / Confirm search |
+| **<kbd>ESC</kbd>**                                               | Abort search / Reset current list           |
+| **<kbd>q</kbd>** \| **<kbd>Ctrl-C</kbd>**                        | Quit TUI                                    |
 
 ## Search
 
