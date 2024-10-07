@@ -251,4 +251,27 @@ impl BibiEntry {
         };
         text
     }
+
+    pub fn get_weblink(citekey: &str, biblio: &Bibliography) -> String {
+        if let true = biblio.get(&citekey).unwrap().doi().is_ok() {
+            let url = biblio.get(&citekey).unwrap().doi().unwrap();
+            url
+        } else if let true = biblio.get(&citekey).unwrap().url().is_ok() {
+            let url = biblio.get(&citekey).unwrap().url().unwrap();
+            url
+        } else {
+            let url = "".to_string();
+            url
+        }
+    }
+
+    pub fn get_filepath(citekey: &str, biblio: &Bibliography) -> PathBuf {
+        if let true = biblio.get(&citekey).unwrap().file().is_ok() {
+            let file = biblio.get(&citekey).unwrap().file().unwrap();
+            file.into()
+        } else {
+            let file = "".to_string();
+            file.into()
+        }
+    }
 }
