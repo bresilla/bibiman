@@ -45,20 +45,18 @@ Of course, this can be aliased if you only use one main file. E.g. in
 ## Features
 
 For now, `bibiman` only has some very basic features implemented which are
-important for my personal workflow:
+important for my personal workflow. There are more to come, the list will be
+updated:
 
-- **Browse** through the bib entries using _Vim-like keybindings_ and a _fuzzy
-  search_ mode.
-- **Filter** the bib entries by _keywords_ (and afterwards filter further by
-  fuzzy searching).
-- **Edit** the current entry by opening a _terminal-based editor_ at the
-  specific line
-- **Yank/Copy** the citekey of the current entry to the system clipboard.
-
-Furthermore, I want to implement the following features:
-
-- [ ] **Open PDF**: Open related PDF file (`file` BibLaTeX key) with keypress.
-- [ ] **Open URL/DOI**: Open related DOI/URL with keypress.
+- [x] **Browse** through the bib entries using _Vim-like keybindings_ and a
+      _fuzzy search_ mode.
+- [x] **Filter** the bib entries by _keywords_ (and afterwards filter further by
+      fuzzy searching).
+- [x] **Edit** the current entry by opening a _terminal-based editor_ at the
+      specific line
+- [x] **Yank/Copy** the citekey of the current entry to the system clipboard.
+- [x] **Open PDF**: Open related PDF file (`file` BibLaTeX key) with keypress.
+- [x] **Open URL/DOI**: Open related DOI/URL with keypress.
 - [ ] **Add Entry via DOI**: Download bibliographic metadata for inserted DOI
       and add it to `.bib` file
 
@@ -72,11 +70,12 @@ Use the following keybindings to manage the TUI:
 | **<kbd>g</kbd><kbd>G</kbd>**                                     | Go to first/last entry                      |
 | **<kbd>y</kbd>**                                                 | Yank/copy citekey of selected entry         |
 | **<kbd>e</kbd>**                                                 | Open editor at selected entry               |
+| **<kbd>o</kbd>** \| **<kbd>u</kbd>**                             | Open related PDF \| URL/DOI                 |
 | **<kbd>TAB</kbd>**                                               | Switch between entries and keywords         |
-| **<kbd>/</kbd>** \| **<kbd>Ctrl+f</kbd>**                        | Enter search mode                           |
+| **<kbd>/</kbd>** \| **<kbd>Ctrl-f</kbd>**                        | Enter search mode                           |
 | **<kbd>Enter</kbd>**                                             | Filter by selected keyword / Confirm search |
 | **<kbd>ESC</kbd>**                                               | Abort search / Reset current list           |
-| **<kbd>q</kbd>** \| **<kbd>Ctrl-C</kbd>**                        | Quit TUI                                    |
+| **<kbd>q</kbd>** \| **<kbd>Ctrl-c</kbd>**                        | Quit TUI                                    |
 
 ## Search
 
@@ -105,9 +104,21 @@ Feel free to try other editors. Important is that the editor supports the
 argument `+..` to set the line number that the cursor should be placed at.
 Otherwise, the functionality might not work properly.
 
-Since this behaviour is most likely supported on UNIX-based systems (Linux,
-MacOS) it might not work under Windows. I can't test it on a Windows machine,
+While this behaviour is most likely supported on UNIX-based systems (Linux,
+MacOS), it might not work under Windows. I can't test it on a Windows machine,
 thus, there might be unexpected errors with it.
+
+## Open connected files or links
+
+Now, `bibiman` also provides the possibility to open PDFs (as value of the
+`file` BibLaTeX field), as well as DOIs and URLs.
+
+For selecting the right program, it uses `xdg-open` on Linux, `open` on MacOS,
+and `start` on Windows. _MacOS and Windows are untested right now!_
+
+Furhtermore, DOIs have to begin with either `https://doi...` as full URL or
+`10.(...)` as regular DOI style. URLs work if they begin with either `http...`
+or with `www...`.
 
 ## Issues and code improvement
 
@@ -137,4 +148,8 @@ Maybe one of these might fit _your_ personal needs better:
   good fit.
 - [bibman (Perl)](https://github.com/maciejjan/bibman): A fast and simple TUI
   written in good ol' Perl. It looks like back in the days, but seems not being
-  maintained anymore
+  maintained anymore.
+- [cobib](https://github.com/mrossinek/cobib): Very elaborated bib manager with
+  CLI and TUI functions.
+- [papis](https://github.com/papis/papis): Powerful CLI tool for managing
+  bibliographies and documents. Has also some TUI features.
