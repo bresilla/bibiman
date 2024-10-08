@@ -15,6 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use core::panic;
+
 use backend::cliargs::{self, CLIArgs};
 use color_eyre::eyre::Result;
 use frontend::app::App;
@@ -37,6 +39,10 @@ async fn main() -> Result<()> {
     if parsed_args.versionarg {
         println!("{}", cliargs::version_func());
         std::process::exit(0);
+    }
+
+    if !parsed_args.bibfilearg.is_file() {
+        panic!("No \'.bib\' file passed, aborting")
     }
 
     // Create an application.

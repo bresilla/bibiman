@@ -102,6 +102,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
             KeyCode::Char('o') => {
                 app.open_connected_file()?;
             }
+            KeyCode::Char('u') => {
+                app.open_doi_url()?;
+            }
             KeyCode::Char('/') => {
                 app.enter_search_area();
             }

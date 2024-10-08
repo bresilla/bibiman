@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use core::panic;
 use std::path::PathBuf;
 
 use sarge::prelude::*;
@@ -45,7 +44,7 @@ impl CLIArgs {
             PathBuf::from(&pos_args[1])
             // pos_args[1].to_string()
         } else {
-            panic!("No path to bibfile provided as argument")
+            PathBuf::new()
         };
         Self {
             helparg: cli_args.help,
@@ -54,26 +53,6 @@ impl CLIArgs {
         }
     }
 }
-
-// Struct for positional arguments
-// TODO: Can surely be improved!!
-// pub struct PosArgs {
-//     pub bibfilearg: PathBuf,
-// }
-
-// impl PosArgs {
-//     pub fn parse_pos_args() -> Self {
-//         let (_, pos_args) = ArgumentsCLI::parse().expect("Could not parse positional arguments");
-//         Self {
-//             bibfilearg: if pos_args.len() > 1 {
-//                 PathBuf::from(&pos_args[1])
-//                 // pos_args[1].to_string()
-//             } else {
-//                 panic!("No path to bibfile provided as argument")
-//             }, // bibfilearg: pos_args[1].to_string(),
-//         }
-//     }
-// }
 
 pub fn help_func() -> String {
     let help = format!(

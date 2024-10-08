@@ -17,7 +17,6 @@
 
 use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
-use color_eyre::eyre::ErrReport;
 use std::{fs, path::PathBuf};
 
 // Set necessary fields

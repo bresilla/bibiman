@@ -19,13 +19,11 @@ use super::app::App;
 use super::tui::Tui;
 use crate::backend::search::BibiSearch;
 use color_eyre::eyre::{Context, Ok, Result};
+use core::panic;
 use editor_command::EditorBuilder;
 use itertools::Itertools;
 use ratatui::widgets::TableState;
-use std::{
-    io::Stderr,
-    process::{Command, Stdio},
-};
+use std::process::{Command, Stdio};
 
 impl FromIterator<Vec<String>> for EntryTable {
     fn from_iter<T: IntoIterator<Item = Vec<String>>>(iter: T) -> Self {
@@ -156,6 +154,8 @@ impl App {
     pub fn run_editor(&mut self, tui: &mut Tui) -> Result<()> {
         // get filecontent and citekey for calculating line number
         let citekey = self.get_selected_citekey();
+        // create independent copy of citekey for finding entry after updating list
+        let saved_key = citekey.to_owned();
         let filepath = self.main_biblio.bibfile.display().to_string();
         let filecontent = self.main_biblio.bibfilestring.clone();
         let mut line_count = 0;
@@ -197,6 +197,23 @@ impl App {
 
         // Update the database and the lists to show changes
         self.update_lists();
+
+        // Search for entry, selected before editing, by matching citekeys
+        // Use earlier saved copy of citekey to match
+        let mut idx_count = 0;
+        loop {
+            if self.entry_table.entry_table_items[idx_count]
+                .citekey
+                .contains(&saved_key)
+            {
+                break;
+            }
+            idx_count = idx_count + 1
+        }
+
+        // Set selected entry to vec-index of match
+        self.entry_table.entry_table_state.select(Some(idx_count));
+
         Ok(())
     }
 
@@ -224,15 +241,76 @@ impl App {
         let filepath = &self.entry_table.entry_table_items[idx].filepath.clone();
 
         // Build command to execute pdf-reader. 'xdg-open' is Linux standard
-        // TODO: need to implement for MacOS ('opener'). Windows, I don't know...
-        let _ = Command::new("xdg-open")
+        let cmd = {
+            match std::env::consts::OS {
+                "linux" => String::from("xdg-open"),
+                "macos" => String::from("open"),
+                "windows" => String::from("start"),
+                _ => panic!("Couldn't detect OS for setting correct opener"),
+            }
+        };
+
+        // Pass filepath as argument, pipe stdout and stderr to /dev/null
+        // to keep the TUI clean (where is it piped on Windows???)
+        let _ = Command::new(&cmd)
             .arg(&filepath)
-            // Pipe output produced by opener to /dev/null
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()
             .wrap_err("Opening file not possible");
 
         Ok(())
+    }
+
+    pub fn open_doi_url(&mut self) -> Result<()> {
+        let idx = self.entry_table.entry_table_state.selected().unwrap();
+        let web_adress = self.entry_table.entry_table_items[idx].doi_url.clone();
+
+        // Resolve strings using the resolving function of dx.doi.org, so the
+        // terminal is not blocked by the resolving process
+        let url = if web_adress.starts_with("10.") {
+            let prefix = "https://doi.org/".to_string();
+            prefix + &web_adress
+        } else if web_adress.starts_with("www.") {
+            let prefix = "https://".to_string();
+            prefix + &web_adress
+        } else {
+            web_adress
+        };
+
+        // Build command to execute browser. 'xdg-open' is Linux standard
+        let cmd = {
+            match std::env::consts::OS {
+                "linux" => String::from("xdg-open"),
+                "macos" => String::from("open"),
+                "windows" => String::from("start"),
+                _ => panic!("Couldn't detect OS for setting correct opener"),
+            }
+        };
+
+        // Pass filepath as argument, pipe stdout and stderr to /dev/null
+        // to keep the TUI clean (where is it piped on Windows???)
+        let _ = Command::new(&cmd)
+            .arg(url)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .wrap_err("Opening file not possible");
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn check_os() {
+        let os = std::env::consts::OS;
+        assert_eq!(
+            os,
+            "linux",
+            "You're not coding on linux, but on {}... Switch to linux, now!",
+            std::env::consts::OS
+        )
     }
 }
