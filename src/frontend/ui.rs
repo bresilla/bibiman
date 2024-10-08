@@ -270,8 +270,10 @@ impl App {
                     Span::styled("Year: ", style_value),
                     Span::styled(cur_entry.year.clone(), Style::new().light_magenta()),
                 ]));
-                if !cur_entry.doi_url.is_empty() {
+                if !cur_entry.doi_url.is_empty() || !cur_entry.filepath.is_empty() {
                     lines.push(Line::raw(""));
+                }
+                if !cur_entry.doi_url.is_empty() {
                     lines.push(Line::from(vec![
                         Span::styled("DOI/URL: ", style_value_sec),
                         Span::styled(
