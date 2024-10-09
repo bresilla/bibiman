@@ -22,8 +22,8 @@ use ratatui::{
     symbols,
     text::{Line, Span, Text},
     widgets::{
-        Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, StatefulWidget,
-        Table, Widget, Wrap,
+        Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
+        ScrollbarOrientation, StatefulWidget, Table, Widget, Wrap,
     },
 };
 
@@ -82,6 +82,7 @@ impl Widget for &mut App {
         self.render_footer(footer_area, buf);
         // Render list area where entry gets selected
         self.render_entrytable(list_area, buf);
+        self.render_entry_table_scrollbar(list_area, buf);
         // Render infos related to selected entry
         // TODO: only placeholder at the moment, has to be impl.
         self.render_taglist(tag_area, buf);
@@ -227,6 +228,20 @@ impl App {
             area,
             buf,
             &mut self.entry_table.entry_table_state,
+        );
+    }
+
+    pub fn render_entry_table_scrollbar(&mut self, area: Rect, buf: &mut Buffer) {
+        StatefulWidget::render(
+            Scrollbar::default()
+                .orientation(ScrollbarOrientation::VerticalRight)
+                .track_symbol(None)
+                .thumb_style(Style::new().fg(Color::DarkGray))
+                .begin_symbol(None)
+                .end_symbol(None),
+            area,
+            buf,
+            &mut self.entry_table.entry_scroll_state,
         );
     }
 

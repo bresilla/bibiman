@@ -22,12 +22,20 @@ use color_eyre::eyre::{Context, Ok, Result};
 use core::panic;
 use editor_command::EditorBuilder;
 use itertools::Itertools;
-use ratatui::widgets::TableState;
+use ratatui::widgets::{ScrollbarState, TableState};
 use std::process::{Command, Stdio};
+
+// Define list containing entries as table
+#[derive(Debug)]
+pub struct EntryTable {
+    pub entry_table_items: Vec<EntryTableItem>,
+    pub entry_table_state: TableState,
+    pub entry_scroll_state: ScrollbarState,
+}
 
 impl FromIterator<Vec<String>> for EntryTable {
     fn from_iter<T: IntoIterator<Item = Vec<String>>>(iter: T) -> Self {
-        let entry_table_items = iter
+        let entry_table_items: Vec<EntryTableItem> = iter
             .into_iter()
             .sorted()
             // 0: authors, 1: title, 2: date, 3: pubtype, 4: keywords, 5: citekey
@@ -40,18 +48,13 @@ impl FromIterator<Vec<String>> for EntryTable {
             })
             .collect();
         let entry_table_state = TableState::default().with_selected(0);
+        let entry_scroll_state = ScrollbarState::new(entry_table_items.len());
         Self {
             entry_table_items,
             entry_table_state,
+            entry_scroll_state,
         }
     }
-}
-
-// Define list containing entries as table
-#[derive(Debug)]
-pub struct EntryTable {
-    pub entry_table_items: Vec<EntryTableItem>,
-    pub entry_table_state: TableState,
 }
 
 // Define contents of each entry table row
@@ -127,21 +130,34 @@ impl App {
     pub fn select_next_entry(&mut self) {
         self.scroll_info = 0;
         self.entry_table.entry_table_state.select_next();
+        self.entry_table.entry_scroll_state = self
+            .entry_table
+            .entry_scroll_state
+            .position(self.entry_table.entry_table_state.selected().unwrap());
     }
 
     pub fn select_previous_entry(&mut self) {
         self.scroll_info = 0;
         self.entry_table.entry_table_state.select_previous();
+        self.entry_table.entry_scroll_state = self
+            .entry_table
+            .entry_scroll_state
+            .position(self.entry_table.entry_table_state.selected().unwrap());
     }
 
     pub fn select_first_entry(&mut self) {
         self.scroll_info = 0;
         self.entry_table.entry_table_state.select_first();
+        self.entry_table.entry_scroll_state = self.entry_table.entry_scroll_state.position(0);
     }
 
     pub fn select_last_entry(&mut self) {
         self.scroll_info = 0;
         self.entry_table.entry_table_state.select_last();
+        self.entry_table.entry_scroll_state = self
+            .entry_table
+            .entry_scroll_state
+            .position(self.entry_table.entry_table_items.len());
     }
 
     // Get the citekey of the selected entry
