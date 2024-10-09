@@ -53,12 +53,13 @@ updated:
 - [x] **Filter** the bib entries by _keywords_ (and afterwards filter further by
       fuzzy searching).
 - [x] **Edit** the current entry by opening a _terminal-based editor_ at the
-      specific line
+      specific line.
 - [x] **Yank/Copy** the citekey of the current entry to the system clipboard.
-- [x] **Open PDF**: Open related PDF file (`file` BibLaTeX key) with keypress.
-- [x] **Open URL/DOI**: Open related DOI/URL with keypress.
-- [ ] **Add Entry via DOI**: Download bibliographic metadata for inserted DOI
-      and add it to `.bib` file
+- [x] **Open related PDF** file (`file` BibLaTeX key) with keypress.
+- [x] **Open related URL/DOI** with keypress.
+- [ ] **Add Entry via DOI** to download bibliographic metadata for inserted DOI
+      and add it to `.bib` file.
+- [ ] **Scrollbar** for better navigating.
 
 ## Keybindings
 
