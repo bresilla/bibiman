@@ -19,8 +19,7 @@ use crate::frontend::app::App;
 use crossterm::{
     cursor,
     event::{
-        DisableMouseCapture, EnableMouseCapture,
-        Event as CrosstermEvent, KeyEvent, MouseEvent,
+        DisableMouseCapture, EnableMouseCapture, Event as CrosstermEvent, KeyEvent, MouseEvent,
     },
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -33,6 +32,7 @@ use std::{
     time::Duration,
 };
 
+use color_eyre::config::HookBuilder;
 use color_eyre::eyre::{OptionExt, Result};
 use futures::{FutureExt, StreamExt};
 use tokio::sync::mpsc;
@@ -101,45 +101,6 @@ impl Tui {
         // let _sender = self.sender.clone();
         self.handler = tokio::spawn(async {
             event_loop.await;
-            //     let mut reader = crossterm::event::EventStream::new();
-            //     let mut tick = tokio::time::interval(tick_rate);
-            //     loop {
-            //         let tick_delay = tick.tick();
-            //         let crossterm_event = reader.next().fuse();
-            //         tokio::select! {
-            //             // _ = _sender.closed() => {
-            //             //   break;
-            //             // }
-            //             _ = _cancellation_token.cancelled() => {
-            //               break;
-            //             }
-            //             Some(Ok(evt)) = crossterm_event => {
-            //                 match evt {
-            //                     CrosstermEvent::Key(key) => {
-            //                         if key.kind == crossterm::event::KeyEventKind::Press {
-            //                             _sender.send(Event::Key(key)).unwrap();
-            //                         }
-            //                     },
-            //                     CrosstermEvent::Mouse(mouse) => {
-            //                         _sender.send(Event::Mouse(mouse)).unwrap();
-            //                     },
-            //                     CrosstermEvent::Resize(x, y) => {
-            //                         _sender.send(Event::Resize(x, y)).unwrap();
-            //                     },
-            //                     CrosstermEvent::FocusLost => {
-            //                     },
-            //                     CrosstermEvent::FocusGained => {
-            //                     },
-            //                     CrosstermEvent::Paste(_) => {
-            //                     },
-            //                 }
-            //             }
-            //             _ = tick_delay => {
-            //                 _sender.send(Event::Tick).unwrap();
-            //             }
-            //         };
-            //     }
-            //     _cancellation_token.cancel();
         });
     }
 
@@ -218,6 +179,7 @@ impl Tui {
         // if self.paste {
         //     crossterm::execute!(stdout(), EnableBracketedPaste)?;
         // }
+        Self::init_error_hooks()?;
         self.start();
         Ok(())
     }
@@ -265,31 +227,35 @@ impl Tui {
         Ok(())
     }
 
-    // /// Resets the terminal interface.
-    // ///
-    // /// This function is also used for the panic hook to revert
-    // /// the terminal properties if unexpected errors occur.
-    // fn reset() -> Result<()> {
-    //     terminal::disable_raw_mode()?;
-    //     crossterm::execute!(io::stdout(), LeaveAlternateScreen, DisableMouseCapture)?;
-    //     Ok(())
-    // }
-
-    // /// Exits the terminal interface.
-    // ///
-    // /// It disables the raw mode and reverts back the terminal properties.
-    // pub fn exit(&mut self) -> Result<()> {
-    //     Self::reset()?;
-    //     self.terminal.show_cursor()?;
-    //     Ok(())
-    // }
-
     pub async fn next(&mut self) -> Result<Event> {
         self.receiver.recv().await.ok_or_eyre("This is an IO error")
-        // .ok_or(Box::new(std::io::Error::new(
-        //     std::io::ErrorKind::Other,
-        //     "This is an IO error",
-        // )))
+    }
+
+    pub fn init_error_hooks() -> Result<()> {
+        let (panic, error) = HookBuilder::default().into_hooks();
+        let panic = panic.into_panic_hook();
+        let error = error.into_eyre_hook();
+        color_eyre::eyre::set_hook(Box::new(move |e| {
+            let _ = crossterm::execute!(
+                stdout(),
+                DisableMouseCapture,
+                LeaveAlternateScreen,
+                cursor::Show
+            );
+            let _ = crossterm::terminal::disable_raw_mode();
+            error(e)
+        }))?;
+        std::panic::set_hook(Box::new(move |info| {
+            let _ = crossterm::execute!(
+                stdout(),
+                DisableMouseCapture,
+                LeaveAlternateScreen,
+                cursor::Show
+            );
+            let _ = crossterm::terminal::disable_raw_mode();
+            panic(info)
+        }));
+        Ok(())
     }
 }
 
