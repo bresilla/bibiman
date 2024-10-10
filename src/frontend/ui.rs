@@ -47,6 +47,9 @@ const SELECTED_STYLE: Style = Style::new()
 const TEXT_FG_COLOR: Color = Color::Indexed(252);
 const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(245);
 
+const SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
+const SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
+
 pub const fn alternate_colors(i: usize) -> Color {
     if i % 2 == 0 {
         NORMAL_ROW_BG
@@ -82,9 +85,7 @@ impl Widget for &mut App {
         self.render_footer(footer_area, buf);
         // Render list area where entry gets selected
         self.render_entrytable(list_area, buf);
-        self.render_entry_table_scrollbar(list_area, buf);
         // Render infos related to selected entry
-        // TODO: only placeholder at the moment, has to be impl.
         self.render_taglist(tag_area, buf);
         self.render_selected_item(info_area, buf);
     }
@@ -229,20 +230,24 @@ impl App {
             buf,
             &mut self.entry_table.entry_table_state,
         );
-    }
 
-    pub fn render_entry_table_scrollbar(&mut self, area: Rect, buf: &mut Buffer) {
-        StatefulWidget::render(
-            Scrollbar::default()
-                .orientation(ScrollbarOrientation::VerticalRight)
-                .track_symbol(None)
-                .thumb_style(Style::new().fg(Color::DarkGray))
-                .begin_symbol(None)
-                .end_symbol(None),
-            area,
-            buf,
-            &mut self.entry_table.entry_scroll_state,
-        );
+        // Scrollbar for entry table
+        let scrollbar = Scrollbar::default()
+            .orientation(ScrollbarOrientation::VerticalRight)
+            .track_symbol(None)
+            .begin_symbol(SCROLLBAR_UPPER_CORNER)
+            .end_symbol(SCROLLBAR_LOWER_CORNER)
+            .thumb_style(Style::new().fg(Color::DarkGray));
+
+        if let CurrentArea::EntryArea = self.current_area {
+            // render the scrollbar
+            StatefulWidget::render(
+                scrollbar,
+                area,
+                buf,
+                &mut self.entry_table.entry_scroll_state,
+            );
+        }
     }
 
     pub fn render_selected_item(&mut self, area: Rect, buf: &mut Buffer) {
@@ -358,6 +363,25 @@ impl App {
             .wrap(Wrap { trim: false })
             .scroll((scroll_height, 0))
             .render(area, buf);
+
+        let scrollbar = Scrollbar::default()
+            .orientation(ScrollbarOrientation::VerticalRight)
+            .track_symbol(None)
+            .begin_symbol(SCROLLBAR_UPPER_CORNER)
+            .end_symbol(SCROLLBAR_LOWER_CORNER)
+            .thumb_style(Style::new().fg(Color::DarkGray));
+
+        if box_height > area.height.into() {
+            if let CurrentArea::EntryArea = self.current_area {
+                // render the scrollbar
+                StatefulWidget::render(
+                    scrollbar,
+                    area,
+                    buf,
+                    &mut self.entry_table.entry_scroll_state,
+                );
+            }
+        }
     }
 
     pub fn render_taglist(&mut self, area: Rect, buf: &mut Buffer) {
@@ -404,8 +428,32 @@ impl App {
             // .highlight_symbol("> ")
             .highlight_spacing(HighlightSpacing::Always);
 
+        // Save list length for calculating scrollbar need
+        // Add 2 to compmensate lines of the block border
+        let list_length = list.len() + 2;
+
         // We need to disambiguate this trait method as both `Widget` and `StatefulWidget` share the
         // same method name `render`.
         StatefulWidget::render(list, area, buf, &mut self.tag_list.tag_list_state);
+
+        // Scrollbar for keyword list
+        let scrollbar = Scrollbar::default()
+            .orientation(ScrollbarOrientation::VerticalRight)
+            .track_symbol(None)
+            .begin_symbol(SCROLLBAR_UPPER_CORNER)
+            .end_symbol(SCROLLBAR_LOWER_CORNER)
+            .thumb_style(Style::new().fg(Color::DarkGray));
+
+        if list_length > area.height.into() {
+            if let CurrentArea::TagArea = self.current_area {
+                // render the scrollbar
+                StatefulWidget::render(
+                    scrollbar,
+                    area,
+                    buf,
+                    &mut self.entry_table.entry_scroll_state,
+                );
+            }
+        }
     }
 }

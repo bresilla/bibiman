@@ -148,6 +148,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
             }
             _ => {}
         },
+        CurrentArea::InfoArea => {}
     }
     Ok(())
 }

@@ -179,7 +179,7 @@ impl Tui {
         // if self.paste {
         //     crossterm::execute!(stdout(), EnableBracketedPaste)?;
         // }
-        Self::init_error_hooks()?;
+        // Self::init_error_hooks()?;
         self.start();
         Ok(())
     }

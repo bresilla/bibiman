@@ -33,6 +33,7 @@ pub enum CurrentArea {
     TagArea,
     SearchArea,
     HelpArea,
+    InfoArea,
 }
 
 // Check which area was active when popup set active
@@ -137,11 +138,20 @@ impl App {
     // Toggle moveable list between entries and tags
     pub fn toggle_area(&mut self) {
         if let CurrentArea::EntryArea = self.current_area {
+            self.entry_table.entry_scroll_state = self.entry_table.entry_scroll_state.position(0);
             self.current_area = CurrentArea::TagArea;
-            self.tag_list.tag_list_state.select(Some(0))
+            self.tag_list.tag_list_state.select(Some(0));
+            self.tag_list.tag_scroll_state = self
+                .tag_list
+                .tag_scroll_state
+                .position(self.tag_list.tag_list_state.selected().unwrap());
         } else if let CurrentArea::TagArea = self.current_area {
             self.current_area = CurrentArea::EntryArea;
-            self.tag_list.tag_list_state.select(None)
+            self.tag_list.tag_list_state.select(None);
+            self.entry_table.entry_scroll_state = self
+                .entry_table
+                .entry_scroll_state
+                .position(self.entry_table.entry_table_state.selected().unwrap());
         }
     }
 
