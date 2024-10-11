@@ -175,15 +175,25 @@ impl App {
     }
 
     pub fn scroll_info_down(&mut self) {
-        self.scroll_info = self.scroll_info + 1;
+        // self.entry_table.entry_info_scroll = self.entry_table.entry_info_scroll + 1;
+        self.entry_table.entry_info_scroll = self.entry_table.entry_info_scroll.saturating_add(1);
+        self.entry_table.entry_info_scroll_state = self
+            .entry_table
+            .entry_info_scroll_state
+            .position(self.entry_table.entry_info_scroll.into());
     }
 
     pub fn scroll_info_up(&mut self) {
-        if self.scroll_info == 0 {
-            {}
-        } else {
-            self.scroll_info = self.scroll_info - 1;
-        }
+        // if self.entry_table.entry_info_scroll == 0 {
+        //     {}
+        // } else {
+        //     self.entry_table.entry_info_scroll = self.entry_table.entry_info_scroll - 1;
+        // }
+        self.entry_table.entry_info_scroll = self.entry_table.entry_info_scroll.saturating_sub(1);
+        self.entry_table.entry_info_scroll_state = self
+            .entry_table
+            .entry_info_scroll_state
+            .position(self.entry_table.entry_info_scroll.into());
     }
 
     // Search Area

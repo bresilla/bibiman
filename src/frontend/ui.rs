@@ -17,13 +17,14 @@
 
 use ratatui::{
     buffer::Buffer,
-    layout::{Constraint, Layout, Rect},
+    layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     symbols,
     text::{Line, Span, Text},
     widgets::{
+        block::{Position, Title},
         Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
-        ScrollbarOrientation, StatefulWidget, Table, Widget, Wrap,
+        ScrollbarOrientation, ScrollbarState, StatefulWidget, Table, Widget, Wrap,
     },
 };
 
@@ -343,22 +344,32 @@ impl App {
             .line_count(area.width);
         // Make sure to allow scroll only if text is larger than the rendered area and stop scrolling when last line is reached
         let scroll_height = {
-            if self.scroll_info == 0 {
-                self.scroll_info
+            if self.entry_table.entry_info_scroll == 0 {
+                self.entry_table.entry_info_scroll
             } else if area.height > box_height as u16 {
-                self.scroll_info = 0;
-                self.scroll_info
-            } else if self.scroll_info > (box_height as u16 + 1 - area.height) {
-                self.scroll_info = box_height as u16 + 1 - area.height;
-                self.scroll_info
+                self.entry_table.entry_info_scroll = 0;
+                self.entry_table.entry_info_scroll
+            } else if self.entry_table.entry_info_scroll > (box_height as u16 + 2 - area.height) {
+                self.entry_table.entry_info_scroll = box_height as u16 + 2 - area.height;
+                self.entry_table.entry_info_scroll
             } else {
-                self.scroll_info
+                self.entry_table.entry_info_scroll
             }
         };
 
         // We can now render the item info
         Paragraph::new(info)
-            .block(block)
+            .block(
+                block.title(
+                    Title::from(if box_height > area.height.into() {
+                        " ▼ "
+                    } else {
+                        ""
+                    })
+                    .position(Position::Bottom)
+                    .alignment(Alignment::Right),
+                ),
+            )
             // .fg(TEXT_FG_COLOR)
             .wrap(Wrap { trim: false })
             .scroll((scroll_height, 0))
@@ -371,17 +382,19 @@ impl App {
             .end_symbol(SCROLLBAR_LOWER_CORNER)
             .thumb_style(Style::new().fg(Color::DarkGray));
 
-        if box_height > area.height.into() {
-            if let CurrentArea::EntryArea = self.current_area {
-                // render the scrollbar
-                StatefulWidget::render(
-                    scrollbar,
-                    area,
-                    buf,
-                    &mut self.entry_table.entry_scroll_state,
-                );
-            }
-        }
+        // if box_height > area.height.into() {
+        //     // self.entry_table.entry_info_scroll_state = ScrollbarState::new(area.height.into());
+        //     self.entry_table.entry_info_scroll_state = self
+        //         .entry_table
+        //         .entry_info_scroll_state
+        //         .content_length(area.height.into());
+        //     StatefulWidget::render(
+        //         scrollbar,
+        //         area,
+        //         buf,
+        //         &mut self.entry_table.entry_info_scroll_state,
+        //     );
+        // }
     }
 
     pub fn render_taglist(&mut self, area: Rect, buf: &mut Buffer) {
@@ -447,12 +460,7 @@ impl App {
         if list_length > area.height.into() {
             if let CurrentArea::TagArea = self.current_area {
                 // render the scrollbar
-                StatefulWidget::render(
-                    scrollbar,
-                    area,
-                    buf,
-                    &mut self.entry_table.entry_scroll_state,
-                );
+                StatefulWidget::render(scrollbar, area, buf, &mut self.tag_list.tag_scroll_state);
             }
         }
     }

@@ -31,6 +31,8 @@ pub struct EntryTable {
     pub entry_table_items: Vec<EntryTableItem>,
     pub entry_table_state: TableState,
     pub entry_scroll_state: ScrollbarState,
+    pub entry_info_scroll: u16,
+    pub entry_info_scroll_state: ScrollbarState,
 }
 
 impl FromIterator<Vec<String>> for EntryTable {
@@ -49,10 +51,13 @@ impl FromIterator<Vec<String>> for EntryTable {
             .collect();
         let entry_table_state = TableState::default().with_selected(0);
         let entry_scroll_state = ScrollbarState::new(entry_table_items.len());
+        let entry_info_scroll_state = ScrollbarState::default();
         Self {
             entry_table_items,
             entry_table_state,
             entry_scroll_state,
+            entry_info_scroll: 0,
+            entry_info_scroll_state,
         }
     }
 }
@@ -128,7 +133,9 @@ impl App {
 
     // Movement
     pub fn select_next_entry(&mut self) {
-        self.scroll_info = 0;
+        self.entry_table.entry_info_scroll = 0;
+        self.entry_table.entry_info_scroll_state =
+            self.entry_table.entry_info_scroll_state.position(0);
         self.entry_table.entry_table_state.select_next();
         self.entry_table.entry_scroll_state = self
             .entry_table
@@ -137,7 +144,9 @@ impl App {
     }
 
     pub fn select_previous_entry(&mut self) {
-        self.scroll_info = 0;
+        self.entry_table.entry_info_scroll = 0;
+        self.entry_table.entry_info_scroll_state =
+            self.entry_table.entry_info_scroll_state.position(0);
         self.entry_table.entry_table_state.select_previous();
         self.entry_table.entry_scroll_state = self
             .entry_table
@@ -146,13 +155,17 @@ impl App {
     }
 
     pub fn select_first_entry(&mut self) {
-        self.scroll_info = 0;
+        self.entry_table.entry_info_scroll = 0;
+        self.entry_table.entry_info_scroll_state =
+            self.entry_table.entry_info_scroll_state.position(0);
         self.entry_table.entry_table_state.select_first();
         self.entry_table.entry_scroll_state = self.entry_table.entry_scroll_state.position(0);
     }
 
     pub fn select_last_entry(&mut self) {
-        self.scroll_info = 0;
+        self.entry_table.entry_info_scroll = 0;
+        self.entry_table.entry_info_scroll_state =
+            self.entry_table.entry_info_scroll_state.position(0);
         self.entry_table.entry_table_state.select_last();
         self.entry_table.entry_scroll_state = self
             .entry_table
