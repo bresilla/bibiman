@@ -15,13 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use core::panic;
-
 use backend::cliargs::{self, CLIArgs};
 use color_eyre::eyre::Result;
+use core::panic;
+use errorsetup::init_error_hooks;
 use frontend::app::App;
 
 pub mod backend;
+pub mod errorsetup;
 pub mod frontend;
 
 #[tokio::main]
@@ -44,6 +45,8 @@ async fn main() -> Result<()> {
     if !parsed_args.bibfilearg.is_file() {
         panic!("No \'.bib\' file passed, aborting")
     }
+
+    init_error_hooks()?;
 
     // Create an application.
     let mut app = App::new(parsed_args)?;

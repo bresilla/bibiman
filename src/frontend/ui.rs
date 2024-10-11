@@ -17,13 +17,14 @@
 
 use ratatui::{
     buffer::Buffer,
-    layout::{Constraint, Layout, Rect},
+    layout::{Alignment, Constraint, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     symbols,
     text::{Line, Span, Text},
     widgets::{
-        Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, StatefulWidget,
-        Table, Widget, Wrap,
+        block::{Position, Title},
+        Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
+        ScrollbarOrientation, StatefulWidget, Table, Widget, Wrap,
     },
 };
 
@@ -46,6 +47,9 @@ const SELECTED_STYLE: Style = Style::new()
     .add_modifier(Modifier::REVERSED);
 const TEXT_FG_COLOR: Color = Color::Indexed(252);
 const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(245);
+
+const SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
+const SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
 
 pub const fn alternate_colors(i: usize) -> Color {
     if i % 2 == 0 {
@@ -83,7 +87,6 @@ impl Widget for &mut App {
         // Render list area where entry gets selected
         self.render_entrytable(list_area, buf);
         // Render infos related to selected entry
-        // TODO: only placeholder at the moment, has to be impl.
         self.render_taglist(tag_area, buf);
         self.render_selected_item(info_area, buf);
     }
@@ -228,6 +231,24 @@ impl App {
             buf,
             &mut self.entry_table.entry_table_state,
         );
+
+        // Scrollbar for entry table
+        let scrollbar = Scrollbar::default()
+            .orientation(ScrollbarOrientation::VerticalRight)
+            .track_symbol(None)
+            .begin_symbol(SCROLLBAR_UPPER_CORNER)
+            .end_symbol(SCROLLBAR_LOWER_CORNER)
+            .thumb_style(Style::new().fg(Color::DarkGray));
+
+        if let CurrentArea::EntryArea = self.current_area {
+            // render the scrollbar
+            StatefulWidget::render(
+                scrollbar,
+                area,
+                buf,
+                &mut self.entry_table.entry_scroll_state,
+            );
+        }
     }
 
     pub fn render_selected_item(&mut self, area: Rect, buf: &mut Buffer) {
@@ -323,22 +344,44 @@ impl App {
             .line_count(area.width);
         // Make sure to allow scroll only if text is larger than the rendered area and stop scrolling when last line is reached
         let scroll_height = {
-            if self.scroll_info == 0 {
-                self.scroll_info
+            if self.entry_table.entry_info_scroll == 0 {
+                self.entry_table.entry_info_scroll
             } else if area.height > box_height as u16 {
-                self.scroll_info = 0;
-                self.scroll_info
-            } else if self.scroll_info > (box_height as u16 + 1 - area.height) {
-                self.scroll_info = box_height as u16 + 1 - area.height;
-                self.scroll_info
+                self.entry_table.entry_info_scroll = 0;
+                self.entry_table.entry_info_scroll
+            } else if self.entry_table.entry_info_scroll > (box_height as u16 + 2 - area.height) {
+                self.entry_table.entry_info_scroll = box_height as u16 + 2 - area.height;
+                self.entry_table.entry_info_scroll
             } else {
-                self.scroll_info
+                self.entry_table.entry_info_scroll
             }
         };
 
         // We can now render the item info
         Paragraph::new(info)
-            .block(block)
+            .block(
+                block
+                    // Render arrows to show that info box has content outside the block
+                    .title(
+                        Title::from(
+                            if box_height > area.height.into()
+                                && self.entry_table.entry_info_scroll
+                                    < box_height as u16 + 2 - area.height
+                            {
+                                " ▼ "
+                            } else {
+                                ""
+                            },
+                        )
+                        .position(Position::Bottom)
+                        .alignment(Alignment::Right),
+                    )
+                    .title(
+                        Title::from(if scroll_height > 0 { " ▲ " } else { "" })
+                            .position(Position::Top)
+                            .alignment(Alignment::Right),
+                    ),
+            )
             // .fg(TEXT_FG_COLOR)
             .wrap(Wrap { trim: false })
             .scroll((scroll_height, 0))
@@ -389,8 +432,27 @@ impl App {
             // .highlight_symbol("> ")
             .highlight_spacing(HighlightSpacing::Always);
 
+        // Save list length for calculating scrollbar need
+        // Add 2 to compmensate lines of the block border
+        let list_length = list.len() + 2;
+
         // We need to disambiguate this trait method as both `Widget` and `StatefulWidget` share the
         // same method name `render`.
         StatefulWidget::render(list, area, buf, &mut self.tag_list.tag_list_state);
+
+        // Scrollbar for keyword list
+        let scrollbar = Scrollbar::default()
+            .orientation(ScrollbarOrientation::VerticalRight)
+            .track_symbol(None)
+            .begin_symbol(SCROLLBAR_UPPER_CORNER)
+            .end_symbol(SCROLLBAR_LOWER_CORNER)
+            .thumb_style(Style::new().fg(Color::DarkGray));
+
+        if list_length > area.height.into() {
+            if let CurrentArea::TagArea = self.current_area {
+                // render the scrollbar
+                StatefulWidget::render(scrollbar, area, buf, &mut self.tag_list.tag_scroll_state);
+            }
+        }
     }
 }

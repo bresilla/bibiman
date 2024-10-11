@@ -18,12 +18,13 @@
 use super::app::{App, FormerArea};
 use super::entries::EntryTable;
 use crate::backend::search::BibiSearch;
-use ratatui::widgets::ListState;
+use ratatui::widgets::{ListState, ScrollbarState};
 
 #[derive(Debug)]
 pub struct TagList {
     pub tag_list_items: Vec<TagListItem>,
     pub tag_list_state: ListState,
+    pub tag_scroll_state: ScrollbarState,
 }
 
 // Structure of the list items.
@@ -43,14 +44,16 @@ impl TagListItem {
 
 impl FromIterator<String> for TagList {
     fn from_iter<I: IntoIterator<Item = String>>(iter: I) -> Self {
-        let tag_list_items = iter
+        let tag_list_items: Vec<TagListItem> = iter
             .into_iter()
             .map(|info| TagListItem::new(&info))
             .collect();
         let tag_list_state = ListState::default(); // for preselection: .with_selected(Some(0));
+        let tag_scroll_state = ScrollbarState::new(tag_list_items.len());
         Self {
             tag_list_items,
             tag_list_state,
+            tag_scroll_state,
         }
     }
 }
@@ -61,18 +64,31 @@ impl App {
     // Movement
     pub fn select_next_tag(&mut self) {
         self.tag_list.tag_list_state.select_next();
+        self.tag_list.tag_scroll_state = self
+            .tag_list
+            .tag_scroll_state
+            .position(self.tag_list.tag_list_state.selected().unwrap());
     }
 
     pub fn select_previous_tag(&mut self) {
         self.tag_list.tag_list_state.select_previous();
+        self.tag_list.tag_scroll_state = self
+            .tag_list
+            .tag_scroll_state
+            .position(self.tag_list.tag_list_state.selected().unwrap());
     }
 
     pub fn select_first_tag(&mut self) {
         self.tag_list.tag_list_state.select_first();
+        self.tag_list.tag_scroll_state = self.tag_list.tag_scroll_state.position(0);
     }
 
     pub fn select_last_tag(&mut self) {
         self.tag_list.tag_list_state.select_last();
+        self.tag_list.tag_scroll_state = self
+            .tag_list
+            .tag_scroll_state
+            .position(self.tag_list.tag_list_items.len());
     }
 
     pub fn get_selected_tag(&self) -> &str {

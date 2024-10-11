@@ -48,11 +48,25 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
     match app.current_area {
         // Keycodes for the tag area
         CurrentArea::TagArea => match key_event.code {
-            KeyCode::Char('j') | KeyCode::Down => {
+            KeyCode::Down => {
                 app.select_next_tag();
             }
-            KeyCode::Char('k') | KeyCode::Up => {
+            KeyCode::Up => {
                 app.select_previous_tag();
+            }
+            KeyCode::Char('j') => {
+                if key_event.modifiers == KeyModifiers::ALT {
+                    app.scroll_info_down();
+                } else {
+                    app.select_next_tag();
+                }
+            }
+            KeyCode::Char('k') => {
+                if key_event.modifiers == KeyModifiers::ALT {
+                    app.scroll_info_up();
+                } else {
+                    app.select_previous_tag();
+                }
             }
             KeyCode::Char('g') | KeyCode::Home => {
                 app.select_first_tag();
@@ -81,11 +95,25 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
         },
         // Keycodes for the entry area
         CurrentArea::EntryArea => match key_event.code {
-            KeyCode::Char('j') | KeyCode::Down => {
+            KeyCode::Down => {
                 app.select_next_entry();
             }
-            KeyCode::Char('k') | KeyCode::Up => {
+            KeyCode::Up => {
                 app.select_previous_entry();
+            }
+            KeyCode::Char('j') => {
+                if key_event.modifiers == KeyModifiers::ALT {
+                    app.scroll_info_down();
+                } else {
+                    app.select_next_entry();
+                }
+            }
+            KeyCode::Char('k') => {
+                if key_event.modifiers == KeyModifiers::ALT {
+                    app.scroll_info_up();
+                } else {
+                    app.select_previous_entry();
+                }
             }
             KeyCode::Char('g') | KeyCode::Home => {
                 app.select_first_entry();
@@ -148,6 +176,7 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
             }
             _ => {}
         },
+        CurrentArea::InfoArea => {}
     }
     Ok(())
 }
