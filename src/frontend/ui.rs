@@ -24,7 +24,7 @@ use ratatui::{
     widgets::{
         block::{Position, Title},
         Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
-        ScrollbarOrientation, ScrollbarState, StatefulWidget, Table, Widget, Wrap,
+        ScrollbarOrientation, StatefulWidget, Table, Widget, Wrap,
     },
 };
 
@@ -360,41 +360,32 @@ impl App {
         // We can now render the item info
         Paragraph::new(info)
             .block(
-                block.title(
-                    Title::from(if box_height > area.height.into() {
-                        " ▼ "
-                    } else {
-                        ""
-                    })
-                    .position(Position::Bottom)
-                    .alignment(Alignment::Right),
-                ),
+                block
+                    // Render arrows to show that info box has content outside the block
+                    .title(
+                        Title::from(
+                            if box_height > area.height.into()
+                                && self.entry_table.entry_info_scroll
+                                    < box_height as u16 + 2 - area.height
+                            {
+                                " ▼ "
+                            } else {
+                                ""
+                            },
+                        )
+                        .position(Position::Bottom)
+                        .alignment(Alignment::Right),
+                    )
+                    .title(
+                        Title::from(if scroll_height > 0 { " ▲ " } else { "" })
+                            .position(Position::Top)
+                            .alignment(Alignment::Right),
+                    ),
             )
             // .fg(TEXT_FG_COLOR)
             .wrap(Wrap { trim: false })
             .scroll((scroll_height, 0))
             .render(area, buf);
-
-        let scrollbar = Scrollbar::default()
-            .orientation(ScrollbarOrientation::VerticalRight)
-            .track_symbol(None)
-            .begin_symbol(SCROLLBAR_UPPER_CORNER)
-            .end_symbol(SCROLLBAR_LOWER_CORNER)
-            .thumb_style(Style::new().fg(Color::DarkGray));
-
-        // if box_height > area.height.into() {
-        //     // self.entry_table.entry_info_scroll_state = ScrollbarState::new(area.height.into());
-        //     self.entry_table.entry_info_scroll_state = self
-        //         .entry_table
-        //         .entry_info_scroll_state
-        //         .content_length(area.height.into());
-        //     StatefulWidget::render(
-        //         scrollbar,
-        //         area,
-        //         buf,
-        //         &mut self.entry_table.entry_info_scroll_state,
-        //     );
-        // }
     }
 
     pub fn render_taglist(&mut self, area: Rect, buf: &mut Buffer) {
