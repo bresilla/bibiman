@@ -5,7 +5,7 @@ database as part of a terminal-based scientific workflow.
 
 Here's a small impression how it looks and works:
 
-![A demo gif of bibiman](./res/bibiman-demo-vhs.gif)
+![A demo gif of bibiman](https://imgur.com/a/yPQkc78)
 
 ## Installation
 
