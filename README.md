@@ -57,9 +57,9 @@ updated:
 - [x] **Yank/Copy** the citekey of the current entry to the system clipboard.
 - [x] **Open related PDF** file (`file` BibLaTeX key) with keypress.
 - [x] **Open related URL/DOI** with keypress.
+- [x] **Scrollbar** for better navigating.
 - [ ] **Add Entry via DOI** to download bibliographic metadata for inserted DOI
       and add it to `.bib` file.
-- [ ] **Scrollbar** for better navigating.
 
 ## Keybindings
 
