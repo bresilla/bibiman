@@ -5,7 +5,7 @@ database as part of a terminal-based scientific workflow.
 
 Here's a small impression how it looks and works:
 
-<blockquote class="imgur-embed-pub" lang="en" data-id="a/yPQkc78" data-context="false" ><a href="//imgur.com/a/yPQkc78"></a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>
+[bibiman demo gif](https://imgur.com/VUS0GkE)
 
 ## Installation
 
