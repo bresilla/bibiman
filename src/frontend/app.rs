@@ -161,7 +161,8 @@ impl App {
         if let CurrentArea::TagArea = self.current_area {
             self.tag_list.tag_list_state.select(Some(0))
         }
-        self.search_struct.filtered_entry_list.clear();
+        self.search_struct.filtered_entry_list_by_search.clear();
+        self.search_struct.filtered_entry_list_by_tags.clear();
         self.search_struct.filtered_tag_list.clear();
         self.search_struct.inner_search = false;
         self.former_area = None

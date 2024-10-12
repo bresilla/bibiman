@@ -105,9 +105,17 @@ impl App {
     }
 
     pub fn filter_tags_by_entries(&mut self) {
-        if !self.search_struct.filtered_entry_list.is_empty() {
+        if !self.search_struct.filtered_entry_list_by_search.is_empty()
+            || !self.search_struct.filtered_entry_list_by_tags.is_empty()
+        {
             self.search_struct.filtered_tag_list.clear();
-            let orig_list = self.search_struct.filtered_entry_list.clone();
+
+            let orig_list = if !self.search_struct.filtered_entry_list_by_search.is_empty() {
+                self.search_struct.filtered_entry_list_by_search.clone()
+            } else {
+                self.search_struct.filtered_entry_list_by_tags.clone()
+            };
+
             let mut filtered_keywords: Vec<String> = Vec::new();
 
             for e in orig_list {
@@ -135,7 +143,7 @@ impl App {
     pub fn filter_for_tags(&mut self) {
         let orig_list = {
             if self.search_struct.inner_search {
-                let orig_list = &self.search_struct.filtered_entry_list;
+                let orig_list = &self.search_struct.filtered_entry_list_by_search;
                 orig_list
             } else {
                 let orig_list = &self.biblio_data.entry_list.bibentries;
@@ -144,8 +152,9 @@ impl App {
         };
         let keyword = self.get_selected_tag();
         let filtered_list = BibiSearch::filter_entries_by_tag(&keyword, &orig_list);
-        self.search_struct.filtered_entry_list = filtered_list;
-        self.entry_table = EntryTable::from_iter(self.search_struct.filtered_entry_list.clone());
+        self.search_struct.filtered_entry_list_by_tags = filtered_list;
+        self.entry_table =
+            EntryTable::from_iter(self.search_struct.filtered_entry_list_by_tags.clone());
         self.filter_tags_by_entries();
         self.toggle_area();
         self.former_area = Some(FormerArea::TagArea);

@@ -8,7 +8,8 @@ use std::collections::HashMap;
 pub struct BibiSearch {
     pub search_string: String, // Search string show in footer, used for search
     pub inner_search: bool,    // True, if we trigger a search for already filtered list
-    pub filtered_entry_list: Vec<Vec<String>>, // Temporary holds filtered entry list to refilter it
+    pub filtered_entry_list_by_search: Vec<Vec<String>>, // Temporary holds entry list filtered by search pattern to refilter it
+    pub filtered_entry_list_by_tags: Vec<Vec<String>>, // Holds entry list filtered by tag to filter it further by search
     pub filtered_tag_list: Vec<String>,
 }
 
@@ -17,7 +18,8 @@ impl Default for BibiSearch {
         Self {
             search_string: String::new(),
             inner_search: false,
-            filtered_entry_list: Vec::new(),
+            filtered_entry_list_by_search: Vec::new(),
+            filtered_entry_list_by_tags: Vec::new(),
             filtered_tag_list: Vec::new(),
         }
     }
