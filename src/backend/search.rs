@@ -10,9 +10,6 @@ use crate::frontend::entries::EntryTableItem;
 pub struct BibiSearch {
     pub search_string: String, // Search string show in footer, used for search
     pub inner_search: bool,    // True, if we trigger a search for already filtered list
-    // pub entry_list_at_search_start: Vec<EntryTableItem>,
-    pub filtered_entry_list_by_search: Vec<Vec<String>>, // Temporary holds entry list filtered by search pattern to refilter it
-    pub filtered_entry_list_by_tags: Vec<Vec<String>>, // Holds entry list filtered by tag to filter it further by search
     pub filtered_tag_list: Vec<String>,
 }
 
@@ -21,9 +18,6 @@ impl Default for BibiSearch {
         Self {
             search_string: String::new(),
             inner_search: false,
-            // entry_list_at_search_start: Vec::new(),
-            filtered_entry_list_by_search: Vec::new(),
-            filtered_entry_list_by_tags: Vec::new(),
             filtered_tag_list: Vec::new(),
         }
     }
