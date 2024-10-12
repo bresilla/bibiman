@@ -65,18 +65,19 @@ updated:
 
 Use the following keybindings to manage the TUI:
 
-| Key                                                              | Action                                      |
-| ---------------------------------------------------------------- | ------------------------------------------- |
-| **<kbd>j</kbd><kbd>k</kbd>** \| **<kbd>Down</kbd><kbd>Up</kbd>** | Move selected list                          |
-| **<kbd>g</kbd><kbd>G</kbd>**                                     | Go to first/last entry                      |
-| **<kbd>y</kbd>**                                                 | Yank/copy citekey of selected entry         |
-| **<kbd>e</kbd>**                                                 | Open editor at selected entry               |
-| **<kbd>o</kbd>** \| **<kbd>u</kbd>**                             | Open related PDF \| URL/DOI                 |
-| **<kbd>TAB</kbd>**                                               | Switch between entries and keywords         |
-| **<kbd>/</kbd>** \| **<kbd>Ctrl-f</kbd>**                        | Enter search mode                           |
-| **<kbd>Enter</kbd>**                                             | Filter by selected keyword / Confirm search |
-| **<kbd>ESC</kbd>**                                               | Abort search / Reset current list           |
-| **<kbd>q</kbd>** \| **<kbd>Ctrl-c</kbd>**                        | Quit TUI                                    |
+| Key                                                                              | Action                                      |
+| -------------------------------------------------------------------------------- | ------------------------------------------- |
+| **<kbd>j</kbd><kbd>k</kbd>** \| **<kbd>Down</kbd><kbd>Up</kbd>**                 | Move selected list                          |
+| **<kbd>g</kbd><kbd>G</kbd>**                                                     | Go to first/last entry                      |
+| **<kbd>PageDown</kbd><kbd>PageUp</kbd>** \| **<kbd>Alt-j</kbd><kbd>Alt-k</kbd>** | Scroll Info window                          |
+| **<kbd>y</kbd>**                                                                 | Yank/copy citekey of selected entry         |
+| **<kbd>e</kbd>**                                                                 | Open editor at selected entry               |
+| **<kbd>o</kbd>** \| **<kbd>u</kbd>**                                             | Open related PDF \| URL/DOI                 |
+| **<kbd>TAB</kbd>**                                                               | Switch between entries and keywords         |
+| **<kbd>/</kbd>** \| **<kbd>Ctrl-f</kbd>**                                        | Enter search mode                           |
+| **<kbd>Enter</kbd>**                                                             | Filter by selected keyword / Confirm search |
+| **<kbd>ESC</kbd>**                                                               | Abort search / Reset current list           |
+| **<kbd>q</kbd>** \| **<kbd>Ctrl-c</kbd>**                                        | Quit TUI                                    |
 
 ## Search
 
@@ -135,7 +136,7 @@ for all my bib entries and want to use `bibiman` mainly as kind of
 terminal most of the time.
 
 I used `JabRef` for many years, but its way to bloated in my eyes. There exists
-a bunch of other graphical tools. Just check it yourself...
+a bunch of other graphical tools...
 
 But there are also some TUI alternatives with slightly different approaches.
 Maybe one of these might fit _your_ personal needs better:

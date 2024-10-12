@@ -211,6 +211,7 @@ impl App {
     pub fn confirm_search(&mut self) {
         if let Some(FormerArea::EntryArea) = self.former_area {
             self.current_area = CurrentArea::EntryArea;
+            self.entry_table.entry_table_state.select(Some(0))
         } else if let Some(FormerArea::TagArea) = self.former_area {
             self.current_area = CurrentArea::TagArea;
             self.tag_list.tag_list_state.select(Some(0))
@@ -224,6 +225,7 @@ impl App {
     pub fn break_search(&mut self) {
         if let Some(FormerArea::EntryArea) = self.former_area {
             self.current_area = CurrentArea::EntryArea;
+            self.entry_table.entry_table_state.select(Some(0))
         } else if let Some(FormerArea::TagArea) = self.former_area {
             self.current_area = CurrentArea::TagArea;
             self.tag_list.tag_list_state.select(Some(0))
