@@ -258,34 +258,18 @@ impl App {
             .add_modifier(Modifier::ITALIC)
             .fg(TEXT_FG_COLOR);
         let lines = {
-            let idx = self.entry_table.entry_table_state.selected().unwrap();
-            let cur_entry = &self.entry_table.entry_table_items[idx];
             // if self.entry_table.entry_table_items.len() > 0 {
             if self.entry_table.entry_table_state.selected().is_some() {
+                let idx = self.entry_table.entry_table_state.selected().unwrap();
+                let cur_entry = &self.entry_table.entry_table_items[idx];
                 let mut lines = vec![];
                 lines.push(Line::from(vec![
                     Span::styled("Authors: ", style_value),
-                    Span::styled(
-                        // String::from(BibiEntry::get_authors(
-                        //     &self.get_selected_citekey(),
-                        //     &self.main_biblio.bibliography,
-                        // )),
-                        // Style::new().green(),
-                        cur_entry.authors.clone(),
-                        Style::new().green(),
-                    ),
+                    Span::styled(cur_entry.authors.clone(), Style::new().green()),
                 ]));
                 lines.push(Line::from(vec![
                     Span::styled("Title: ", style_value),
-                    Span::styled(
-                        // String::from(BibiEntry::get_title(
-                        //     &self.get_selected_citekey(),
-                        //     &self.main_biblio.bibliography,
-                        // )),
-                        // Style::new().magenta(),
-                        cur_entry.title.clone(),
-                        Style::new().magenta(),
-                    ),
+                    Span::styled(cur_entry.title.clone(), Style::new().magenta()),
                 ]));
                 lines.push(Line::from(vec![
                     Span::styled("Year: ", style_value),

@@ -4,11 +4,12 @@ use nucleo_matcher::{
 };
 use std::collections::HashMap;
 
+use crate::frontend::entries::EntryTableItem;
+
 #[derive(Debug)]
 pub struct BibiSearch {
     pub search_string: String, // Search string show in footer, used for search
     pub inner_search: bool,    // True, if we trigger a search for already filtered list
-    pub filtered_entry_list: Vec<Vec<String>>, // Temporary holds filtered entry list to refilter it
     pub filtered_tag_list: Vec<String>,
 }
 
@@ -17,25 +18,35 @@ impl Default for BibiSearch {
         Self {
             search_string: String::new(),
             inner_search: false,
-            filtered_entry_list: Vec::new(),
             filtered_tag_list: Vec::new(),
         }
     }
 }
 
 impl BibiSearch {
-    // Stringify inner Vec<String> by joining/concat
-    fn convert_to_string(inner_vec: &Vec<String>) -> String {
-        inner_vec[0..6].join(" ")
+    // Stringify EntryTableItem by joining/concat
+    fn convert_to_string(inner_vec: &EntryTableItem) -> String {
+        let entry_table_item_str = {
+            format!(
+                "{} {} {} {} {} {}",
+                &inner_vec.authors,
+                &inner_vec.title,
+                &inner_vec.year,
+                &inner_vec.pubtype,
+                &inner_vec.keywords,
+                &inner_vec.citekey
+            )
+        };
+        entry_table_item_str
     }
 
     // Return a filtered entry list
     pub fn search_entry_list(
         search_pattern: &str,
-        orig_list: Vec<Vec<String>>,
-    ) -> Vec<Vec<String>> {
+        orig_list: Vec<EntryTableItem>,
+    ) -> Vec<EntryTableItem> {
         // Create a hashmap to connect stingified entry with entry vec
-        let mut entry_string_hm: HashMap<String, Vec<String>> = HashMap::new();
+        let mut entry_string_hm: HashMap<String, EntryTableItem> = HashMap::new();
 
         // Convert all entries to string and insert them into the hashmap
         // next to the original inner Vec<String> of the entry list
@@ -56,10 +67,11 @@ impl BibiSearch {
 
         // Create filtered entry list and push the inner entry vec's to it
         // Use the filtered stringified hm-key as index
-        let mut filtered_list: Vec<Vec<String>> = Vec::new();
+        let mut filtered_list: Vec<EntryTableItem> = Vec::new();
         for m in filtered_matches {
             filtered_list.push(entry_string_hm[&m].to_owned());
         }
+        filtered_list.sort();
         filtered_list
     }
 
@@ -77,11 +89,17 @@ impl BibiSearch {
         filtered_matches
     }
 
-    pub fn filter_entries_by_tag(keyword: &str, orig_list: &Vec<Vec<String>>) -> Vec<Vec<String>> {
-        let mut filtered_list: Vec<Vec<String>> = Vec::new();
+    pub fn filter_entries_by_tag(
+        keyword: &str,
+        orig_list: &Vec<EntryTableItem>,
+    ) -> Vec<EntryTableItem> {
+        let mut filtered_list: Vec<EntryTableItem> = Vec::new();
 
+        // Loop over the whole given entry table
+        // Check if the selected keyword is present in the current entry
+        // If present, push the entry to the filtered list
         for e in orig_list {
-            if e[4].contains(keyword) {
+            if e.keywords.contains(keyword) {
                 filtered_list.push(e.to_owned());
             }
         }
@@ -96,17 +114,17 @@ mod tests {
 
     #[test]
     fn test_vector_join() {
-        let bibvec = vec![
-            "Author".to_string(),
-            "Title".to_string(),
-            "1999".to_string(),
-            "article".to_string(),
-            "hello, bye".to_string(),
-            "author_1999".to_string(),
-            "An abstract with multiple sentences. Sometimes thats necessary".to_string(),
-            "www.bibiman.org".to_string(),
-            "/home/file/path.pdf".to_string(),
-        ];
+        let bibvec: EntryTableItem = EntryTableItem::new(
+            "Author",
+            "Title",
+            "1999",
+            "article",
+            "hello, bye",
+            "author_1999",
+            "An abstract with multiple sentences. Here is the second",
+            "https://www.bibiman.org",
+            "/home/file/path.pdf",
+        );
 
         let joined_vec = BibiSearch::convert_to_string(&bibvec);
 

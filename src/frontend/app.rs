@@ -161,7 +161,7 @@ impl App {
         if let CurrentArea::TagArea = self.current_area {
             self.tag_list.tag_list_state.select(Some(0))
         }
-        self.search_struct.filtered_entry_list.clear();
+        self.entry_table.entry_table_at_search_start.clear();
         self.search_struct.filtered_tag_list.clear();
         self.search_struct.inner_search = false;
         self.former_area = None
@@ -175,7 +175,6 @@ impl App {
     }
 
     pub fn scroll_info_down(&mut self) {
-        // self.entry_table.entry_info_scroll = self.entry_table.entry_info_scroll + 1;
         self.entry_table.entry_info_scroll = self.entry_table.entry_info_scroll.saturating_add(1);
         self.entry_table.entry_info_scroll_state = self
             .entry_table
@@ -184,11 +183,6 @@ impl App {
     }
 
     pub fn scroll_info_up(&mut self) {
-        // if self.entry_table.entry_info_scroll == 0 {
-        //     {}
-        // } else {
-        //     self.entry_table.entry_info_scroll = self.entry_table.entry_info_scroll - 1;
-        // }
         self.entry_table.entry_info_scroll = self.entry_table.entry_info_scroll.saturating_sub(1);
         self.entry_table.entry_info_scroll_state = self
             .entry_table
@@ -204,6 +198,8 @@ impl App {
             if let Some(FormerArea::TagArea) = self.former_area {
                 self.search_struct.inner_search = true
             }
+            self.entry_table.entry_table_at_search_start =
+                self.entry_table.entry_table_items.clone();
             self.former_area = Some(FormerArea::EntryArea)
         } else if let CurrentArea::TagArea = self.current_area {
             self.former_area = Some(FormerArea::TagArea)
@@ -221,6 +217,7 @@ impl App {
         }
         self.former_area = Some(FormerArea::SearchArea);
         self.search_struct.search_string.clear();
+        self.entry_table.entry_table_at_search_start.clear();
     }
 
     // Break search: leave search area without filtering list
@@ -238,6 +235,7 @@ impl App {
         self.former_area = None;
         // If search is canceled, reset default status of struct
         self.search_struct.search_string.clear();
+        self.entry_table.entry_table_at_search_start.clear();
     }
 
     // Remove last char from search pattern and filter list immidiately
