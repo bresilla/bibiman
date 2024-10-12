@@ -29,6 +29,7 @@ use std::process::{Command, Stdio};
 #[derive(Debug)]
 pub struct EntryTable {
     pub entry_table_items: Vec<EntryTableItem>,
+    pub entry_table_at_search_start: Vec<EntryTableItem>,
     pub entry_table_state: TableState,
     pub entry_scroll_state: ScrollbarState,
     pub entry_info_scroll: u16,
@@ -54,6 +55,7 @@ impl FromIterator<Vec<String>> for EntryTable {
         let entry_info_scroll_state = ScrollbarState::default();
         Self {
             entry_table_items,
+            entry_table_at_search_start: Vec::new(),
             entry_table_state,
             entry_scroll_state,
             entry_info_scroll: 0,
@@ -63,7 +65,7 @@ impl FromIterator<Vec<String>> for EntryTable {
 }
 
 // Define contents of each entry table row
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct EntryTableItem {
     pub authors: String,
     pub title: String,
@@ -248,20 +250,12 @@ impl App {
 
     // Search entry list
     pub fn search_entries(&mut self) {
-        let orig_list = {
-            if self.search_struct.inner_search {
-                let orig_list = &self.search_struct.filtered_entry_list_by_tags;
-                orig_list
-            } else {
-                let orig_list = &self.biblio_data.entry_list.bibentries;
-                orig_list
-            }
-        };
+        // Use snapshot of entry list saved when starting the search
+        // so deleting a char, will show former entries too
+        let orig_list = self.entry_table.entry_table_at_search_start.clone();
         let filtered_list =
             BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
-        //search::search_entry_list(&self.search_string, orig_list.clone());
-        self.search_struct.filtered_entry_list_by_search = filtered_list.clone();
-        self.entry_table = EntryTable::from_iter(filtered_list);
+        self.entry_table.entry_table_items = filtered_list;
     }
 
     // Open file connected with entry through 'file' or 'pdf' field
