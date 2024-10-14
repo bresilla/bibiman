@@ -23,7 +23,7 @@ use ratatui::{
     text::{Line, Span, Text},
     widgets::{
         block::{Position, Title},
-        Block, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
+        Block, Borders, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
         ScrollbarOrientation, StatefulWidget, Table, Widget, Wrap,
     },
 };
@@ -78,6 +78,9 @@ impl Widget for &mut App {
         let [list_area, item_area] =
             Layout::vertical([Constraint::Fill(1), Constraint::Fill(1)]).areas(main_area);
 
+        let [entry_area, entry_info_area] =
+            Layout::vertical([Constraint::Fill(1), Constraint::Length(2)]).areas(list_area);
+
         let [tag_area, info_area] =
             Layout::horizontal([Constraint::Max(25), Constraint::Min(35)]).areas(item_area);
 
@@ -85,7 +88,8 @@ impl Widget for &mut App {
         App::render_header(header_area, buf);
         self.render_footer(footer_area, buf);
         // Render list area where entry gets selected
-        self.render_entrytable(list_area, buf);
+        self.render_entrytable(entry_area, buf);
+        self.render_file_info(entry_info_area, buf);
         // Render infos related to selected entry
         self.render_taglist(tag_area, buf);
         self.render_selected_item(info_area, buf);
@@ -156,8 +160,78 @@ impl App {
         }
     }
 
+    // Render info of the current file and process
+    // 1. Basename of the currently loaded file
+    // 2. Keyword by which the entries are filtered at the moment
+    // 3. Currently selected entry and total count of entries
+    pub fn render_file_info(&mut self, area: Rect, buf: &mut Buffer) {
+        let block = Block::new() // can also be Block::new
+            // Leave Top empty to simulate one large box with borders of entry list
+            .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+            .border_set(if let CurrentArea::EntryArea = self.current_area {
+                symbols::border::THICK
+            } else {
+                symbols::border::PLAIN
+            })
+            .border_style(if let CurrentArea::EntryArea = self.current_area {
+                BOX_SELECTED_BOX_STYLE
+            } else {
+                BOX_UNSELECTED_BORDER_STYLE
+            });
+
+        let background_style = Color::Indexed(235);
+
+        let [file_area, keyword_area, count_area] = Layout::horizontal([
+            Constraint::Fill(4),
+            Constraint::Fill(2),
+            Constraint::Fill(1),
+        ])
+        .horizontal_margin(1)
+        .areas(area);
+
+        Line::from(vec![
+            Span::raw("File: ").bold(),
+            Span::raw(self.main_bibfile.file_name().unwrap().to_string_lossy()).bold(),
+        ])
+        .bg(background_style)
+        .render(file_area, buf);
+
+        Line::from(if !self.tag_list.selected_keyword.is_empty() {
+            vec![
+                Span::raw("Filtered by: "),
+                Span::raw(self.tag_list.selected_keyword.to_string())
+                    .bold()
+                    .green(),
+            ]
+        } else {
+            vec![Span::raw(" ")]
+        })
+        .bg(background_style)
+        .render(keyword_area, buf);
+
+        Line::from(if self.entry_table.entry_table_state.selected().is_some() {
+            vec![
+                Span::raw((self.entry_table.entry_table_state.selected().unwrap() + 1).to_string())
+                    .bold(),
+                Span::raw("/"),
+                Span::raw(self.entry_table.entry_table_items.len().to_string()),
+            ]
+        } else {
+            vec![Span::raw("No entries")]
+        })
+        .right_aligned()
+        .bg(background_style)
+        .render(count_area, buf);
+        // Paragraph::new(Line::from(vec![Span::raw(
+        //     self.main_bibfile.display().to_string(),
+        // )]))
+        // .block(block)
+        // .render(area, buf);
+        Widget::render(block, area, buf)
+    }
+
     pub fn render_entrytable(&mut self, area: Rect, buf: &mut Buffer) {
-        let block = Block::bordered() // can also be Block::new
+        let block = Block::new() // can also be Block::new
             .title(
                 Line::styled(
                     " Bibliographic Entries ",
@@ -169,6 +243,7 @@ impl App {
                 )
                 .centered(),
             )
+            .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
             .border_set(if let CurrentArea::EntryArea = self.current_area {
                 symbols::border::THICK
             } else {
@@ -179,11 +254,8 @@ impl App {
             } else {
                 BOX_UNSELECTED_BORDER_STYLE
             });
-        // .bg(Color::Black); // .bg(NORMAL_ROW_BG);
+
         let header_style = Style::default().bold().fg(TEXT_FG_COLOR);
-        // let selected_style = Style::default()
-        //     .add_modifier(Modifier::REVERSED)
-        //     .add_modifier(Modifier::BOLD);
 
         let header = [
             "Authors".underlined(),
@@ -196,6 +268,7 @@ impl App {
         .collect::<Row>()
         .style(header_style)
         .height(1);
+
         // Iterate over vector storing each entries data fields
         let rows = self
             .entry_table
@@ -237,7 +310,7 @@ impl App {
             .orientation(ScrollbarOrientation::VerticalRight)
             .track_symbol(None)
             .begin_symbol(SCROLLBAR_UPPER_CORNER)
-            .end_symbol(SCROLLBAR_LOWER_CORNER)
+            .end_symbol(None)
             .thumb_style(Style::new().fg(Color::DarkGray));
 
         if let CurrentArea::EntryArea = self.current_area {
@@ -405,7 +478,7 @@ impl App {
             .enumerate()
             .map(|(_i, todo_item)| {
                 // let color = alternate_colors(i);
-                ListItem::from(todo_item) //.bg(color)
+                ListItem::from(todo_item.to_owned()) //.bg(color)
             })
             .collect();
 
