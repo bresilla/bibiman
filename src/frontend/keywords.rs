@@ -21,9 +21,10 @@ use ratatui::widgets::{ListState, ScrollbarState};
 
 #[derive(Debug)]
 pub struct TagList {
-    pub tag_list_items: Vec<TagListItem>,
+    pub tag_list_items: Vec<String>,
     pub tag_list_state: ListState,
     pub tag_scroll_state: ScrollbarState,
+    pub selected_keyword: String,
 }
 
 // Structure of the list items.
@@ -41,18 +42,33 @@ impl TagListItem {
     }
 }
 
-impl FromIterator<String> for TagList {
-    fn from_iter<I: IntoIterator<Item = String>>(iter: I) -> Self {
-        let tag_list_items: Vec<TagListItem> = iter
-            .into_iter()
-            .map(|info| TagListItem::new(&info))
-            .collect();
+// impl FromIterator<String> for TagList {
+//     fn from_iter<I: IntoIterator<Item = String>>(iter: I) -> Self {
+//         let tag_list_items: Vec<TagListItem> = iter
+//             .into_iter()
+//             .map(|info| TagListItem::new(&info))
+//             .collect();
+//         let tag_list_state = ListState::default(); // for preselection: .with_selected(Some(0));
+//         let tag_scroll_state = ScrollbarState::new(tag_list_items.len());
+//         Self {
+//             tag_list_items,
+//             tag_list_state,
+//             tag_scroll_state,
+//             selected_keyword: String::new(),
+//         }
+//     }
+// }
+
+impl TagList {
+    pub fn new(keyword_list: Vec<String>) -> Self {
+        let tag_list_items = keyword_list;
         let tag_list_state = ListState::default(); // for preselection: .with_selected(Some(0));
         let tag_scroll_state = ScrollbarState::new(tag_list_items.len());
         Self {
             tag_list_items,
             tag_list_state,
             tag_scroll_state,
+            selected_keyword: String::new(),
         }
     }
 }
@@ -92,7 +108,8 @@ impl App {
 
     pub fn get_selected_tag(&self) -> &str {
         let idx = self.tag_list.tag_list_state.selected().unwrap();
-        let keyword = &self.tag_list.tag_list_items[idx].keyword;
+        let keyword = &self.tag_list.tag_list_items[idx];
+        // let keyword = &self.tag_list.tag_list_items[idx].keyword;
         keyword
     }
 
@@ -100,7 +117,8 @@ impl App {
         let orig_list = &self.main_biblio.keyword_list;
         let filtered_list =
             BibiSearch::search_tag_list(&self.search_struct.search_string, orig_list.clone());
-        self.tag_list = TagList::from_iter(filtered_list)
+        self.tag_list.tag_list_items = filtered_list;
+        // self.tag_list = TagList::from_iter(filtered_list)
     }
 
     pub fn filter_tags_by_entries(&mut self) {
@@ -124,7 +142,7 @@ impl App {
         filtered_keywords.dedup();
 
         self.search_struct.filtered_tag_list = filtered_keywords.clone();
-        self.tag_list = TagList::from_iter(filtered_keywords);
+        self.tag_list.tag_list_items = filtered_keywords;
     }
 
     // Filter the entry list by tags when hitting enter
@@ -134,9 +152,11 @@ impl App {
         let orig_list = &self.entry_table.entry_table_items;
         let keyword = self.get_selected_tag();
         let filtered_list = BibiSearch::filter_entries_by_tag(&keyword, &orig_list);
+        self.tag_list.selected_keyword = keyword.to_string();
         self.entry_table.entry_table_items = filtered_list;
         self.filter_tags_by_entries();
         self.toggle_area();
+        self.entry_table.entry_table_state.select(Some(0));
         self.former_area = Some(FormerArea::TagArea);
     }
 }
