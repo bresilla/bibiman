@@ -19,11 +19,18 @@ use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
 use std::{fs, path::PathBuf};
 
+#[derive(Debug)]
+pub enum FileFormat {
+    BibLatex,
+    Hayagriva,
+}
+
 // Set necessary fields
 // TODO: can surely be made more efficient/simpler
 #[derive(Debug)]
 pub struct BibiMain {
     pub bibfile: PathBuf,           // path to bibfile
+    pub bibfile_format: FileFormat, // Format of passed file
     pub bibfilestring: String,      // content of bibfile as string
     pub bibliography: Bibliography, // parsed bibliography
     pub citekeys: Vec<String>,      // list of all citekeys
@@ -33,6 +40,7 @@ pub struct BibiMain {
 impl BibiMain {
     pub fn new(main_bibfile: PathBuf) -> Self {
         // TODO: Needs check for config file path as soon as config file is impl
+        let bibfile_format = Self::check_file_format(&main_bibfile);
         let bibfile = main_bibfile;
         let bibfilestring = fs::read_to_string(&bibfile).unwrap();
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
@@ -40,6 +48,7 @@ impl BibiMain {
         let keyword_list = Self::collect_tag_list(&citekeys, &bibliography);
         Self {
             bibfile,
+            bibfile_format,
             bibfilestring,
             bibliography,
             citekeys,
@@ -47,13 +56,27 @@ impl BibiMain {
         }
     }
 
+    // Check which file format the passed file has
+    fn check_file_format(main_bibfile: &PathBuf) -> FileFormat {
+        let extension = main_bibfile.extension().unwrap().to_str();
+
+        match extension {
+            Some("yml") => FileFormat::Hayagriva,
+            Some("yaml") => FileFormat::Hayagriva,
+            Some("bib") => FileFormat::BibLatex,
+            Some(_) => panic!("The extension {:?} is no valid bibfile", extension.unwrap()),
+            None => panic!("The given path {:?} holds no valid file", main_bibfile),
+        }
+    }
+
     // get list of citekeys from the given bibfile
     // this list is the base for further operations on the bibentries
     // since it is the entry point of the biblatex crate.
     pub fn get_citekeys(bibstring: &Bibliography) -> Vec<String> {
-        let mut citekeys: Vec<String> =
-            bibstring.iter().map(|entry| entry.to_owned().key).collect();
-        citekeys.sort_by_key(|name| name.to_lowercase());
+        let citekeys: Vec<String> = bibstring.keys().map(|k| k.to_owned()).collect();
+        // let mut citekeys: Vec<String> =
+        //     bibstring.iter().map(|entry| entry.to_owned().key).collect();
+        // citekeys.sort_by_key(|name| name.to_lowercase());
         citekeys
     }
 
