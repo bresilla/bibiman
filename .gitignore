@@ -1,5 +1,7 @@
 /target
-/src*.bak
-todolist.md
+# no backup files
+**/*.bak
+
+# no gif's
 **/*.tape
 res/*.gif

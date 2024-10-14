@@ -138,20 +138,22 @@ impl App {
                 let block = Block::bordered()
                     .title(Line::raw(" Basic Commands ").centered())
                     .border_style(BOX_UNSELECTED_BORDER_STYLE)
-                    .border_set(symbols::border::ROUNDED);
+                    .border_set(symbols::border::PLAIN);
                 Paragraph::new(Line::from(vec![
                     Span::styled("j/k: ", style_emph),
-                    Span::raw("to move | "),
+                    Span::raw("move | "),
                     Span::styled("g/G: ", style_emph),
-                    Span::raw("go top/bottom | "),
+                    Span::raw("top/bottom | "),
                     Span::styled("TAB: ", style_emph),
-                    Span::raw("switch fields | "),
+                    Span::raw("switch tab | "),
                     Span::styled("y: ", style_emph),
                     Span::raw("yank citekey | "),
                     Span::styled("e: ", style_emph),
-                    Span::raw("edit entry | "),
+                    Span::raw("edit | "),
                     Span::styled("/: ", style_emph),
-                    Span::raw("search"),
+                    Span::raw("search | "),
+                    Span::styled("o/u: ", style_emph),
+                    Span::raw("open PDF/DOI"),
                 ]))
                 .block(block)
                 .centered()

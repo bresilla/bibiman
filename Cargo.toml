@@ -5,9 +5,13 @@ authors = ["lukeflo <lukeflo@some.email.not>"]
 license = "GPL-3.0-or-later"
 edition = "2021"
 
+[profile.release-git]
+inherits = "release"
+lto = "fat"
+
 [dependencies]
 arboard = { version = "3.4.1", features = ["wayland-data-control"] }
-biblatex = "0.9.3"
+biblatex = "0.10.0"
 color-eyre = "0.6.3"
 crossterm = { version = "0.28.1", features = ["event-stream"] }
 editor-command = "0.1.1"
