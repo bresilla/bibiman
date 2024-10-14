@@ -3,7 +3,8 @@
 `bibiman` is a simple terminal user interface for handling your BibLaTeX
 database as part of a terminal-based scientific workflow.
 
-Here's a small impression how it looks and works:
+Here's a small impression how it looks and works (the `vhs` demo has a small
+glitch and doesn_t show all search results):
 
 [![bibiman-demo-vhs.gif](https://i.postimg.cc/76zSmy35/bibiman-demo-vhs.gif)](https://postimg.cc/YGp4CZy7)
 
@@ -58,8 +59,11 @@ updated:
 - [x] **Open related PDF** file (`file` BibLaTeX key) with keypress.
 - [x] **Open related URL/DOI** with keypress.
 - [x] **Scrollbar** for better navigating.
-- [ ] **Add Entry via DOI** to download bibliographic metadata for inserted DOI
-      and add it to `.bib` file.
+- [ ] **Open related notes file** for specific entry.
+- [ ] **Add Entry via DOI** as formatted code.
+- [ ] **Support Hayagriva(`.yaml.`)** format as input.
+- [ ] **Implement config file** for setting some default values like main
+      bibfile, PDF-opener, or editor
 
 ## Keybindings
 
@@ -102,8 +106,8 @@ I've tested the following editors (set as value of `VISUAL`):
 - [x] **Emacs (GUI)**: `export VISUAL="emacs"` (open emacs in separate window,
       blocks the terminal running `bibiman` as long as emacs is opened)
 
-Feel free to try other editors. Important is that the editor supports the
-argument `+..` to set the line number that the cursor should be placed at.
+Feel free to try other editors and report. Important is that the editor supports
+the argument `+..` to set the line number that the cursor should be placed at.
 Otherwise, the functionality might not work properly.
 
 While this behaviour is most likely supported on UNIX-based systems (Linux,
