@@ -170,39 +170,36 @@ impl BibiEntry {
     }
 
     pub fn get_authors(citekey: &str, biblio: &Bibliography) -> String {
-        let authors = {
-            if biblio.get(&citekey).unwrap().author().is_ok() {
-                let authors = biblio.get(&citekey).unwrap().author().unwrap();
-                if authors.len() > 1 {
-                    let authors = format!("{} et al.", authors[0].name);
-                    authors
-                } else if authors.len() == 1 {
-                    let authors = authors[0].name.to_string();
-                    authors
+        if biblio.get(&citekey).unwrap().author().is_ok() {
+            let authors = biblio.get(&citekey).unwrap().author().unwrap();
+            if authors.len() > 1 {
+                let authors = format!("{} et al.", authors[0].name);
+                authors
+            } else if authors.len() == 1 {
+                let authors = authors[0].name.to_string();
+                authors
+            } else {
+                let editors_authors = format!("empty");
+                editors_authors
+            }
+        } else {
+            if biblio.get(&citekey).unwrap().editors().is_ok() {
+                let editors = biblio.get(&citekey).unwrap().editors().unwrap();
+                if editors.len() > 1 {
+                    let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
+                    editors
+                } else if editors.len() == 1 {
+                    let editors = format!("{} (ed.)", editors[0].0[0].name);
+                    editors
                 } else {
                     let editors_authors = format!("empty");
                     editors_authors
                 }
             } else {
-                if biblio.get(&citekey).unwrap().editors().is_ok() {
-                    let editors = biblio.get(&citekey).unwrap().editors().unwrap();
-                    if editors.len() > 1 {
-                        let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
-                        editors
-                    } else if editors.len() == 1 {
-                        let editors = format!("{} (ed.)", editors[0].0[0].name);
-                        editors
-                    } else {
-                        let editors_authors = format!("empty");
-                        editors_authors
-                    }
-                } else {
-                    let editors_authors = format!("empty");
-                    editors_authors
-                }
+                let editors_authors = format!("empty");
+                editors_authors
             }
-        };
-        authors
+        }
     }
 
     pub fn get_title(citekey: &str, biblio: &Bibliography) -> String {
