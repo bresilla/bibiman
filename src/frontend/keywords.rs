@@ -42,23 +42,6 @@ impl TagListItem {
     }
 }
 
-// impl FromIterator<String> for TagList {
-//     fn from_iter<I: IntoIterator<Item = String>>(iter: I) -> Self {
-//         let tag_list_items: Vec<TagListItem> = iter
-//             .into_iter()
-//             .map(|info| TagListItem::new(&info))
-//             .collect();
-//         let tag_list_state = ListState::default(); // for preselection: .with_selected(Some(0));
-//         let tag_scroll_state = ScrollbarState::new(tag_list_items.len());
-//         Self {
-//             tag_list_items,
-//             tag_list_state,
-//             tag_scroll_state,
-//             selected_keyword: String::new(),
-//         }
-//     }
-// }
-
 impl TagList {
     pub fn new(keyword_list: Vec<String>) -> Self {
         let tag_list_items = keyword_list;
@@ -118,11 +101,11 @@ impl App {
         let filtered_list =
             BibiSearch::search_tag_list(&self.search_struct.search_string, orig_list.clone());
         self.tag_list.tag_list_items = filtered_list;
+        // Update scrollbar length after filtering list
         self.tag_list.tag_scroll_state = ScrollbarState::content_length(
             self.tag_list.tag_scroll_state,
             self.tag_list.tag_list_items.len(),
         );
-        // self.tag_list = TagList::from_iter(filtered_list)
     }
 
     pub fn filter_tags_by_entries(&mut self) {
