@@ -114,17 +114,17 @@ mod tests {
 
     #[test]
     fn test_vector_join() {
-        let bibvec: EntryTableItem = EntryTableItem::new(
-            "Author",
-            "Title",
-            "1999",
-            "article",
-            "hello, bye",
-            "author_1999",
-            "An abstract with multiple sentences. Here is the second",
-            "https://www.bibiman.org",
-            "/home/file/path.pdf",
-        );
+        let bibvec: EntryTableItem = EntryTableItem {
+            authors: "Author".to_string(),
+            title: "Title".to_string(),
+            year: "1999".to_string(),
+            pubtype: "article".to_string(),
+            keywords: "hello, bye".to_string(),
+            citekey: "author_1999".to_string(),
+            abstract_text: "An abstract with multiple sentences. Here is the second".to_string(),
+            doi_url: "https://www.bibiman.org".to_string(),
+            filepath: "/home/file/path.pdf".to_string(),
+        };
 
         let joined_vec = BibiSearch::convert_to_string(&bibvec);
 
