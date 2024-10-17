@@ -118,6 +118,10 @@ impl App {
         let filtered_list =
             BibiSearch::search_tag_list(&self.search_struct.search_string, orig_list.clone());
         self.tag_list.tag_list_items = filtered_list;
+        self.tag_list.tag_scroll_state = ScrollbarState::content_length(
+            self.tag_list.tag_scroll_state,
+            self.tag_list.tag_list_items.len(),
+        );
         // self.tag_list = TagList::from_iter(filtered_list)
     }
 
@@ -143,6 +147,10 @@ impl App {
 
         self.search_struct.filtered_tag_list = filtered_keywords.clone();
         self.tag_list.tag_list_items = filtered_keywords;
+        self.tag_list.tag_scroll_state = ScrollbarState::content_length(
+            self.tag_list.tag_scroll_state,
+            self.tag_list.tag_list_items.len(),
+        );
     }
 
     // Filter the entry list by tags when hitting enter
@@ -154,6 +162,11 @@ impl App {
         let filtered_list = BibiSearch::filter_entries_by_tag(&keyword, &orig_list);
         self.tag_list.selected_keyword = keyword.to_string();
         self.entry_table.entry_table_items = filtered_list;
+        // Update scrollbar state with new lenght of itemlist
+        self.entry_table.entry_scroll_state = ScrollbarState::content_length(
+            self.entry_table.entry_scroll_state,
+            self.entry_table.entry_table_items.len(),
+        );
         self.filter_tags_by_entries();
         self.toggle_area();
         self.entry_table.entry_table_state.select(Some(0));

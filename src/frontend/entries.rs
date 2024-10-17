@@ -288,6 +288,10 @@ impl App {
         let filtered_list =
             BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
         self.entry_table.entry_table_items = filtered_list;
+        self.entry_table.entry_scroll_state = ScrollbarState::content_length(
+            self.entry_table.entry_scroll_state,
+            self.entry_table.entry_table_items.len(),
+        );
     }
 
     // Open file connected with entry through 'file' or 'pdf' field
