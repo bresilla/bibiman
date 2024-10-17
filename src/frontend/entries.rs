@@ -76,21 +76,11 @@ impl EntryTable {
 
     // Sort entry table by specific column.
     // Toggle sorting by hitting same key again
-    pub fn sort_entry_table(&mut self, sorting: &str) {
+    pub fn sort_entry_table(&mut self, sorting: &str, toggle: bool) {
+        if toggle {
+            self.entry_table_reversed_sort = !self.entry_table_reversed_sort;
+        }
         if self.entry_table_reversed_sort {
-            match sorting {
-                "author" => self
-                    .entry_table_items
-                    .sort_by(|a, b| a.authors.to_lowercase().cmp(&b.authors.to_lowercase())),
-                "title" => self
-                    .entry_table_items
-                    .sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase())),
-                "year" => self
-                    .entry_table_items
-                    .sort_by(|a, b| a.year.to_lowercase().cmp(&b.year.to_lowercase())),
-                _ => {}
-            }
-        } else if !self.entry_table_reversed_sort {
             match sorting {
                 "author" => self
                     .entry_table_items
@@ -103,8 +93,20 @@ impl EntryTable {
                     .sort_by(|a, b| b.year.to_lowercase().cmp(&a.year.to_lowercase())),
                 _ => {}
             }
+        } else if !self.entry_table_reversed_sort {
+            match sorting {
+                "author" => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.authors.to_lowercase().cmp(&b.authors.to_lowercase())),
+                "title" => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase())),
+                "year" => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.year.to_lowercase().cmp(&b.year.to_lowercase())),
+                _ => {}
+            }
         }
-        self.entry_table_reversed_sort = !self.entry_table_reversed_sort;
     }
 }
 
@@ -276,6 +278,9 @@ impl App {
         let filtered_list =
             BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
         self.entry_table.entry_table_items = filtered_list;
+        if self.entry_table.entry_table_reversed_sort {
+            self.entry_table.sort_entry_table("author", false);
+        }
         self.entry_table.entry_scroll_state = ScrollbarState::content_length(
             self.entry_table.entry_scroll_state,
             self.entry_table.entry_table_items.len(),
