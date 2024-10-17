@@ -47,6 +47,8 @@ const SELECTED_STYLE: Style = Style::new()
     .add_modifier(Modifier::REVERSED);
 const TEXT_FG_COLOR: Color = Color::Indexed(252);
 const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(245);
+const SORTED_ENTRIES: &str = "▼";
+const SORTED_ENTRIES_REVERSED: &str = "▲";
 
 const SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
 const SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
@@ -259,15 +261,22 @@ impl App {
 
         let header_style = Style::default().bold().fg(TEXT_FG_COLOR);
 
-        let header = [
-            "Authors".underlined(),
-            "Title".underlined(),
-            "Year".underlined(),
-            "Type".underlined(),
-        ]
-        .into_iter()
-        .map(Cell::from)
-        .collect::<Row>()
+        let header = Row::new(vec![
+            Cell::from(Line::from(vec![
+                Span::raw("Author").underlined(),
+                Span::raw(format!(
+                    " {}",
+                    if self.entry_table.entry_table_reversed_sort {
+                        SORTED_ENTRIES_REVERSED
+                    } else {
+                        SORTED_ENTRIES
+                    }
+                )),
+            ])),
+            Cell::from("Title".to_string().underlined()),
+            Cell::from("Year".to_string().underlined()),
+            Cell::from("Type".to_string().underlined()),
+        ])
         .style(header_style)
         .height(1);
 

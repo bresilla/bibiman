@@ -53,8 +53,6 @@ pub struct App {
     pub main_bibfile: PathBuf,
     // main bibliography
     pub main_biblio: BibiMain,
-    // bibliographic data
-    pub biblio_data: BibiData,
     // search struct:
     pub search_struct: BibiSearch,
     // tag list
@@ -76,7 +74,6 @@ impl App {
         let running = true;
         let main_bibfile = args.bibfilearg;
         let main_biblio = BibiMain::new(main_bibfile.clone());
-        let biblio_data = BibiData::new(&main_biblio.bibliography, &main_biblio.citekeys);
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
         let entry_table = EntryTable::new(&main_biblio.citekeys, &main_biblio.bibliography);
@@ -85,7 +82,6 @@ impl App {
             running,
             main_bibfile,
             main_biblio,
-            biblio_data,
             tag_list,
             search_struct,
             entry_table,
@@ -129,8 +125,6 @@ impl App {
 
     pub fn update_lists(&mut self) {
         self.main_biblio = BibiMain::new(self.main_bibfile.clone());
-        self.biblio_data =
-            BibiData::new(&self.main_biblio.bibliography, &self.main_biblio.citekeys);
         // self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         self.entry_table =

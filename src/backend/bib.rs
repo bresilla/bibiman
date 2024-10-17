@@ -113,61 +113,6 @@ impl BibiMain {
         keyword_list.dedup();
         keyword_list
     }
-}
-
-#[derive(Debug)]
-pub struct BibiData {
-    pub entry_list: BibiDataSets,
-}
-
-impl BibiData {
-    pub fn new(biblio: &Bibliography, citekeys: &Vec<String>) -> Self {
-        Self {
-            entry_list: {
-                let bibentries = citekeys
-                    .into_iter()
-                    .map(|citekey| BibiEntry::new(&citekey, &biblio))
-                    .collect();
-                BibiDataSets { bibentries }
-            },
-        }
-    }
-}
-
-// Parent struct which keeps the Vector of all bibentries
-// Necessary for implementing FromIterator
-#[derive(Debug)]
-pub struct BibiDataSets {
-    pub bibentries: Vec<Vec<String>>,
-}
-
-// Struct which has to be created for every entry of bibdatabase
-#[derive(Debug)]
-pub struct BibiEntry {
-    pub authors: String,
-    pub title: String,
-    pub year: String,
-    pub pubtype: String,
-    pub keywords: String,
-    pub citekey: String,
-    pub weblink: String,
-    pub filepath: String,
-}
-
-impl BibiEntry {
-    pub fn new(citekey: &str, biblio: &Bibliography) -> Vec<String> {
-        vec![
-            Self::get_authors(&citekey, &biblio),
-            Self::get_title(&citekey, &biblio),
-            Self::get_year(&citekey, &biblio),
-            Self::get_pubtype(&citekey, &biblio),
-            Self::get_keywords(&citekey, &biblio),
-            citekey.to_string(),
-            Self::get_abstract(&citekey, &biblio),
-            Self::get_weblink(&citekey, &biblio),
-            Self::get_filepath(&citekey, &biblio),
-        ]
-    }
 
     pub fn get_authors(citekey: &str, biblio: &Bibliography) -> String {
         if biblio.get(&citekey).unwrap().author().is_ok() {

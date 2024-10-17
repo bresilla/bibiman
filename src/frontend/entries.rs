@@ -17,12 +17,11 @@
 
 use super::app::App;
 use super::tui::Tui;
-use crate::backend::{bib::BibiEntry, search::BibiSearch};
+use crate::backend::{bib::BibiMain, search::BibiSearch};
 use biblatex::Bibliography;
 use color_eyre::eyre::{Context, Ok, Result};
 use core::panic;
 use editor_command::EditorBuilder;
-use itertools::Itertools;
 use ratatui::widgets::{ScrollbarState, TableState};
 use std::process::{Command, Stdio};
 
@@ -31,68 +30,81 @@ use std::process::{Command, Stdio};
 pub struct EntryTable {
     pub entry_table_items: Vec<EntryTableItem>,
     pub entry_table_at_search_start: Vec<EntryTableItem>,
+    pub entry_table_reversed_sort: bool,
     pub entry_table_state: TableState,
     pub entry_scroll_state: ScrollbarState,
     pub entry_info_scroll: u16,
     pub entry_info_scroll_state: ScrollbarState,
 }
 
-// impl FromIterator<Vec<String>> for EntryTable {
-//     fn from_iter<T: IntoIterator<Item = Vec<String>>>(iter: T) -> Self {
-//         let entry_table_items: Vec<EntryTableItem> = iter
-//             .into_iter()
-//             .sorted()
-//             // 0: authors, 1: title, 2: date, 3: pubtype, 4: keywords, 5: citekey
-//             // 6: abstract, 7: doi/url, 8: pdf filepath
-//             // See backend/bib.rs BibiEntry impl
-//             .map(|i| {
-//                 EntryTableItem::new(
-//                     &i[0], &i[1], &i[2], &i[3], &i[4], &i[5], &i[6], &i[7], &i[8],
-//                 )
-//             })
-//             .collect();
-//         let entry_table_state = TableState::default().with_selected(0);
-//         let entry_scroll_state = ScrollbarState::new(entry_table_items.len());
-//         let entry_info_scroll_state = ScrollbarState::default();
-//         Self {
-//             entry_table_items,
-//             entry_table_at_search_start: Vec::new(),
-//             entry_table_state,
-//             entry_scroll_state,
-//             entry_info_scroll: 0,
-//             entry_info_scroll_state,
-//         }
-//     }
-// }
-
 impl EntryTable {
     pub fn new(citekeys: &Vec<String>, biblio: &Bibliography) -> Self {
-        let entry_table_items: Vec<EntryTableItem> = citekeys
-            .into_iter()
-            .sorted()
-            .map(|key| EntryTableItem {
-                authors: BibiEntry::get_authors(&key, &biblio),
-                title: BibiEntry::get_title(&key, &biblio),
-                year: BibiEntry::get_year(&key, &biblio),
-                pubtype: BibiEntry::get_pubtype(&key, &biblio),
-                keywords: BibiEntry::get_keywords(&key, &biblio),
-                citekey: key.clone(),
-                abstract_text: BibiEntry::get_abstract(&key, &biblio),
-                doi_url: BibiEntry::get_weblink(&key, &biblio),
-                filepath: BibiEntry::get_filepath(&key, &biblio),
-            })
-            .collect();
+        let entry_table_items = Self::set_entry_table(&citekeys, &biblio);
         let entry_table_state = TableState::default().with_selected(0);
         let entry_scroll_state = ScrollbarState::new(entry_table_items.len());
         let entry_info_scroll_state = ScrollbarState::default();
         Self {
             entry_table_items,
             entry_table_at_search_start: Vec::new(),
+            entry_table_reversed_sort: false,
             entry_table_state,
             entry_scroll_state,
             entry_info_scroll: 0,
             entry_info_scroll_state,
         }
+    }
+
+    pub fn set_entry_table(citekeys: &Vec<String>, biblio: &Bibliography) -> Vec<EntryTableItem> {
+        let mut entry_table: Vec<EntryTableItem> = citekeys
+            .into_iter()
+            .map(|key| EntryTableItem {
+                authors: BibiMain::get_authors(&key, &biblio),
+                title: BibiMain::get_title(&key, &biblio),
+                year: BibiMain::get_year(&key, &biblio),
+                pubtype: BibiMain::get_pubtype(&key, &biblio),
+                keywords: BibiMain::get_keywords(&key, &biblio),
+                citekey: key.to_owned(),
+                abstract_text: BibiMain::get_abstract(&key, &biblio),
+                doi_url: BibiMain::get_weblink(&key, &biblio),
+                filepath: BibiMain::get_filepath(&key, &biblio),
+            })
+            .collect();
+
+        entry_table.sort_by(|a, b| a.authors.to_lowercase().cmp(&b.authors.to_lowercase()));
+        entry_table
+    }
+
+    // Sort entry table by specific column.
+    // Toggle sorting by hitting same key again
+    pub fn sort_entry_table(&mut self, sorting: &str) {
+        if self.entry_table_reversed_sort {
+            match sorting {
+                "author" => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.authors.to_lowercase().cmp(&b.authors.to_lowercase())),
+                "title" => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase())),
+                "year" => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.year.to_lowercase().cmp(&b.year.to_lowercase())),
+                _ => {}
+            }
+        } else if !self.entry_table_reversed_sort {
+            match sorting {
+                "author" => self
+                    .entry_table_items
+                    .sort_by(|a, b| b.authors.to_lowercase().cmp(&a.authors.to_lowercase())),
+                "title" => self
+                    .entry_table_items
+                    .sort_by(|a, b| b.title.to_lowercase().cmp(&a.title.to_lowercase())),
+                "year" => self
+                    .entry_table_items
+                    .sort_by(|a, b| b.year.to_lowercase().cmp(&a.year.to_lowercase())),
+                _ => {}
+            }
+        }
+        self.entry_table_reversed_sort = !self.entry_table_reversed_sort;
     }
 }
 
@@ -111,30 +123,6 @@ pub struct EntryTableItem {
 }
 
 impl EntryTableItem {
-    // pub fn new(
-    //     authors: String,
-    //     title: String,
-    //     year: String,
-    //     pubtype: String,
-    //     keywords: String,
-    //     citekey: String,
-    //     abstract_text: String,
-    //     doi_url: String,
-    //     filepath: String,
-    // ) -> Self {
-    //     Self {
-    //         authors,
-    //         title,
-    //         year,
-    //         pubtype,
-    //         keywords,
-    //         citekey,
-    //         abstract_text,
-    //         doi_url,
-    //         filepath,
-    //     }
-    // }
-
     // This functions decides which fields are rendered in the entry table
     // Fields which should be usable but not visible can be left out
     pub fn ref_vec(&self) -> Vec<&String> {
