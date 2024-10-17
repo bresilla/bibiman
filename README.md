@@ -62,6 +62,7 @@ updated:
 - [x] **Scrollbar** for better navigating.
 - [ ] **Open related notes file** for specific entry.
 - [ ] **Add Entry via DOI** as formatted code.
+- [ ] **Sort Entries** by different values (partly possible for author column)
 - [ ] **Support Hayagriva(`.yaml.`)** format as input.
 - [ ] **Implement config file** for setting some default values like main
       bibfile, PDF-opener, or editor
