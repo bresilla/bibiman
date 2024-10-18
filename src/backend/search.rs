@@ -116,6 +116,7 @@ mod tests {
     fn test_vector_join() {
         let bibvec: EntryTableItem = EntryTableItem {
             authors: "Author".to_string(),
+            short_author: "".to_string(),
             title: "Title".to_string(),
             year: "1999".to_string(),
             pubtype: "article".to_string(),

@@ -17,6 +17,7 @@
 
 use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
+use itertools::Itertools;
 use std::{fs, path::PathBuf};
 
 #[derive(Debug)]
@@ -74,16 +75,13 @@ impl BibiMain {
     // since it is the entry point of the biblatex crate.
     pub fn get_citekeys(bibstring: &Bibliography) -> Vec<String> {
         let citekeys: Vec<String> = bibstring.keys().map(|k| k.to_owned()).collect();
-        // let mut citekeys: Vec<String> =
-        //     bibstring.iter().map(|entry| entry.to_owned().key).collect();
-        // citekeys.sort_by_key(|name| name.to_lowercase());
         citekeys
     }
 
     // collect all keywords present in the bibliography
     // sort them and remove duplicates
     // this list is for fast filtering entries by topics/keyowrds
-    pub fn collect_tag_list(citekeys: &Vec<String>, biblio: &Bibliography) -> Vec<String> {
+    pub fn collect_tag_list(citekeys: &[String], biblio: &Bibliography) -> Vec<String> {
         // Initialize vector collecting all keywords
         let mut keyword_list = vec![];
 
@@ -118,8 +116,8 @@ impl BibiMain {
         if biblio.get(&citekey).unwrap().author().is_ok() {
             let authors = biblio.get(&citekey).unwrap().author().unwrap();
             if authors.len() > 1 {
-                let authors = format!("{} et al.", authors[0].name);
-                authors
+                let all_authors = authors.iter().map(|a| &a.name).join(", ");
+                all_authors
             } else if authors.len() == 1 {
                 let authors = authors[0].name.to_string();
                 authors
@@ -128,12 +126,14 @@ impl BibiMain {
                 editors_authors
             }
         } else {
-            if biblio.get(&citekey).unwrap().editors().is_ok() {
+            if !biblio.get(&citekey).unwrap().editors().unwrap().is_empty() {
                 let editors = biblio.get(&citekey).unwrap().editors().unwrap();
-                if editors.len() > 1 {
-                    let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
+                if editors[0].0.len() > 1 {
+                    // let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
+                    let mut editors = editors[0].0.iter().map(|e| &e.name).join(", ");
+                    editors.push_str(" (ed.)");
                     editors
-                } else if editors.len() == 1 {
+                } else if editors[0].0.len() == 1 {
                     let editors = format!("{} (ed.)", editors[0].0[0].name);
                     editors
                 } else {

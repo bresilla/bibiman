@@ -42,9 +42,9 @@ async fn main() -> Result<()> {
         std::process::exit(0);
     }
 
-    if !parsed_args.bibfilearg.is_file() {
-        panic!("No \'.bib\' file passed, aborting")
-    }
+    // if !parsed_args.bibfilearg.is_file() {
+    //     panic!("No \'.bib\' file passed, aborting")
+    // }
 
     init_error_hooks()?;
 

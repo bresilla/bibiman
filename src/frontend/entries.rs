@@ -17,7 +17,10 @@
 
 use super::app::App;
 use super::tui::Tui;
-use crate::backend::{bib::BibiMain, search::BibiSearch};
+use crate::backend::{
+    bib::{BibiMain, FileFormat},
+    search::BibiSearch,
+};
 use biblatex::Bibliography;
 use color_eyre::eyre::{Context, Ok, Result};
 use core::panic;
@@ -54,11 +57,12 @@ impl EntryTable {
         }
     }
 
-    pub fn set_entry_table(citekeys: &Vec<String>, biblio: &Bibliography) -> Vec<EntryTableItem> {
+    pub fn set_entry_table(citekeys: &[String], biblio: &Bibliography) -> Vec<EntryTableItem> {
         let mut entry_table: Vec<EntryTableItem> = citekeys
             .into_iter()
             .map(|key| EntryTableItem {
                 authors: BibiMain::get_authors(&key, &biblio),
+                short_author: String::new(),
                 title: BibiMain::get_title(&key, &biblio),
                 year: BibiMain::get_year(&key, &biblio),
                 pubtype: BibiMain::get_pubtype(&key, &biblio),
@@ -114,6 +118,7 @@ impl EntryTable {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct EntryTableItem {
     pub authors: String,
+    pub short_author: String,
     pub title: String,
     pub year: String,
     pub pubtype: String,
@@ -127,8 +132,32 @@ pub struct EntryTableItem {
 impl EntryTableItem {
     // This functions decides which fields are rendered in the entry table
     // Fields which should be usable but not visible can be left out
-    pub fn ref_vec(&self) -> Vec<&String> {
-        vec![&self.authors, &self.title, &self.year, &self.pubtype]
+    pub fn ref_vec(&mut self) -> Vec<&str> {
+        self.short_author = match self.authors.split_once(",") {
+            Some((first, _rest)) => {
+                if self.authors.contains("(ed.)") {
+                    let first_author = format!("{} et al. (ed.)", first);
+                    first_author
+                } else {
+                    let first_author = format!("{} et al.", first);
+                    first_author
+                }
+            }
+            None => String::from(""),
+        };
+
+        vec![
+            {
+                if self.short_author.is_empty() {
+                    &self.authors
+                } else {
+                    &self.short_author
+                }
+            },
+            &self.title,
+            &self.year,
+            &self.pubtype,
+        ]
     }
 
     pub fn authors(&self) -> &str {
@@ -149,6 +178,14 @@ impl EntryTableItem {
 
     pub fn citekey(&self) -> &str {
         &self.citekey
+    }
+
+    pub fn doi_url(&self) -> &str {
+        &self.doi_url
+    }
+
+    pub fn filepath(&self) -> &str {
+        &self.filepath
     }
 }
 
@@ -355,6 +392,8 @@ impl App {
 
 #[cfg(test)]
 mod tests {
+    use super::EntryTableItem;
+
     #[test]
     fn check_os() {
         let os = std::env::consts::OS;
@@ -363,6 +402,48 @@ mod tests {
             "linux",
             "You're not coding on linux, but on {}... Switch to linux, now!",
             std::env::consts::OS
+        )
+    }
+
+    #[test]
+    fn shorten_authors() {
+        let mut entry: EntryTableItem = EntryTableItem {
+            authors: "Miller, Schmitz, Bernard".to_string(),
+            short_author: "".to_string(),
+            title: "A title".to_string(),
+            year: "2000".to_string(),
+            pubtype: "article".to_string(),
+            keywords: "key1, key2".to_string(),
+            citekey: "miller_2000".to_string(),
+            abstract_text: "An abstract".to_string(),
+            doi_url: "www.text.org".to_string(),
+            filepath: "/home/test".to_string(),
+        };
+
+        let entry_vec = EntryTableItem::ref_vec(&mut entry);
+
+        let mut entry_editors: EntryTableItem = EntryTableItem {
+            authors: "Miller, Schmitz, Bernard (ed.)".to_string(),
+            short_author: "".to_string(),
+            title: "A title".to_string(),
+            year: "2000".to_string(),
+            pubtype: "article".to_string(),
+            keywords: "key1, key2".to_string(),
+            citekey: "miller_2000".to_string(),
+            abstract_text: "An abstract".to_string(),
+            doi_url: "www.text.org".to_string(),
+            filepath: "/home/test".to_string(),
+        };
+
+        let entry_vec_editors = EntryTableItem::ref_vec(&mut entry_editors);
+
+        assert_eq!(
+            entry_vec,
+            vec!["Miller et al.", "A title", "2000", "article"]
+        );
+        assert_eq!(
+            entry_vec_editors,
+            vec!["Miller et al. (ed.)", "A title", "2000", "article"]
         )
     }
 }
