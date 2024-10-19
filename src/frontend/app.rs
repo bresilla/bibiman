@@ -76,7 +76,7 @@ impl App {
         let main_biblio = BibiMain::new(main_bibfile.clone());
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
-        let entry_table = EntryTable::new(&main_biblio.citekeys, &main_biblio.bibliography);
+        let entry_table = EntryTable::new(main_biblio.entry_list.clone());
         let current_area = CurrentArea::EntryArea;
         Ok(Self {
             running,
@@ -127,8 +127,7 @@ impl App {
         self.main_biblio = BibiMain::new(self.main_bibfile.clone());
         // self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
-        self.entry_table =
-            EntryTable::new(&self.main_biblio.citekeys, &self.main_biblio.bibliography);
+        self.entry_table = EntryTable::new(self.main_biblio.entry_list.clone());
     }
 
     // Toggle moveable list between entries and tags
@@ -152,8 +151,7 @@ impl App {
     }
 
     pub fn reset_current_list(&mut self) {
-        self.entry_table =
-            EntryTable::new(&self.main_biblio.citekeys, &self.main_biblio.bibliography);
+        self.entry_table = EntryTable::new(self.main_biblio.entry_list.clone());
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         if let CurrentArea::TagArea = self.current_area {
             self.tag_list.tag_list_state.select(Some(0))

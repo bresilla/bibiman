@@ -18,7 +18,7 @@
 use super::app::App;
 use super::tui::Tui;
 use crate::backend::{
-    bib::{BibiMain, FileFormat},
+    bib::{BibiData, BibiMain, FileFormat},
     search::BibiSearch,
 };
 use biblatex::Bibliography;
@@ -41,8 +41,8 @@ pub struct EntryTable {
 }
 
 impl EntryTable {
-    pub fn new(citekeys: &Vec<String>, biblio: &Bibliography) -> Self {
-        let entry_table_items = Self::set_entry_table(&citekeys, &biblio);
+    pub fn new(entry_list: Vec<BibiData>) -> Self {
+        let entry_table_items = Self::set_entry_table(entry_list);
         let entry_table_state = TableState::default().with_selected(0);
         let entry_scroll_state = ScrollbarState::new(entry_table_items.len());
         let entry_info_scroll_state = ScrollbarState::default();
@@ -57,20 +57,20 @@ impl EntryTable {
         }
     }
 
-    pub fn set_entry_table(citekeys: &[String], biblio: &Bibliography) -> Vec<EntryTableItem> {
-        let mut entry_table: Vec<EntryTableItem> = citekeys
+    pub fn set_entry_table(entry_list: Vec<BibiData>) -> Vec<EntryTableItem> {
+        let mut entry_table: Vec<EntryTableItem> = entry_list
             .into_iter()
-            .map(|key| EntryTableItem {
-                authors: BibiMain::get_authors(&key, &biblio),
+            .map(|e| EntryTableItem {
+                authors: e.authors,
                 short_author: String::new(),
-                title: BibiMain::get_title(&key, &biblio),
-                year: BibiMain::get_year(&key, &biblio),
-                pubtype: BibiMain::get_pubtype(&key, &biblio),
-                keywords: BibiMain::get_keywords(&key, &biblio),
-                citekey: key.to_owned(),
-                abstract_text: BibiMain::get_abstract(&key, &biblio),
-                doi_url: BibiMain::get_weblink(&key, &biblio),
-                filepath: BibiMain::get_filepath(&key, &biblio),
+                title: e.title,
+                year: e.year,
+                pubtype: e.pubtype,
+                keywords: e.keywords,
+                citekey: e.citekey,
+                abstract_text: e.abstract_text,
+                doi_url: e.doi_url,
+                filepath: e.filepath,
             })
             .collect();
 
