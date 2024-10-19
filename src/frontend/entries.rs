@@ -17,11 +17,7 @@
 
 use super::app::App;
 use super::tui::Tui;
-use crate::backend::{
-    bib::{BibiData, BibiMain, FileFormat},
-    search::BibiSearch,
-};
-use biblatex::Bibliography;
+use crate::backend::{bib::BibiData, search::BibiSearch};
 use color_eyre::eyre::{Context, Ok, Result};
 use core::panic;
 use editor_command::EditorBuilder;

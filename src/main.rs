@@ -17,7 +17,6 @@
 
 use backend::cliargs::{self, CLIArgs};
 use color_eyre::eyre::Result;
-use core::panic;
 use errorsetup::init_error_hooks;
 use frontend::app::App;
 

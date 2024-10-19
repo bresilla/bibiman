@@ -17,7 +17,6 @@
 
 use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
-use hayagriva::io::from_yaml_str;
 use itertools::Itertools;
 use std::{fs, path::PathBuf};
 
@@ -62,7 +61,7 @@ impl BibiMain {
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
         let citekeys = Self::get_citekeys(&bibliography);
         let keyword_list = Self::collect_tag_list(&citekeys, &bibliography);
-        let entry_list = Self::create_entry_list(&citekeys, &bibliography, &bibfile_format);
+        let entry_list = Self::create_entry_list(&citekeys, &bibliography);
         Self {
             bibfile,
             bibfile_format,
@@ -71,14 +70,6 @@ impl BibiMain {
             citekeys,
             keyword_list,
             entry_list,
-        }
-    }
-
-    fn parse_bibliography(format: &FileFormat, bibfilestring: &str) -> Bibliography {
-        if let FileFormat::BibLatex = format {
-            biblatex::Bibliography::parse(bibfilestring).unwrap()
-        } else if let FileFormat::Hayagriva = format {
-            from_yaml_str(&bibfilestring).unwrap()
         }
     }
 
@@ -95,15 +86,11 @@ impl BibiMain {
         }
     }
 
-    fn create_entry_list(
-        citekeys: &[String],
-        bibliography: &Bibliography,
-        format: &FileFormat,
-    ) -> Vec<BibiData> {
+    fn create_entry_list(citekeys: &[String], bibliography: &Bibliography) -> Vec<BibiData> {
         citekeys
             .into_iter()
             .map(|k| BibiData {
-                authors: Self::get_authors(&k, &bibliography, format),
+                authors: Self::get_authors(&k, &bibliography),
                 title: Self::get_title(&k, &bibliography),
                 year: Self::get_year(&k, &bibliography),
                 pubtype: Self::get_pubtype(&k, &bibliography),
@@ -158,41 +145,38 @@ impl BibiMain {
         keyword_list
     }
 
-    pub fn get_authors(citekey: &str, biblio: &Bibliography, format: &FileFormat) -> String {
-        if let FileFormat::BibLatex = format {
-            if biblio.get(&citekey).unwrap().author().is_ok() {
-                let authors = biblio.get(&citekey).unwrap().author().unwrap();
-                if authors.len() > 1 {
-                    let all_authors = authors.iter().map(|a| &a.name).join(", ");
-                    all_authors
-                } else if authors.len() == 1 {
-                    let authors = authors[0].name.to_string();
-                    authors
+    pub fn get_authors(citekey: &str, biblio: &Bibliography) -> String {
+        if biblio.get(&citekey).unwrap().author().is_ok() {
+            let authors = biblio.get(&citekey).unwrap().author().unwrap();
+            if authors.len() > 1 {
+                let all_authors = authors.iter().map(|a| &a.name).join(", ");
+                all_authors
+            } else if authors.len() == 1 {
+                let authors = authors[0].name.to_string();
+                authors
+            } else {
+                let editors_authors = format!("empty");
+                editors_authors
+            }
+        } else {
+            if !biblio.get(&citekey).unwrap().editors().unwrap().is_empty() {
+                let editors = biblio.get(&citekey).unwrap().editors().unwrap();
+                if editors[0].0.len() > 1 {
+                    // let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
+                    let mut editors = editors[0].0.iter().map(|e| &e.name).join(", ");
+                    editors.push_str(" (ed.)");
+                    editors
+                } else if editors[0].0.len() == 1 {
+                    let editors = format!("{} (ed.)", editors[0].0[0].name);
+                    editors
                 } else {
                     let editors_authors = format!("empty");
                     editors_authors
                 }
             } else {
-                if !biblio.get(&citekey).unwrap().editors().unwrap().is_empty() {
-                    let editors = biblio.get(&citekey).unwrap().editors().unwrap();
-                    if editors[0].0.len() > 1 {
-                        // let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
-                        let mut editors = editors[0].0.iter().map(|e| &e.name).join(", ");
-                        editors.push_str(" (ed.)");
-                        editors
-                    } else if editors[0].0.len() == 1 {
-                        let editors = format!("{} (ed.)", editors[0].0[0].name);
-                        editors
-                    } else {
-                        let editors_authors = format!("empty");
-                        editors_authors
-                    }
-                } else {
-                    let editors_authors = format!("empty");
-                    editors_authors
-                }
+                let editors_authors = format!("empty");
+                editors_authors
             }
-        } else if let FileFormat::Hayagriva = format {
         }
     }
 
