@@ -7,7 +7,9 @@ database as part of a terminal-based scientific workflow.
 
 Here's a small impression how it looks and works:
 
-[![bibiman-demo-vhs.gif](https://i.postimg.cc/mgkRzm4T/bibiman-demo-vhs.gif)](https://postimg.cc/crpPPM6z)
+[![bibiman-demo-vhs.gif](https://preview.redd.it/r716soa87rud1.gif?width=1500&format=mp4&s=dff6e7dc01b84ded822b835cdfaf892d03e2ff88)](https://www.reddit.com/r/commandline/comments/1g3kyi2/bibiman_tui_for_fast_and_uncomplicated/)
+
+<!-- [![bibiman-demo-vhs.gif](https://i.postimg.cc/mgkRzm4T/bibiman-demo-vhs.gif)](https://postimg.cc/crpPPM6z) -->
 
 ## Installation
 
