@@ -17,11 +17,10 @@
 
 use super::app::App;
 use super::tui::Tui;
-use crate::backend::search::BibiSearch;
+use crate::backend::{bib::BibiData, search::BibiSearch};
 use color_eyre::eyre::{Context, Ok, Result};
 use core::panic;
 use editor_command::EditorBuilder;
-use itertools::Itertools;
 use ratatui::widgets::{ScrollbarState, TableState};
 use std::process::{Command, Stdio};
 
@@ -30,36 +29,83 @@ use std::process::{Command, Stdio};
 pub struct EntryTable {
     pub entry_table_items: Vec<EntryTableItem>,
     pub entry_table_at_search_start: Vec<EntryTableItem>,
+    pub entry_table_reversed_sort: bool,
     pub entry_table_state: TableState,
     pub entry_scroll_state: ScrollbarState,
     pub entry_info_scroll: u16,
     pub entry_info_scroll_state: ScrollbarState,
 }
 
-impl FromIterator<Vec<String>> for EntryTable {
-    fn from_iter<T: IntoIterator<Item = Vec<String>>>(iter: T) -> Self {
-        let entry_table_items: Vec<EntryTableItem> = iter
-            .into_iter()
-            .sorted()
-            // 0: authors, 1: title, 2: date, 3: pubtype, 4: keywords, 5: citekey
-            // 6: abstract, 7: doi/url, 8: pdf filepath
-            // See backend/bib.rs BibiEntry impl
-            .map(|i| {
-                EntryTableItem::new(
-                    &i[0], &i[1], &i[2], &i[3], &i[4], &i[5], &i[6], &i[7], &i[8],
-                )
-            })
-            .collect();
+impl EntryTable {
+    pub fn new(entry_list: Vec<BibiData>) -> Self {
+        let entry_table_items = Self::set_entry_table(entry_list);
         let entry_table_state = TableState::default().with_selected(0);
         let entry_scroll_state = ScrollbarState::new(entry_table_items.len());
         let entry_info_scroll_state = ScrollbarState::default();
         Self {
             entry_table_items,
             entry_table_at_search_start: Vec::new(),
+            entry_table_reversed_sort: false,
             entry_table_state,
             entry_scroll_state,
             entry_info_scroll: 0,
             entry_info_scroll_state,
+        }
+    }
+
+    pub fn set_entry_table(entry_list: Vec<BibiData>) -> Vec<EntryTableItem> {
+        let mut entry_table: Vec<EntryTableItem> = entry_list
+            .into_iter()
+            .map(|e| EntryTableItem {
+                authors: e.authors,
+                short_author: String::new(),
+                title: e.title,
+                year: e.year,
+                pubtype: e.pubtype,
+                keywords: e.keywords,
+                citekey: e.citekey,
+                abstract_text: e.abstract_text,
+                doi_url: e.doi_url,
+                filepath: e.filepath,
+            })
+            .collect();
+
+        entry_table.sort_by(|a, b| a.authors.to_lowercase().cmp(&b.authors.to_lowercase()));
+        entry_table
+    }
+
+    // Sort entry table by specific column.
+    // Toggle sorting by hitting same key again
+    pub fn sort_entry_table(&mut self, sorting: &str, toggle: bool) {
+        if toggle {
+            self.entry_table_reversed_sort = !self.entry_table_reversed_sort;
+        }
+        if self.entry_table_reversed_sort {
+            match sorting {
+                "author" => self
+                    .entry_table_items
+                    .sort_by(|a, b| b.authors.to_lowercase().cmp(&a.authors.to_lowercase())),
+                "title" => self
+                    .entry_table_items
+                    .sort_by(|a, b| b.title.to_lowercase().cmp(&a.title.to_lowercase())),
+                "year" => self
+                    .entry_table_items
+                    .sort_by(|a, b| b.year.to_lowercase().cmp(&a.year.to_lowercase())),
+                _ => {}
+            }
+        } else if !self.entry_table_reversed_sort {
+            match sorting {
+                "author" => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.authors.to_lowercase().cmp(&b.authors.to_lowercase())),
+                "title" => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase())),
+                "year" => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.year.to_lowercase().cmp(&b.year.to_lowercase())),
+                _ => {}
+            }
         }
     }
 }
@@ -68,6 +114,7 @@ impl FromIterator<Vec<String>> for EntryTable {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct EntryTableItem {
     pub authors: String,
+    pub short_author: String,
     pub title: String,
     pub year: String,
     pub pubtype: String,
@@ -79,34 +126,34 @@ pub struct EntryTableItem {
 }
 
 impl EntryTableItem {
-    pub fn new(
-        authors: &str,
-        title: &str,
-        year: &str,
-        pubtype: &str,
-        keywords: &str,
-        citekey: &str,
-        abstract_text: &str,
-        doi_url: &str,
-        filepath: &str,
-    ) -> Self {
-        Self {
-            authors: authors.to_string(),
-            title: title.to_string(),
-            year: year.to_string(),
-            pubtype: pubtype.to_string(),
-            keywords: keywords.to_string(),
-            citekey: citekey.to_string(),
-            abstract_text: abstract_text.to_string(),
-            doi_url: doi_url.to_string(),
-            filepath: filepath.to_string(),
-        }
-    }
-
     // This functions decides which fields are rendered in the entry table
     // Fields which should be usable but not visible can be left out
-    pub fn ref_vec(&self) -> Vec<&String> {
-        vec![&self.authors, &self.title, &self.year, &self.pubtype]
+    pub fn ref_vec(&mut self) -> Vec<&str> {
+        self.short_author = match self.authors.split_once(",") {
+            Some((first, _rest)) => {
+                if self.authors.contains("(ed.)") {
+                    let first_author = format!("{} et al. (ed.)", first);
+                    first_author
+                } else {
+                    let first_author = format!("{} et al.", first);
+                    first_author
+                }
+            }
+            None => String::from(""),
+        };
+
+        vec![
+            {
+                if self.short_author.is_empty() {
+                    &self.authors
+                } else {
+                    &self.short_author
+                }
+            },
+            &self.title,
+            &self.year,
+            &self.pubtype,
+        ]
     }
 
     pub fn authors(&self) -> &str {
@@ -127,6 +174,14 @@ impl EntryTableItem {
 
     pub fn citekey(&self) -> &str {
         &self.citekey
+    }
+
+    pub fn doi_url(&self) -> &str {
+        &self.doi_url
+    }
+
+    pub fn filepath(&self) -> &str {
+        &self.filepath
     }
 }
 
@@ -256,6 +311,13 @@ impl App {
         let filtered_list =
             BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
         self.entry_table.entry_table_items = filtered_list;
+        if self.entry_table.entry_table_reversed_sort {
+            self.entry_table.sort_entry_table("author", false);
+        }
+        self.entry_table.entry_scroll_state = ScrollbarState::content_length(
+            self.entry_table.entry_scroll_state,
+            self.entry_table.entry_table_items.len(),
+        );
     }
 
     // Open file connected with entry through 'file' or 'pdf' field
@@ -326,6 +388,8 @@ impl App {
 
 #[cfg(test)]
 mod tests {
+    use super::EntryTableItem;
+
     #[test]
     fn check_os() {
         let os = std::env::consts::OS;
@@ -334,6 +398,48 @@ mod tests {
             "linux",
             "You're not coding on linux, but on {}... Switch to linux, now!",
             std::env::consts::OS
+        )
+    }
+
+    #[test]
+    fn shorten_authors() {
+        let mut entry: EntryTableItem = EntryTableItem {
+            authors: "Miller, Schmitz, Bernard".to_string(),
+            short_author: "".to_string(),
+            title: "A title".to_string(),
+            year: "2000".to_string(),
+            pubtype: "article".to_string(),
+            keywords: "key1, key2".to_string(),
+            citekey: "miller_2000".to_string(),
+            abstract_text: "An abstract".to_string(),
+            doi_url: "www.text.org".to_string(),
+            filepath: "/home/test".to_string(),
+        };
+
+        let entry_vec = EntryTableItem::ref_vec(&mut entry);
+
+        let mut entry_editors: EntryTableItem = EntryTableItem {
+            authors: "Miller, Schmitz, Bernard (ed.)".to_string(),
+            short_author: "".to_string(),
+            title: "A title".to_string(),
+            year: "2000".to_string(),
+            pubtype: "article".to_string(),
+            keywords: "key1, key2".to_string(),
+            citekey: "miller_2000".to_string(),
+            abstract_text: "An abstract".to_string(),
+            doi_url: "www.text.org".to_string(),
+            filepath: "/home/test".to_string(),
+        };
+
+        let entry_vec_editors = EntryTableItem::ref_vec(&mut entry_editors);
+
+        assert_eq!(
+            entry_vec,
+            vec!["Miller et al.", "A title", "2000", "article"]
+        );
+        assert_eq!(
+            entry_vec_editors,
+            vec!["Miller et al. (ed.)", "A title", "2000", "article"]
         )
     }
 }

@@ -17,7 +17,6 @@
 
 use backend::cliargs::{self, CLIArgs};
 use color_eyre::eyre::Result;
-use core::panic;
 use errorsetup::init_error_hooks;
 use frontend::app::App;
 
@@ -42,9 +41,9 @@ async fn main() -> Result<()> {
         std::process::exit(0);
     }
 
-    if !parsed_args.bibfilearg.is_file() {
-        panic!("No \'.bib\' file passed, aborting")
-    }
+    // if !parsed_args.bibfilearg.is_file() {
+    //     panic!("No \'.bib\' file passed, aborting")
+    // }
 
     init_error_hooks()?;
 

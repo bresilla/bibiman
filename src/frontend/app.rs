@@ -53,8 +53,6 @@ pub struct App {
     pub main_bibfile: PathBuf,
     // main bibliography
     pub main_biblio: BibiMain,
-    // bibliographic data
-    pub biblio_data: BibiData,
     // search struct:
     pub search_struct: BibiSearch,
     // tag list
@@ -76,16 +74,14 @@ impl App {
         let running = true;
         let main_bibfile = args.bibfilearg;
         let main_biblio = BibiMain::new(main_bibfile.clone());
-        let biblio_data = BibiData::new(&main_biblio.bibliography, &main_biblio.citekeys);
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
-        let entry_table = EntryTable::from_iter(biblio_data.entry_list.bibentries.clone());
+        let entry_table = EntryTable::new(main_biblio.entry_list.clone());
         let current_area = CurrentArea::EntryArea;
         Ok(Self {
             running,
             main_bibfile,
             main_biblio,
-            biblio_data,
             tag_list,
             search_struct,
             entry_table,
@@ -129,11 +125,9 @@ impl App {
 
     pub fn update_lists(&mut self) {
         self.main_biblio = BibiMain::new(self.main_bibfile.clone());
-        self.biblio_data =
-            BibiData::new(&self.main_biblio.bibliography, &self.main_biblio.citekeys);
         // self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
-        self.entry_table = EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone());
+        self.entry_table = EntryTable::new(self.main_biblio.entry_list.clone());
     }
 
     // Toggle moveable list between entries and tags
@@ -157,7 +151,7 @@ impl App {
     }
 
     pub fn reset_current_list(&mut self) {
-        self.entry_table = EntryTable::from_iter(self.biblio_data.entry_list.bibentries.clone());
+        self.entry_table = EntryTable::new(self.main_biblio.entry_list.clone());
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         if let CurrentArea::TagArea = self.current_area {
             self.tag_list.tag_list_state.select(Some(0))

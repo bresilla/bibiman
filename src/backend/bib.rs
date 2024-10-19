@@ -17,50 +17,104 @@
 
 use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
+use itertools::Itertools;
 use std::{fs, path::PathBuf};
+
+#[derive(Debug)]
+pub enum FileFormat {
+    BibLatex,
+    Hayagriva,
+}
 
 // Set necessary fields
 // TODO: can surely be made more efficient/simpler
 #[derive(Debug)]
 pub struct BibiMain {
     pub bibfile: PathBuf,           // path to bibfile
+    pub bibfile_format: FileFormat, // Format of passed file
     pub bibfilestring: String,      // content of bibfile as string
     pub bibliography: Bibliography, // parsed bibliography
     pub citekeys: Vec<String>,      // list of all citekeys
     pub keyword_list: Vec<String>,  // list of all available keywords
+    pub entry_list: Vec<BibiData>,  // List of all entries
+}
+
+#[derive(Debug, Clone)]
+pub struct BibiData {
+    pub authors: String,
+    pub title: String,
+    pub year: String,
+    pub pubtype: String,
+    pub keywords: String,
+    pub citekey: String,
+    pub abstract_text: String,
+    pub doi_url: String,
+    pub filepath: String,
 }
 
 impl BibiMain {
     pub fn new(main_bibfile: PathBuf) -> Self {
         // TODO: Needs check for config file path as soon as config file is impl
+        let bibfile_format = Self::check_file_format(&main_bibfile);
         let bibfile = main_bibfile;
         let bibfilestring = fs::read_to_string(&bibfile).unwrap();
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
         let citekeys = Self::get_citekeys(&bibliography);
         let keyword_list = Self::collect_tag_list(&citekeys, &bibliography);
+        let entry_list = Self::create_entry_list(&citekeys, &bibliography);
         Self {
             bibfile,
+            bibfile_format,
             bibfilestring,
             bibliography,
             citekeys,
             keyword_list,
+            entry_list,
         }
+    }
+
+    // Check which file format the passed file has
+    fn check_file_format(main_bibfile: &PathBuf) -> FileFormat {
+        let extension = main_bibfile.extension().unwrap().to_str();
+
+        match extension {
+            Some("yml") => FileFormat::Hayagriva,
+            Some("yaml") => FileFormat::Hayagriva,
+            Some("bib") => FileFormat::BibLatex,
+            Some(_) => panic!("The extension {:?} is no valid bibfile", extension.unwrap()),
+            None => panic!("The given path {:?} holds no valid file", main_bibfile),
+        }
+    }
+
+    fn create_entry_list(citekeys: &[String], bibliography: &Bibliography) -> Vec<BibiData> {
+        citekeys
+            .into_iter()
+            .map(|k| BibiData {
+                authors: Self::get_authors(&k, &bibliography),
+                title: Self::get_title(&k, &bibliography),
+                year: Self::get_year(&k, &bibliography),
+                pubtype: Self::get_pubtype(&k, &bibliography),
+                keywords: Self::get_keywords(&k, &bibliography),
+                citekey: k.to_owned(),
+                abstract_text: Self::get_abstract(&k, &bibliography),
+                doi_url: Self::get_weblink(&k, &bibliography),
+                filepath: Self::get_filepath(&k, &bibliography),
+            })
+            .collect()
     }
 
     // get list of citekeys from the given bibfile
     // this list is the base for further operations on the bibentries
     // since it is the entry point of the biblatex crate.
     pub fn get_citekeys(bibstring: &Bibliography) -> Vec<String> {
-        let mut citekeys: Vec<String> =
-            bibstring.iter().map(|entry| entry.to_owned().key).collect();
-        citekeys.sort_by_key(|name| name.to_lowercase());
+        let citekeys: Vec<String> = bibstring.keys().map(|k| k.to_owned()).collect();
         citekeys
     }
 
     // collect all keywords present in the bibliography
     // sort them and remove duplicates
     // this list is for fast filtering entries by topics/keyowrds
-    pub fn collect_tag_list(citekeys: &Vec<String>, biblio: &Bibliography) -> Vec<String> {
+    pub fn collect_tag_list(citekeys: &[String], biblio: &Bibliography) -> Vec<String> {
         // Initialize vector collecting all keywords
         let mut keyword_list = vec![];
 
@@ -90,96 +144,40 @@ impl BibiMain {
         keyword_list.dedup();
         keyword_list
     }
-}
-
-#[derive(Debug)]
-pub struct BibiData {
-    pub entry_list: BibiDataSets,
-}
-
-impl BibiData {
-    pub fn new(biblio: &Bibliography, citekeys: &Vec<String>) -> Self {
-        Self {
-            entry_list: {
-                let bibentries = citekeys
-                    .into_iter()
-                    .map(|citekey| BibiEntry::new(&citekey, &biblio))
-                    .collect();
-                BibiDataSets { bibentries }
-            },
-        }
-    }
-}
-
-// Parent struct which keeps the Vector of all bibentries
-// Necessary for implementing FromIterator
-#[derive(Debug)]
-pub struct BibiDataSets {
-    pub bibentries: Vec<Vec<String>>,
-}
-
-// Struct which has to be created for every entry of bibdatabase
-#[derive(Debug)]
-pub struct BibiEntry {
-    pub authors: String,
-    pub title: String,
-    pub year: String,
-    pub pubtype: String,
-    pub keywords: String,
-    pub citekey: String,
-    pub weblink: String,
-    pub filepath: String,
-}
-
-impl BibiEntry {
-    pub fn new(citekey: &str, biblio: &Bibliography) -> Vec<String> {
-        vec![
-            Self::get_authors(&citekey, &biblio),
-            Self::get_title(&citekey, &biblio),
-            Self::get_year(&citekey, &biblio),
-            Self::get_pubtype(&citekey, &biblio),
-            Self::get_keywords(&citekey, &biblio),
-            citekey.to_string(),
-            Self::get_abstract(&citekey, &biblio),
-            Self::get_weblink(&citekey, &biblio),
-            Self::get_filepath(&citekey, &biblio),
-        ]
-    }
 
     pub fn get_authors(citekey: &str, biblio: &Bibliography) -> String {
-        let authors = {
-            if biblio.get(&citekey).unwrap().author().is_ok() {
-                let authors = biblio.get(&citekey).unwrap().author().unwrap();
-                if authors.len() > 1 {
-                    let authors = format!("{} et al.", authors[0].name);
-                    authors
-                } else if authors.len() == 1 {
-                    let authors = authors[0].name.to_string();
-                    authors
+        if biblio.get(&citekey).unwrap().author().is_ok() {
+            let authors = biblio.get(&citekey).unwrap().author().unwrap();
+            if authors.len() > 1 {
+                let all_authors = authors.iter().map(|a| &a.name).join(", ");
+                all_authors
+            } else if authors.len() == 1 {
+                let authors = authors[0].name.to_string();
+                authors
+            } else {
+                let editors_authors = format!("empty");
+                editors_authors
+            }
+        } else {
+            if !biblio.get(&citekey).unwrap().editors().unwrap().is_empty() {
+                let editors = biblio.get(&citekey).unwrap().editors().unwrap();
+                if editors[0].0.len() > 1 {
+                    // let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
+                    let mut editors = editors[0].0.iter().map(|e| &e.name).join(", ");
+                    editors.push_str(" (ed.)");
+                    editors
+                } else if editors[0].0.len() == 1 {
+                    let editors = format!("{} (ed.)", editors[0].0[0].name);
+                    editors
                 } else {
                     let editors_authors = format!("empty");
                     editors_authors
                 }
             } else {
-                if biblio.get(&citekey).unwrap().editors().is_ok() {
-                    let editors = biblio.get(&citekey).unwrap().editors().unwrap();
-                    if editors.len() > 1 {
-                        let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
-                        editors
-                    } else if editors.len() == 1 {
-                        let editors = format!("{} (ed.)", editors[0].0[0].name);
-                        editors
-                    } else {
-                        let editors_authors = format!("empty");
-                        editors_authors
-                    }
-                } else {
-                    let editors_authors = format!("empty");
-                    editors_authors
-                }
+                let editors_authors = format!("empty");
+                editors_authors
             }
-        };
-        authors
+        }
     }
 
     pub fn get_title(citekey: &str, biblio: &Bibliography) -> String {

@@ -121,6 +121,9 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
             KeyCode::Char('G') | KeyCode::End => {
                 app.select_last_entry();
             }
+            KeyCode::Char('s') => {
+                app.entry_table.sort_entry_table("author", true);
+            }
             KeyCode::Char('y') => {
                 App::yank_text(&app.get_selected_citekey());
             }

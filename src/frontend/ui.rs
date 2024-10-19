@@ -28,7 +28,7 @@ use ratatui::{
     },
 };
 
-use crate::{frontend::app::App, frontend::keywords::TagListItem};
+use crate::frontend::{app::App, keywords::TagListItem};
 
 use super::app::{CurrentArea, FormerArea};
 
@@ -47,6 +47,8 @@ const SELECTED_STYLE: Style = Style::new()
     .add_modifier(Modifier::REVERSED);
 const TEXT_FG_COLOR: Color = Color::Indexed(252);
 const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(245);
+const SORTED_ENTRIES: &str = "▼";
+const SORTED_ENTRIES_REVERSED: &str = "▲";
 
 const SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
 const SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
@@ -259,15 +261,22 @@ impl App {
 
         let header_style = Style::default().bold().fg(TEXT_FG_COLOR);
 
-        let header = [
-            "Authors".underlined(),
-            "Title".underlined(),
-            "Year".underlined(),
-            "Type".underlined(),
-        ]
-        .into_iter()
-        .map(Cell::from)
-        .collect::<Row>()
+        let header = Row::new(vec![
+            Cell::from(Line::from(vec![
+                Span::raw("Author").underlined(),
+                Span::raw(format!(
+                    " {}",
+                    if self.entry_table.entry_table_reversed_sort {
+                        SORTED_ENTRIES_REVERSED
+                    } else {
+                        SORTED_ENTRIES
+                    }
+                )),
+            ])),
+            Cell::from("Title".to_string().underlined()),
+            Cell::from("Year".to_string().underlined()),
+            Cell::from("Type".to_string().underlined()),
+        ])
         .style(header_style)
         .height(1);
 
@@ -275,7 +284,7 @@ impl App {
         let rows = self
             .entry_table
             .entry_table_items
-            .iter()
+            .iter_mut()
             .enumerate()
             .map(|(_i, data)| {
                 let item = data.ref_vec();
@@ -340,15 +349,16 @@ impl App {
                 let mut lines = vec![];
                 lines.push(Line::from(vec![
                     Span::styled("Authors: ", style_value),
-                    Span::styled(cur_entry.authors.clone(), Style::new().green()),
+                    // Span::styled(cur_entry.authors.clone(), Style::new().green()),
+                    Span::styled(cur_entry.authors(), Style::new().green()),
                 ]));
                 lines.push(Line::from(vec![
                     Span::styled("Title: ", style_value),
-                    Span::styled(cur_entry.title.clone(), Style::new().magenta()),
+                    Span::styled(cur_entry.title(), Style::new().magenta()),
                 ]));
                 lines.push(Line::from(vec![
                     Span::styled("Year: ", style_value),
-                    Span::styled(cur_entry.year.clone(), Style::new().light_magenta()),
+                    Span::styled(cur_entry.year(), Style::new().light_magenta()),
                 ]));
                 if !cur_entry.doi_url.is_empty() || !cur_entry.filepath.is_empty() {
                     lines.push(Line::raw(""));
@@ -357,7 +367,7 @@ impl App {
                     lines.push(Line::from(vec![
                         Span::styled("DOI/URL: ", style_value_sec),
                         Span::styled(
-                            cur_entry.doi_url.clone(),
+                            cur_entry.doi_url(),
                             Style::default().fg(TEXT_FG_COLOR).underlined(),
                         ),
                     ]));
@@ -365,10 +375,7 @@ impl App {
                 if !cur_entry.filepath.is_empty() {
                     lines.push(Line::from(vec![
                         Span::styled("File: ", style_value_sec),
-                        Span::styled(
-                            cur_entry.filepath.clone(),
-                            Style::default().fg(TEXT_FG_COLOR),
-                        ),
+                        Span::styled(cur_entry.filepath(), Style::default().fg(TEXT_FG_COLOR)),
                     ]));
                 }
                 lines.push(Line::from(""));
