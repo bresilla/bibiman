@@ -60,16 +60,16 @@ impl App {
     // Tag List commands
 
     // Movement
-    pub fn select_next_tag(&mut self) {
-        self.tag_list.tag_list_state.select_next();
+    pub fn select_next_tag(&mut self, keywords: u16) {
+        self.tag_list.tag_list_state.scroll_down_by(keywords);
         self.tag_list.tag_scroll_state = self
             .tag_list
             .tag_scroll_state
             .position(self.tag_list.tag_list_state.selected().unwrap());
     }
 
-    pub fn select_previous_tag(&mut self) {
-        self.tag_list.tag_list_state.select_previous();
+    pub fn select_previous_tag(&mut self, keywords: u16) {
+        self.tag_list.tag_list_state.scroll_up_by(keywords);
         self.tag_list.tag_scroll_state = self
             .tag_list
             .tag_scroll_state

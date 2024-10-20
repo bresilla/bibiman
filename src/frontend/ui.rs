@@ -30,7 +30,10 @@ use ratatui::{
 
 use crate::frontend::{app::App, keywords::TagListItem};
 
-use super::app::{CurrentArea, FormerArea};
+use super::{
+    app::{CurrentArea, FormerArea},
+    entries::EntryTableColumn,
+};
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 // const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
@@ -49,6 +52,7 @@ const TEXT_FG_COLOR: Color = Color::Indexed(252);
 const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(245);
 const SORTED_ENTRIES: &str = "▼";
 const SORTED_ENTRIES_REVERSED: &str = "▲";
+const HEADER_FOOTER_BG: Color = Color::Indexed(235);
 
 const SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
 const SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
@@ -183,8 +187,6 @@ impl App {
                 BOX_UNSELECTED_BORDER_STYLE
             });
 
-        let background_style = Color::Indexed(235);
-
         let [file_area, keyword_area, count_area] = Layout::horizontal([
             Constraint::Fill(4),
             Constraint::Fill(2),
@@ -197,7 +199,7 @@ impl App {
             Span::raw("File: ").bold(),
             Span::raw(self.main_bibfile.file_name().unwrap().to_string_lossy()).bold(),
         ])
-        .bg(background_style)
+        .bg(HEADER_FOOTER_BG)
         .render(file_area, buf);
 
         Line::from(if !self.tag_list.selected_keyword.is_empty() {
@@ -210,7 +212,7 @@ impl App {
         } else {
             vec![Span::raw(" ")]
         })
-        .bg(background_style)
+        .bg(HEADER_FOOTER_BG)
         .render(keyword_area, buf);
 
         Line::from(if self.entry_table.entry_table_state.selected().is_some() {
@@ -224,7 +226,7 @@ impl App {
             vec![Span::raw("No entries")]
         })
         .right_aligned()
-        .bg(background_style)
+        .bg(HEADER_FOOTER_BG)
         .render(count_area, buf);
         // Paragraph::new(Line::from(vec![Span::raw(
         //     self.main_bibfile.display().to_string(),
@@ -259,23 +261,72 @@ impl App {
                 BOX_UNSELECTED_BORDER_STYLE
             });
 
-        let header_style = Style::default().bold().fg(TEXT_FG_COLOR);
+        let header_style = Style::default()
+            .bold()
+            .fg(TEXT_FG_COLOR)
+            .bg(HEADER_FOOTER_BG);
 
         let header = Row::new(vec![
-            Cell::from(Line::from(vec![
-                Span::raw("Author").underlined(),
-                Span::raw(format!(
-                    " {}",
-                    if self.entry_table.entry_table_reversed_sort {
-                        SORTED_ENTRIES_REVERSED
-                    } else {
-                        SORTED_ENTRIES
-                    }
-                )),
-            ])),
-            Cell::from("Title".to_string().underlined()),
-            Cell::from("Year".to_string().underlined()),
-            Cell::from("Type".to_string().underlined()),
+            if let EntryTableColumn::Authors = self.entry_table.entry_table_selected_column {
+                Cell::from(Line::from(vec![
+                    Span::raw("Author").underlined(),
+                    Span::raw(format!(
+                        " {}",
+                        if self.entry_table.entry_table_reversed_sort {
+                            SORTED_ENTRIES_REVERSED
+                        } else {
+                            SORTED_ENTRIES
+                        }
+                    )),
+                ]))
+            } else {
+                Cell::from("Author".to_string())
+            },
+            if let EntryTableColumn::Title = self.entry_table.entry_table_selected_column {
+                Cell::from(Line::from(vec![
+                    Span::raw("Title").underlined(),
+                    Span::raw(format!(
+                        " {}",
+                        if self.entry_table.entry_table_reversed_sort {
+                            SORTED_ENTRIES_REVERSED
+                        } else {
+                            SORTED_ENTRIES
+                        }
+                    )),
+                ]))
+            } else {
+                Cell::from("Title".to_string())
+            },
+            if let EntryTableColumn::Year = self.entry_table.entry_table_selected_column {
+                Cell::from(Line::from(vec![
+                    Span::raw("Year").underlined(),
+                    Span::raw(format!(
+                        " {}",
+                        if self.entry_table.entry_table_reversed_sort {
+                            SORTED_ENTRIES_REVERSED
+                        } else {
+                            SORTED_ENTRIES
+                        }
+                    )),
+                ]))
+            } else {
+                Cell::from("Year".to_string())
+            },
+            if let EntryTableColumn::Pubtype = self.entry_table.entry_table_selected_column {
+                Cell::from(Line::from(vec![
+                    Span::raw("Pubtype").underlined(),
+                    Span::raw(format!(
+                        " {}",
+                        if self.entry_table.entry_table_reversed_sort {
+                            SORTED_ENTRIES_REVERSED
+                        } else {
+                            SORTED_ENTRIES
+                        }
+                    )),
+                ]))
+            } else {
+                Cell::from("Pubtype".to_string())
+            },
         ])
         .style(header_style)
         .height(1);
@@ -299,7 +350,13 @@ impl App {
             [
                 Constraint::Percentage(20),
                 Constraint::Fill(1),
-                Constraint::Length(4),
+                Constraint::Length(
+                    if let EntryTableColumn::Year = self.entry_table.entry_table_selected_column {
+                        6
+                    } else {
+                        4
+                    },
+                ),
                 Constraint::Percentage(10),
             ],
         )
