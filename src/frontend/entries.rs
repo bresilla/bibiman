@@ -24,11 +24,20 @@ use editor_command::EditorBuilder;
 use ratatui::widgets::{ScrollbarState, TableState};
 use std::process::{Command, Stdio};
 
+#[derive(Debug)]
+pub enum EntryTableColumn {
+    Authors,
+    Title,
+    Year,
+    Pubtype,
+}
+
 // Define list containing entries as table
 #[derive(Debug)]
 pub struct EntryTable {
     pub entry_table_items: Vec<EntryTableItem>,
     pub entry_table_at_search_start: Vec<EntryTableItem>,
+    pub entry_table_selected_column: EntryTableColumn,
     pub entry_table_reversed_sort: bool,
     pub entry_table_state: TableState,
     pub entry_scroll_state: ScrollbarState,
@@ -45,6 +54,7 @@ impl EntryTable {
         Self {
             entry_table_items,
             entry_table_at_search_start: Vec::new(),
+            entry_table_selected_column: EntryTableColumn::Authors,
             entry_table_reversed_sort: false,
             entry_table_state,
             entry_scroll_state,
@@ -76,35 +86,39 @@ impl EntryTable {
 
     // Sort entry table by specific column.
     // Toggle sorting by hitting same key again
-    pub fn sort_entry_table(&mut self, sorting: &str, toggle: bool) {
+    pub fn sort_entry_table(&mut self, toggle: bool) {
         if toggle {
             self.entry_table_reversed_sort = !self.entry_table_reversed_sort;
         }
         if self.entry_table_reversed_sort {
-            match sorting {
-                "author" => self
+            match self.entry_table_selected_column {
+                EntryTableColumn::Authors => self
                     .entry_table_items
                     .sort_by(|a, b| b.authors.to_lowercase().cmp(&a.authors.to_lowercase())),
-                "title" => self
+                EntryTableColumn::Title => self
                     .entry_table_items
                     .sort_by(|a, b| b.title.to_lowercase().cmp(&a.title.to_lowercase())),
-                "year" => self
+                EntryTableColumn::Year => self
                     .entry_table_items
                     .sort_by(|a, b| b.year.to_lowercase().cmp(&a.year.to_lowercase())),
-                _ => {}
+                EntryTableColumn::Pubtype => self
+                    .entry_table_items
+                    .sort_by(|a, b| b.pubtype.to_lowercase().cmp(&a.pubtype.to_lowercase())),
             }
         } else if !self.entry_table_reversed_sort {
-            match sorting {
-                "author" => self
+            match self.entry_table_selected_column {
+                EntryTableColumn::Authors => self
                     .entry_table_items
                     .sort_by(|a, b| a.authors.to_lowercase().cmp(&b.authors.to_lowercase())),
-                "title" => self
+                EntryTableColumn::Title => self
                     .entry_table_items
                     .sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase())),
-                "year" => self
+                EntryTableColumn::Year => self
                     .entry_table_items
                     .sort_by(|a, b| a.year.to_lowercase().cmp(&b.year.to_lowercase())),
-                _ => {}
+                EntryTableColumn::Pubtype => self
+                    .entry_table_items
+                    .sort_by(|a, b| a.pubtype.to_lowercase().cmp(&b.pubtype.to_lowercase())),
             }
         }
     }
@@ -189,22 +203,22 @@ impl App {
     // Entry Table commands
 
     // Movement
-    pub fn select_next_entry(&mut self) {
+    pub fn select_next_entry(&mut self, entries: u16) {
         self.entry_table.entry_info_scroll = 0;
         self.entry_table.entry_info_scroll_state =
             self.entry_table.entry_info_scroll_state.position(0);
-        self.entry_table.entry_table_state.select_next();
+        self.entry_table.entry_table_state.scroll_down_by(entries);
         self.entry_table.entry_scroll_state = self
             .entry_table
             .entry_scroll_state
             .position(self.entry_table.entry_table_state.selected().unwrap());
     }
 
-    pub fn select_previous_entry(&mut self) {
+    pub fn select_previous_entry(&mut self, entries: u16) {
         self.entry_table.entry_info_scroll = 0;
         self.entry_table.entry_info_scroll_state =
             self.entry_table.entry_info_scroll_state.position(0);
-        self.entry_table.entry_table_state.select_previous();
+        self.entry_table.entry_table_state.scroll_up_by(entries);
         self.entry_table.entry_scroll_state = self
             .entry_table
             .entry_scroll_state
@@ -228,6 +242,48 @@ impl App {
             .entry_table
             .entry_scroll_state
             .position(self.entry_table.entry_table_items.len());
+    }
+
+    pub fn select_next_column(&mut self) {
+        match self.entry_table.entry_table_selected_column {
+            EntryTableColumn::Authors => {
+                self.entry_table.entry_table_selected_column = EntryTableColumn::Title;
+                self.entry_table.sort_entry_table(false);
+            }
+            EntryTableColumn::Title => {
+                self.entry_table.entry_table_selected_column = EntryTableColumn::Year;
+                self.entry_table.sort_entry_table(false);
+            }
+            EntryTableColumn::Year => {
+                self.entry_table.entry_table_selected_column = EntryTableColumn::Pubtype;
+                self.entry_table.sort_entry_table(false);
+            }
+            EntryTableColumn::Pubtype => {
+                self.entry_table.entry_table_selected_column = EntryTableColumn::Authors;
+                self.entry_table.sort_entry_table(false);
+            }
+        }
+    }
+
+    pub fn select_prev_column(&mut self) {
+        match self.entry_table.entry_table_selected_column {
+            EntryTableColumn::Authors => {
+                self.entry_table.entry_table_selected_column = EntryTableColumn::Pubtype;
+                self.entry_table.sort_entry_table(false);
+            }
+            EntryTableColumn::Title => {
+                self.entry_table.entry_table_selected_column = EntryTableColumn::Authors;
+                self.entry_table.sort_entry_table(false);
+            }
+            EntryTableColumn::Year => {
+                self.entry_table.entry_table_selected_column = EntryTableColumn::Title;
+                self.entry_table.sort_entry_table(false);
+            }
+            EntryTableColumn::Pubtype => {
+                self.entry_table.entry_table_selected_column = EntryTableColumn::Year;
+                self.entry_table.sort_entry_table(false);
+            }
+        }
     }
 
     // Get the citekey of the selected entry
@@ -312,7 +368,7 @@ impl App {
             BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
         self.entry_table.entry_table_items = filtered_list;
         if self.entry_table.entry_table_reversed_sort {
-            self.entry_table.sort_entry_table("author", false);
+            self.entry_table.sort_entry_table(false);
         }
         self.entry_table.entry_scroll_state = ScrollbarState::content_length(
             self.entry_table.entry_scroll_state,

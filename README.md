@@ -60,30 +60,36 @@ updated:
 - [x] **Open related PDF** file (`file` BibLaTeX key) with keypress.
 - [x] **Open related URL/DOI** with keypress.
 - [x] **Scrollbar** for better navigating.
+- [x] **Sort Entries** by different each column (`Authors`, `Title`, `Year`,
+      `Pubtype`)
 - [ ] **Open related notes file** for specific entry.
 - [ ] **Add Entry via DOI** as formatted code.
-- [ ] **Sort Entries** by different values (partly possible for author column)
-- [ ] **Support Hayagriva(`.yaml.`)** format as input.
 - [ ] **Implement config file** for setting some default values like main
       bibfile, PDF-opener, or editor
+- [ ] **Support Hayagriva(`.yaml`)** format as input (_on hold for now_, because
+      the Hayagriva Yaml style doesn't offer keywords; s. issue in
+      [Hayagriva repo](https://github.com/typst/hayagriva/issues/240)).
 
 ## Keybindings
 
 Use the following keybindings to manage the TUI:
 
-| Key                                                                              | Action                                      |
-| -------------------------------------------------------------------------------- | ------------------------------------------- |
-| **<kbd>j</kbd><kbd>k</kbd>** \| **<kbd>Down</kbd><kbd>Up</kbd>**                 | Move selected list                          |
-| **<kbd>g</kbd><kbd>G</kbd>**                                                     | Go to first/last entry                      |
-| **<kbd>PageDown</kbd><kbd>PageUp</kbd>** \| **<kbd>Alt-j</kbd><kbd>Alt-k</kbd>** | Scroll Info window                          |
-| **<kbd>y</kbd>**                                                                 | Yank/copy citekey of selected entry         |
-| **<kbd>e</kbd>**                                                                 | Open editor at selected entry               |
-| **<kbd>o</kbd>** \| **<kbd>u</kbd>**                                             | Open related PDF \| URL/DOI                 |
-| **<kbd>TAB</kbd>**                                                               | Switch between entries and keywords         |
-| **<kbd>/</kbd>** \| **<kbd>Ctrl-f</kbd>**                                        | Enter search mode                           |
-| **<kbd>Enter</kbd>**                                                             | Filter by selected keyword / Confirm search |
-| **<kbd>ESC</kbd>**                                                               | Abort search / Reset current list           |
-| **<kbd>q</kbd>** \| **<kbd>Ctrl-c</kbd>**                                        | Quit TUI                                    |
+| Key                                    | Action                                      |
+| -------------------------------------- | ------------------------------------------- |
+| `j`,`k` \| `Down`,`Up`                 | Move down/up by 1                           |
+| `Ctrl-d` \| `Ctrl-u`                   | Move down/up by 5                           |
+| `g`,`G`                                | Go to first/last entry                      |
+| `h`,`k`                                | Select previous/next entry column           |
+| `s`                                    | Sort current column (toggles)               |
+| `PageDown`,`PageUp` \| `Alt-j`,`Alt-k` | Scroll Info window                          |
+| `y`                                    | Yank/copy citekey of selected entry         |
+| `e`                                    | Open editor at selected entry               |
+| `o` \| `u`                             | Open related PDF \| URL/DOI                 |
+| `TAB`                                  | Switch between entries and keywords         |
+| `/` \| `Ctrl-f`                        | Enter search mode                           |
+| `Enter`                                | Filter by selected keyword / Confirm search |
+| `ESC`                                  | Abort search / Reset current list           |
+| `q` \| `Ctrl-c`                        | Quit TUI                                    |
 
 ## Search
 
@@ -122,7 +128,8 @@ Now, `bibiman` also provides the possibility to open PDFs (as value of the
 `file` BibLaTeX field), as well as DOIs and URLs.
 
 For selecting the right program, it uses `xdg-open` on Linux, `open` on MacOS,
-and `start` on Windows. _MacOS and Windows are untested right now!_
+and `start` on Windows. _MacOS is untested right now! Windows does not work,
+have to figure this out_
 
 Furhtermore, DOIs have to begin with either `https://doi...` as full URL or
 `10.(...)` as regular DOI style. URLs work if they begin with either `http...`

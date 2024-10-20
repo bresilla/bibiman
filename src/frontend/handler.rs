@@ -49,23 +49,33 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
         // Keycodes for the tag area
         CurrentArea::TagArea => match key_event.code {
             KeyCode::Down => {
-                app.select_next_tag();
+                app.select_next_tag(1);
             }
             KeyCode::Up => {
-                app.select_previous_tag();
+                app.select_previous_tag(1);
             }
             KeyCode::Char('j') => {
                 if key_event.modifiers == KeyModifiers::ALT {
                     app.scroll_info_down();
                 } else {
-                    app.select_next_tag();
+                    app.select_next_tag(1);
                 }
             }
             KeyCode::Char('k') => {
                 if key_event.modifiers == KeyModifiers::ALT {
                     app.scroll_info_up();
                 } else {
-                    app.select_previous_tag();
+                    app.select_previous_tag(1);
+                }
+            }
+            KeyCode::Char('d') => {
+                if key_event.modifiers == KeyModifiers::CONTROL {
+                    app.select_next_tag(5)
+                }
+            }
+            KeyCode::Char('u') => {
+                if key_event.modifiers == KeyModifiers::CONTROL {
+                    app.select_previous_tag(5)
                 }
             }
             KeyCode::Char('g') | KeyCode::Home => {
@@ -96,23 +106,35 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
         // Keycodes for the entry area
         CurrentArea::EntryArea => match key_event.code {
             KeyCode::Down => {
-                app.select_next_entry();
+                app.select_next_entry(1);
             }
             KeyCode::Up => {
-                app.select_previous_entry();
+                app.select_previous_entry(1);
             }
             KeyCode::Char('j') => {
                 if key_event.modifiers == KeyModifiers::ALT {
                     app.scroll_info_down();
                 } else {
-                    app.select_next_entry();
+                    app.select_next_entry(1);
                 }
             }
             KeyCode::Char('k') => {
                 if key_event.modifiers == KeyModifiers::ALT {
                     app.scroll_info_up();
                 } else {
-                    app.select_previous_entry();
+                    app.select_previous_entry(1);
+                }
+            }
+            KeyCode::Char('d') => {
+                if key_event.modifiers == KeyModifiers::CONTROL {
+                    app.select_next_entry(5);
+                }
+            }
+            KeyCode::Char('u') => {
+                if key_event.modifiers == KeyModifiers::CONTROL {
+                    app.select_previous_entry(5);
+                } else {
+                    app.open_doi_url()?;
                 }
             }
             KeyCode::Char('g') | KeyCode::Home => {
@@ -121,8 +143,14 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
             KeyCode::Char('G') | KeyCode::End => {
                 app.select_last_entry();
             }
+            KeyCode::Char('h') => {
+                app.select_prev_column();
+            }
+            KeyCode::Char('l') => {
+                app.select_next_column();
+            }
             KeyCode::Char('s') => {
-                app.entry_table.sort_entry_table("author", true);
+                app.entry_table.sort_entry_table(true);
             }
             KeyCode::Char('y') => {
                 App::yank_text(&app.get_selected_citekey());
@@ -132,9 +160,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
             }
             KeyCode::Char('o') => {
                 app.open_connected_file()?;
-            }
-            KeyCode::Char('u') => {
-                app.open_doi_url()?;
             }
             KeyCode::Char('/') => {
                 app.enter_search_area();
