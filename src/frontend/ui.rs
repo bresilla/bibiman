@@ -188,8 +188,8 @@ impl App {
             });
 
         let [file_area, keyword_area, count_area] = Layout::horizontal([
+            Constraint::Fill(3),
             Constraint::Fill(4),
-            Constraint::Fill(2),
             Constraint::Fill(1),
         ])
         .horizontal_margin(1)
@@ -202,10 +202,12 @@ impl App {
         .bg(HEADER_FOOTER_BG)
         .render(file_area, buf);
 
-        Line::from(if !self.tag_list.selected_keyword.is_empty() {
+        Line::from(if !self.tag_list.selected_keywords.is_empty() {
             vec![
-                Span::raw("Filtered by: "),
-                Span::raw(self.tag_list.selected_keyword.to_string())
+                Span::raw("Selected keywords: "),
+                // Show all keywords in correct order if list is filtered
+                // successively by multiple keywords
+                Span::raw(self.tag_list.selected_keywords.join(" → "))
                     .bold()
                     .green(),
             ]
