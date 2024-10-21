@@ -228,11 +228,8 @@ impl App {
         .right_aligned()
         .bg(HEADER_FOOTER_BG)
         .render(count_area, buf);
-        // Paragraph::new(Line::from(vec![Span::raw(
-        //     self.main_bibfile.display().to_string(),
-        // )]))
-        // .block(block)
-        // .render(area, buf);
+
+        // Render that stuff
         Widget::render(block, area, buf)
     }
 
@@ -266,67 +263,103 @@ impl App {
             .fg(TEXT_FG_COLOR)
             .bg(HEADER_FOOTER_BG);
 
+        let header_selected_col = Style::default().underlined();
+
         let header = Row::new(vec![
-            if let EntryTableColumn::Authors = self.entry_table.entry_table_selected_column {
-                Cell::from(Line::from(vec![
-                    Span::raw("Author").underlined(),
-                    Span::raw(format!(
-                        " {}",
-                        if self.entry_table.entry_table_reversed_sort {
-                            SORTED_ENTRIES_REVERSED
-                        } else {
-                            SORTED_ENTRIES
-                        }
-                    )),
-                ]))
-            } else {
-                Cell::from("Author".to_string())
-            },
-            if let EntryTableColumn::Title = self.entry_table.entry_table_selected_column {
-                Cell::from(Line::from(vec![
-                    Span::raw("Title").underlined(),
-                    Span::raw(format!(
-                        " {}",
-                        if self.entry_table.entry_table_reversed_sort {
-                            SORTED_ENTRIES_REVERSED
-                        } else {
-                            SORTED_ENTRIES
-                        }
-                    )),
-                ]))
-            } else {
-                Cell::from("Title".to_string())
-            },
-            if let EntryTableColumn::Year = self.entry_table.entry_table_selected_column {
-                Cell::from(Line::from(vec![
-                    Span::raw("Year").underlined(),
-                    Span::raw(format!(
-                        " {}",
-                        if self.entry_table.entry_table_reversed_sort {
-                            SORTED_ENTRIES_REVERSED
-                        } else {
-                            SORTED_ENTRIES
-                        }
-                    )),
-                ]))
-            } else {
-                Cell::from("Year".to_string())
-            },
-            if let EntryTableColumn::Pubtype = self.entry_table.entry_table_selected_column {
-                Cell::from(Line::from(vec![
-                    Span::raw("Pubtype").underlined(),
-                    Span::raw(format!(
-                        " {}",
-                        if self.entry_table.entry_table_reversed_sort {
-                            SORTED_ENTRIES_REVERSED
-                        } else {
-                            SORTED_ENTRIES
-                        }
-                    )),
-                ]))
-            } else {
-                Cell::from("Pubtype".to_string())
-            },
+            Cell::from(Line::from(vec![
+                {
+                    if let EntryTableColumn::Authors = self.entry_table.entry_table_selected_column
+                    {
+                        Span::styled("Author", header_selected_col)
+                    } else {
+                        Span::raw("Author")
+                    }
+                },
+                {
+                    if let EntryTableColumn::Authors = self.entry_table.entry_table_sorted_by_col {
+                        Span::raw(format!(
+                            " {}",
+                            if self.entry_table.entry_table_reversed_sort {
+                                SORTED_ENTRIES_REVERSED
+                            } else {
+                                SORTED_ENTRIES
+                            }
+                        ))
+                    } else {
+                        Span::raw("")
+                    }
+                },
+            ])),
+            Cell::from(Line::from(vec![
+                {
+                    if let EntryTableColumn::Title = self.entry_table.entry_table_selected_column {
+                        Span::styled("Title", header_selected_col)
+                    } else {
+                        Span::raw("Title")
+                    }
+                },
+                {
+                    if let EntryTableColumn::Title = self.entry_table.entry_table_sorted_by_col {
+                        Span::raw(format!(
+                            " {}",
+                            if self.entry_table.entry_table_reversed_sort {
+                                SORTED_ENTRIES_REVERSED
+                            } else {
+                                SORTED_ENTRIES
+                            }
+                        ))
+                    } else {
+                        Span::raw("")
+                    }
+                },
+            ])),
+            Cell::from(Line::from(vec![
+                {
+                    if let EntryTableColumn::Year = self.entry_table.entry_table_selected_column {
+                        Span::styled("Year", header_selected_col)
+                    } else {
+                        Span::raw("Year")
+                    }
+                },
+                {
+                    if let EntryTableColumn::Year = self.entry_table.entry_table_sorted_by_col {
+                        Span::raw(format!(
+                            " {}",
+                            if self.entry_table.entry_table_reversed_sort {
+                                SORTED_ENTRIES_REVERSED
+                            } else {
+                                SORTED_ENTRIES
+                            }
+                        ))
+                    } else {
+                        Span::raw("")
+                    }
+                },
+            ])),
+            Cell::from(Line::from(vec![
+                {
+                    if let EntryTableColumn::Pubtype = self.entry_table.entry_table_selected_column
+                    {
+                        Span::styled("Pubtype", header_selected_col)
+                    } else {
+                        Span::raw("Pubtype")
+                    }
+                },
+                {
+                    if let EntryTableColumn::Pubtype = self.entry_table.entry_table_sorted_by_col {
+                        Span::raw(format!(
+                            " {}",
+                            if self.entry_table.entry_table_reversed_sort {
+                                SORTED_ENTRIES_REVERSED
+                            } else {
+                                SORTED_ENTRIES
+                            }
+                        ))
+                    } else {
+                        Span::raw("")
+                    }
+                },
+            ])),
         ])
         .style(header_style)
         .height(1);
@@ -351,7 +384,7 @@ impl App {
                 Constraint::Percentage(20),
                 Constraint::Fill(1),
                 Constraint::Length(
-                    if let EntryTableColumn::Year = self.entry_table.entry_table_selected_column {
+                    if let EntryTableColumn::Year = self.entry_table.entry_table_sorted_by_col {
                         6
                     } else {
                         4
