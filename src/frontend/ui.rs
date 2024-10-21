@@ -15,6 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use color_eyre::owo_colors::OwoColorize;
+use itertools::Itertools;
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
@@ -33,6 +35,7 @@ use crate::frontend::{app::App, keywords::TagListItem};
 use super::{
     app::{CurrentArea, FormerArea},
     entries::EntryTableColumn,
+    keywords,
 };
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
@@ -452,6 +455,33 @@ impl App {
                     Span::styled("Year: ", style_value),
                     Span::styled(cur_entry.year(), Style::new().light_magenta()),
                 ]));
+                // Render keywords in info box in Markdown code style
+                if !cur_entry.keywords.is_empty() {
+                    let kw: Vec<&str> = cur_entry
+                        .keywords
+                        .split(",")
+                        .map(|k| k.trim())
+                        .filter(|k| !k.is_empty())
+                        .collect();
+                    let mut content = vec![Span::styled("Keywords: ", style_value)];
+                    for k in kw {
+                        // Add half block highlighted in bg color to enlarge block
+                        content.push(Span::raw("▐").fg(HEADER_FOOTER_BG));
+                        content.push(Span::styled(
+                            k,
+                            Style::default().bg(HEADER_FOOTER_BG).fg(
+                                // Highlight selected keyword green
+                                if self.tag_list.selected_keywords.iter().any(|e| e == k) {
+                                    Color::Green
+                                } else {
+                                    TEXT_FG_COLOR
+                                },
+                            ),
+                        ));
+                        content.push(Span::raw("▌").fg(HEADER_FOOTER_BG));
+                    }
+                    lines.push(Line::from(content))
+                }
                 if !cur_entry.doi_url.is_empty() || !cur_entry.filepath.is_empty() {
                     lines.push(Line::raw(""));
                 }
