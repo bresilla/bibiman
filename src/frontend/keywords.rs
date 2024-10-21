@@ -24,7 +24,7 @@ pub struct TagList {
     pub tag_list_items: Vec<String>,
     pub tag_list_state: ListState,
     pub tag_scroll_state: ScrollbarState,
-    pub selected_keyword: String,
+    pub selected_keywords: Vec<String>,
 }
 
 // Structure of the list items.
@@ -51,7 +51,7 @@ impl TagList {
             tag_list_items,
             tag_list_state,
             tag_scroll_state,
-            selected_keyword: String::new(),
+            selected_keywords: Vec::new(),
         }
     }
 }
@@ -143,7 +143,8 @@ impl App {
         let orig_list = &self.entry_table.entry_table_items;
         let keyword = self.get_selected_tag();
         let filtered_list = BibiSearch::filter_entries_by_tag(&keyword, &orig_list);
-        self.tag_list.selected_keyword = keyword.to_string();
+        // self.tag_list.selected_keyword = keyword.to_string();
+        self.tag_list.selected_keywords.push(keyword.to_string());
         self.entry_table.entry_table_items = filtered_list;
         // Update scrollbar state with new lenght of itemlist
         self.entry_table.entry_scroll_state = ScrollbarState::content_length(
