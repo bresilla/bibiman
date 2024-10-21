@@ -24,7 +24,7 @@ use editor_command::EditorBuilder;
 use ratatui::widgets::{ScrollbarState, TableState};
 use std::process::{Command, Stdio};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EntryTableColumn {
     Authors,
     Title,
@@ -33,11 +33,12 @@ pub enum EntryTableColumn {
 }
 
 // Define list containing entries as table
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct EntryTable {
     pub entry_table_items: Vec<EntryTableItem>,
     pub entry_table_at_search_start: Vec<EntryTableItem>,
     pub entry_table_selected_column: EntryTableColumn,
+    pub entry_table_sorted_by_col: EntryTableColumn,
     pub entry_table_reversed_sort: bool,
     pub entry_table_state: TableState,
     pub entry_scroll_state: ScrollbarState,
@@ -55,6 +56,7 @@ impl EntryTable {
             entry_table_items,
             entry_table_at_search_start: Vec::new(),
             entry_table_selected_column: EntryTableColumn::Authors,
+            entry_table_sorted_by_col: EntryTableColumn::Authors,
             entry_table_reversed_sort: false,
             entry_table_state,
             entry_scroll_state,
@@ -90,6 +92,10 @@ impl EntryTable {
         if toggle {
             self.entry_table_reversed_sort = !self.entry_table_reversed_sort;
         }
+        if self.entry_table_selected_column != self.entry_table_sorted_by_col {
+            self.entry_table_reversed_sort = false
+        }
+        self.entry_table_sorted_by_col = self.entry_table_selected_column.clone();
         if self.entry_table_reversed_sort {
             match self.entry_table_selected_column {
                 EntryTableColumn::Authors => self
@@ -248,19 +254,15 @@ impl App {
         match self.entry_table.entry_table_selected_column {
             EntryTableColumn::Authors => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Title;
-                self.entry_table.sort_entry_table(false);
             }
             EntryTableColumn::Title => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Year;
-                self.entry_table.sort_entry_table(false);
             }
             EntryTableColumn::Year => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Pubtype;
-                self.entry_table.sort_entry_table(false);
             }
             EntryTableColumn::Pubtype => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Authors;
-                self.entry_table.sort_entry_table(false);
             }
         }
     }
@@ -269,19 +271,15 @@ impl App {
         match self.entry_table.entry_table_selected_column {
             EntryTableColumn::Authors => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Pubtype;
-                self.entry_table.sort_entry_table(false);
             }
             EntryTableColumn::Title => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Authors;
-                self.entry_table.sort_entry_table(false);
             }
             EntryTableColumn::Year => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Title;
-                self.entry_table.sort_entry_table(false);
             }
             EntryTableColumn::Pubtype => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Year;
-                self.entry_table.sort_entry_table(false);
             }
         }
     }
