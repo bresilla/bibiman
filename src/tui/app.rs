@@ -15,13 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use super::tui;
-use crate::backend::cliargs::CLIArgs;
-use crate::backend::{bib::*, search::BibiSearch};
-use crate::{
-    frontend::entries::EntryTable, frontend::handler::handle_key_events,
-    frontend::keywords::TagList, frontend::tui::Event,
-};
+use super::Event;
+use crate::bib::{bibmain::*, search::BibiSearch};
+use crate::cliargs::CLIArgs;
+use crate::tui;
+use crate::{bib::entries::EntryTable, bib::keywords::TagList, tui::handler::handle_key_events};
 use arboard::Clipboard;
 use color_eyre::eyre::{Ok, Result};
 use std::path::PathBuf;

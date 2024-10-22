@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-pub mod bib;
-pub mod cliargs;
+pub mod bibmain;
+pub mod entries;
+pub mod keywords;
 pub mod search;

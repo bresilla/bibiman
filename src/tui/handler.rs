@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::frontend::app::App;
-use crate::frontend::tui::Tui;
+use crate::tui::app::App;
+use crate::tui::Tui;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use super::app::CurrentArea;

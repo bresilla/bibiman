@@ -15,7 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::frontend::app::App;
+pub mod app;
+pub mod command;
+pub mod handler;
+pub mod ui;
+
+use crate::tui::app::App;
 use crossterm::{
     cursor,
     event::{
@@ -26,7 +31,7 @@ use crossterm::{
 // use ratatui::backend::{Backend, CrosstermBackend};
 use color_eyre::eyre::{OptionExt, Result};
 use futures::{FutureExt, StreamExt};
-use ratatui::backend::CrosstermBackend as Backend;
+use ratatui::backend::CrosstermBackend;
 use std::io::{stdout, Stdout};
 use std::panic;
 use std::{
@@ -52,7 +57,7 @@ pub enum Event {
 #[derive(Debug)]
 pub struct Tui {
     /// Interface to the Terminal.
-    pub terminal: ratatui::Terminal<Backend<Stdout>>,
+    pub terminal: ratatui::Terminal<CrosstermBackend<Stdout>>,
     /// Event sender channel.
     sender: mpsc::UnboundedSender<Event>,
     /// Event receiver channel.
@@ -65,7 +70,7 @@ pub struct Tui {
 impl Tui {
     // Constructs a new instance of [`Tui`].
     pub fn new() -> Result<Self> {
-        let terminal = ratatui::Terminal::new(Backend::new(stdout()))?;
+        let terminal = ratatui::Terminal::new(CrosstermBackend::new(stdout()))?;
         let (sender, receiver) = mpsc::unbounded_channel();
         let handler = tokio::spawn(async {});
         let cancellation_token = CancellationToken::new();
@@ -173,7 +178,7 @@ impl Tui {
     pub fn exit(&mut self) -> Result<()> {
         self.cancellation_token.cancel();
         if crossterm::terminal::is_raw_mode_enabled()? {
-            self.flush()?;
+            self.terminal.flush()?;
             // if self.paste {
             //     crossterm::execute!(stdout(), DisableBracketedPaste)?;
             // }
@@ -203,7 +208,7 @@ impl Tui {
 }
 
 impl Deref for Tui {
-    type Target = ratatui::Terminal<Backend<Stdout>>;
+    type Target = ratatui::Terminal<CrosstermBackend<Stdout>>;
 
     fn deref(&self) -> &Self::Target {
         &self.terminal

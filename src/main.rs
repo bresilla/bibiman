@@ -15,14 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use backend::cliargs::{self, CLIArgs};
+use cliargs::CLIArgs;
 use color_eyre::eyre::Result;
 use errorsetup::init_error_hooks;
-use frontend::app::App;
+use tui::app::App;
 
-pub mod backend;
+pub mod bib;
+pub mod cliargs;
 pub mod errorsetup;
-pub mod frontend;
+pub mod tui;
 
 #[tokio::main]
 async fn main() -> Result<()> {

@@ -1,10 +1,9 @@
+use super::entries::EntryTableItem;
 use nucleo_matcher::{
     pattern::{CaseMatching, Normalization, Pattern},
     Config, Matcher,
 };
 use std::collections::HashMap;
-
-use crate::frontend::entries::EntryTableItem;
 
 #[derive(Debug)]
 pub struct BibiSearch {

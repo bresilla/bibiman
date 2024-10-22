@@ -15,8 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use color_eyre::owo_colors::OwoColorize;
-use itertools::Itertools;
+use super::app::{CurrentArea, FormerArea};
+use crate::bib::entries::EntryTableColumn;
+use crate::bib::keywords::TagListItem;
+use crate::tui::app::App;
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
@@ -24,18 +26,9 @@ use ratatui::{
     symbols,
     text::{Line, Span, Text},
     widgets::{
-        block::{Position, Title},
         Block, Borders, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
         ScrollbarOrientation, StatefulWidget, Table, Widget, Wrap,
     },
-};
-
-use crate::frontend::{app::App, keywords::TagListItem};
-
-use super::{
-    app::{CurrentArea, FormerArea},
-    entries::EntryTableColumn,
-    keywords,
 };
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
@@ -401,7 +394,7 @@ impl App {
         .block(block)
         .header(header)
         .column_spacing(2)
-        .highlight_style(SELECTED_STYLE)
+        .row_highlight_style(SELECTED_STYLE)
         // .bg(Color::Black)
         .highlight_spacing(HighlightSpacing::Always);
         StatefulWidget::render(
@@ -550,8 +543,8 @@ impl App {
             .block(
                 block
                     // Render arrows to show that info box has content outside the block
-                    .title(
-                        Title::from(
+                    .title_bottom(
+                        Line::from(
                             if box_height > area.height.into()
                                 && self.entry_table.entry_info_scroll
                                     < box_height as u16 + 2 - area.height
@@ -561,12 +554,10 @@ impl App {
                                 ""
                             },
                         )
-                        .position(Position::Bottom)
                         .alignment(Alignment::Right),
                     )
-                    .title(
-                        Title::from(if scroll_height > 0 { " ▲ " } else { "" })
-                            .position(Position::Top)
+                    .title_top(
+                        Line::from(if scroll_height > 0 { " ▲ " } else { "" })
                             .alignment(Alignment::Right),
                     ),
             )

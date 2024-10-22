@@ -15,195 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use super::app::App;
-use super::tui::Tui;
-use crate::backend::{bib::BibiData, search::BibiSearch};
+use crate::bib::entries::EntryTableColumn;
+use crate::bib::search::BibiSearch;
+use crate::tui::app::{App, FormerArea};
+use crate::tui::Tui;
 use color_eyre::eyre::{Context, Ok, Result};
 use core::panic;
 use editor_command::EditorBuilder;
-use ratatui::widgets::{ScrollbarState, TableState};
+use ratatui::widgets::ScrollbarState;
 use std::process::{Command, Stdio};
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum EntryTableColumn {
-    Authors,
-    Title,
-    Year,
-    Pubtype,
-}
-
-// Define list containing entries as table
-#[derive(Debug, PartialEq, Eq)]
-pub struct EntryTable {
-    pub entry_table_items: Vec<EntryTableItem>,
-    pub entry_table_at_search_start: Vec<EntryTableItem>,
-    pub entry_table_selected_column: EntryTableColumn,
-    pub entry_table_sorted_by_col: EntryTableColumn,
-    pub entry_table_reversed_sort: bool,
-    pub entry_table_state: TableState,
-    pub entry_scroll_state: ScrollbarState,
-    pub entry_info_scroll: u16,
-    pub entry_info_scroll_state: ScrollbarState,
-}
-
-impl EntryTable {
-    pub fn new(entry_list: Vec<BibiData>) -> Self {
-        let entry_table_items = Self::set_entry_table(entry_list);
-        let entry_table_state = TableState::default().with_selected(0);
-        let entry_scroll_state = ScrollbarState::new(entry_table_items.len());
-        let entry_info_scroll_state = ScrollbarState::default();
-        Self {
-            entry_table_items,
-            entry_table_at_search_start: Vec::new(),
-            entry_table_selected_column: EntryTableColumn::Authors,
-            entry_table_sorted_by_col: EntryTableColumn::Authors,
-            entry_table_reversed_sort: false,
-            entry_table_state,
-            entry_scroll_state,
-            entry_info_scroll: 0,
-            entry_info_scroll_state,
-        }
-    }
-
-    pub fn set_entry_table(entry_list: Vec<BibiData>) -> Vec<EntryTableItem> {
-        let mut entry_table: Vec<EntryTableItem> = entry_list
-            .into_iter()
-            .map(|e| EntryTableItem {
-                authors: e.authors,
-                short_author: String::new(),
-                title: e.title,
-                year: e.year,
-                pubtype: e.pubtype,
-                keywords: e.keywords,
-                citekey: e.citekey,
-                abstract_text: e.abstract_text,
-                doi_url: e.doi_url,
-                filepath: e.filepath,
-            })
-            .collect();
-
-        entry_table.sort_by(|a, b| a.authors.to_lowercase().cmp(&b.authors.to_lowercase()));
-        entry_table
-    }
-
-    // Sort entry table by specific column.
-    // Toggle sorting by hitting same key again
-    pub fn sort_entry_table(&mut self, toggle: bool) {
-        if toggle {
-            self.entry_table_reversed_sort = !self.entry_table_reversed_sort;
-        }
-        if self.entry_table_selected_column != self.entry_table_sorted_by_col {
-            self.entry_table_reversed_sort = false
-        }
-        self.entry_table_sorted_by_col = self.entry_table_selected_column.clone();
-        if self.entry_table_reversed_sort {
-            match self.entry_table_selected_column {
-                EntryTableColumn::Authors => self
-                    .entry_table_items
-                    .sort_by(|a, b| b.authors.to_lowercase().cmp(&a.authors.to_lowercase())),
-                EntryTableColumn::Title => self
-                    .entry_table_items
-                    .sort_by(|a, b| b.title.to_lowercase().cmp(&a.title.to_lowercase())),
-                EntryTableColumn::Year => self
-                    .entry_table_items
-                    .sort_by(|a, b| b.year.to_lowercase().cmp(&a.year.to_lowercase())),
-                EntryTableColumn::Pubtype => self
-                    .entry_table_items
-                    .sort_by(|a, b| b.pubtype.to_lowercase().cmp(&a.pubtype.to_lowercase())),
-            }
-        } else if !self.entry_table_reversed_sort {
-            match self.entry_table_selected_column {
-                EntryTableColumn::Authors => self
-                    .entry_table_items
-                    .sort_by(|a, b| a.authors.to_lowercase().cmp(&b.authors.to_lowercase())),
-                EntryTableColumn::Title => self
-                    .entry_table_items
-                    .sort_by(|a, b| a.title.to_lowercase().cmp(&b.title.to_lowercase())),
-                EntryTableColumn::Year => self
-                    .entry_table_items
-                    .sort_by(|a, b| a.year.to_lowercase().cmp(&b.year.to_lowercase())),
-                EntryTableColumn::Pubtype => self
-                    .entry_table_items
-                    .sort_by(|a, b| a.pubtype.to_lowercase().cmp(&b.pubtype.to_lowercase())),
-            }
-        }
-    }
-}
-
-// Define contents of each entry table row
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct EntryTableItem {
-    pub authors: String,
-    pub short_author: String,
-    pub title: String,
-    pub year: String,
-    pub pubtype: String,
-    pub keywords: String,
-    pub citekey: String,
-    pub abstract_text: String,
-    pub doi_url: String,
-    pub filepath: String,
-}
-
-impl EntryTableItem {
-    // This functions decides which fields are rendered in the entry table
-    // Fields which should be usable but not visible can be left out
-    pub fn ref_vec(&mut self) -> Vec<&str> {
-        self.short_author = match self.authors.split_once(",") {
-            Some((first, _rest)) => {
-                if self.authors.contains("(ed.)") {
-                    let first_author = format!("{} et al. (ed.)", first);
-                    first_author
-                } else {
-                    let first_author = format!("{} et al.", first);
-                    first_author
-                }
-            }
-            None => String::from(""),
-        };
-
-        vec![
-            {
-                if self.short_author.is_empty() {
-                    &self.authors
-                } else {
-                    &self.short_author
-                }
-            },
-            &self.title,
-            &self.year,
-            &self.pubtype,
-        ]
-    }
-
-    pub fn authors(&self) -> &str {
-        &self.authors
-    }
-
-    pub fn title(&self) -> &str {
-        &self.title
-    }
-
-    pub fn year(&self) -> &str {
-        &self.year
-    }
-
-    pub fn pubtype(&self) -> &str {
-        &self.pubtype
-    }
-
-    pub fn citekey(&self) -> &str {
-        &self.citekey
-    }
-
-    pub fn doi_url(&self) -> &str {
-        &self.doi_url
-    }
-
-    pub fn filepath(&self) -> &str {
-        &self.filepath
-    }
-}
 
 impl App {
     // Entry Table commands
@@ -440,60 +260,104 @@ impl App {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::EntryTableItem;
+impl App {
+    // Tag List commands
 
-    #[test]
-    fn check_os() {
-        let os = std::env::consts::OS;
-        assert_eq!(
-            os,
-            "linux",
-            "You're not coding on linux, but on {}... Switch to linux, now!",
-            std::env::consts::OS
-        )
+    // Movement
+    pub fn select_next_tag(&mut self, keywords: u16) {
+        self.tag_list.tag_list_state.scroll_down_by(keywords);
+        self.tag_list.tag_scroll_state = self
+            .tag_list
+            .tag_scroll_state
+            .position(self.tag_list.tag_list_state.selected().unwrap());
     }
 
-    #[test]
-    fn shorten_authors() {
-        let mut entry: EntryTableItem = EntryTableItem {
-            authors: "Miller, Schmitz, Bernard".to_string(),
-            short_author: "".to_string(),
-            title: "A title".to_string(),
-            year: "2000".to_string(),
-            pubtype: "article".to_string(),
-            keywords: "key1, key2".to_string(),
-            citekey: "miller_2000".to_string(),
-            abstract_text: "An abstract".to_string(),
-            doi_url: "www.text.org".to_string(),
-            filepath: "/home/test".to_string(),
-        };
+    pub fn select_previous_tag(&mut self, keywords: u16) {
+        self.tag_list.tag_list_state.scroll_up_by(keywords);
+        self.tag_list.tag_scroll_state = self
+            .tag_list
+            .tag_scroll_state
+            .position(self.tag_list.tag_list_state.selected().unwrap());
+    }
 
-        let entry_vec = EntryTableItem::ref_vec(&mut entry);
+    pub fn select_first_tag(&mut self) {
+        self.tag_list.tag_list_state.select_first();
+        self.tag_list.tag_scroll_state = self.tag_list.tag_scroll_state.position(0);
+    }
 
-        let mut entry_editors: EntryTableItem = EntryTableItem {
-            authors: "Miller, Schmitz, Bernard (ed.)".to_string(),
-            short_author: "".to_string(),
-            title: "A title".to_string(),
-            year: "2000".to_string(),
-            pubtype: "article".to_string(),
-            keywords: "key1, key2".to_string(),
-            citekey: "miller_2000".to_string(),
-            abstract_text: "An abstract".to_string(),
-            doi_url: "www.text.org".to_string(),
-            filepath: "/home/test".to_string(),
-        };
+    pub fn select_last_tag(&mut self) {
+        self.tag_list.tag_list_state.select_last();
+        self.tag_list.tag_scroll_state = self
+            .tag_list
+            .tag_scroll_state
+            .position(self.tag_list.tag_list_items.len());
+    }
 
-        let entry_vec_editors = EntryTableItem::ref_vec(&mut entry_editors);
+    pub fn get_selected_tag(&self) -> &str {
+        let idx = self.tag_list.tag_list_state.selected().unwrap();
+        let keyword = &self.tag_list.tag_list_items[idx];
+        // let keyword = &self.tag_list.tag_list_items[idx].keyword;
+        keyword
+    }
 
-        assert_eq!(
-            entry_vec,
-            vec!["Miller et al.", "A title", "2000", "article"]
+    pub fn search_tags(&mut self) {
+        let orig_list = &self.main_biblio.keyword_list;
+        let filtered_list =
+            BibiSearch::search_tag_list(&self.search_struct.search_string, orig_list.clone());
+        self.tag_list.tag_list_items = filtered_list;
+        // Update scrollbar length after filtering list
+        self.tag_list.tag_scroll_state = ScrollbarState::content_length(
+            self.tag_list.tag_scroll_state,
+            self.tag_list.tag_list_items.len(),
         );
-        assert_eq!(
-            entry_vec_editors,
-            vec!["Miller et al. (ed.)", "A title", "2000", "article"]
-        )
+    }
+
+    pub fn filter_tags_by_entries(&mut self) {
+        let mut filtered_keywords: Vec<String> = Vec::new();
+
+        let orig_list = &self.entry_table.entry_table_items;
+
+        for e in orig_list {
+            if !e.keywords.is_empty() {
+                let mut key_vec: Vec<String> = e
+                    .keywords
+                    .split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect();
+                filtered_keywords.append(&mut key_vec);
+            }
+        }
+
+        filtered_keywords.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+        filtered_keywords.dedup();
+
+        self.search_struct.filtered_tag_list = filtered_keywords.clone();
+        self.tag_list.tag_list_items = filtered_keywords;
+        self.tag_list.tag_scroll_state = ScrollbarState::content_length(
+            self.tag_list.tag_scroll_state,
+            self.tag_list.tag_list_items.len(),
+        );
+    }
+
+    // Filter the entry list by tags when hitting enter
+    // If already inside a filtered tag or entry list, apply the filtering
+    // to the already filtered list only
+    pub fn filter_for_tags(&mut self) {
+        let orig_list = &self.entry_table.entry_table_items;
+        let keyword = self.get_selected_tag();
+        let filtered_list = BibiSearch::filter_entries_by_tag(&keyword, &orig_list);
+        // self.tag_list.selected_keyword = keyword.to_string();
+        self.tag_list.selected_keywords.push(keyword.to_string());
+        self.entry_table.entry_table_items = filtered_list;
+        // Update scrollbar state with new lenght of itemlist
+        self.entry_table.entry_scroll_state = ScrollbarState::content_length(
+            self.entry_table.entry_scroll_state,
+            self.entry_table.entry_table_items.len(),
+        );
+        self.filter_tags_by_entries();
+        self.toggle_area();
+        self.entry_table.entry_table_state.select(Some(0));
+        self.former_area = Some(FormerArea::TagArea);
     }
 }
