@@ -192,18 +192,6 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
             }
             _ => {}
         },
-        // Keycodes for the help area (popup)
-        CurrentArea::HelpArea => match key_event.code {
-            KeyCode::Char('q') => {
-                app.quit();
-            }
-            KeyCode::Esc => {
-                app.bibiman.toggle_area();
-                app.bibiman.former_area = None;
-            }
-            _ => {}
-        },
-        CurrentArea::InfoArea => {}
     }
     Ok(())
 }

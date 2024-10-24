@@ -15,10 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::app::App;
 use crate::bibiman::{bibisetup::*, search::BibiSearch};
 use crate::cliargs::CLIArgs;
-use crate::tui::commandnew::CmdAction;
 use crate::{bibiman::entries::EntryTable, bibiman::keywords::TagList};
 use arboard::Clipboard;
 use color_eyre::eyre::{Ok, Result};
@@ -36,8 +34,6 @@ pub enum CurrentArea {
     EntryArea,
     TagArea,
     SearchArea,
-    HelpArea,
-    InfoArea,
 }
 
 // Check which area was active when popup set active

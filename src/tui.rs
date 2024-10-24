@@ -198,7 +198,8 @@ impl Tui {
     pub fn draw(&mut self, app: &mut App) -> Result<()> {
         // self.terminal.draw(|frame| ui::render(app, frame))?;
         self.terminal
-            .draw(|frame| frame.render_widget(app, frame.area()))?;
+            // .draw(|frame| frame.render_widget(app, frame.area()))?;
+            .draw(|frame| ui::render_ui(app, frame))?;
         Ok(())
     }
 
