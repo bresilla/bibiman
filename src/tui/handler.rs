@@ -15,12 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::tui::app::App;
+use crate::bibiman::{Bibiman, CurrentArea};
 use crate::tui::Tui;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-
-use super::app::CurrentArea;
+use crate::App;
 use color_eyre::eyre::Result;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 /// Handles the key events and updates the state of [`App`].
 pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> Result<()> {
@@ -37,159 +36,159 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
             }
         }
         KeyCode::PageDown => {
-            app.scroll_info_down();
+            app.bibiman.scroll_info_down();
         }
         KeyCode::PageUp => {
-            app.scroll_info_up();
+            app.bibiman.scroll_info_up();
         }
         _ => {}
     }
     // Keycodes for specific areas
-    match app.current_area {
+    match app.bibiman.current_area {
         // Keycodes for the tag area
         CurrentArea::TagArea => match key_event.code {
             KeyCode::Down => {
-                app.select_next_tag(1);
+                app.bibiman.select_next_tag(1);
             }
             KeyCode::Up => {
-                app.select_previous_tag(1);
+                app.bibiman.select_previous_tag(1);
             }
             KeyCode::Char('j') => {
                 if key_event.modifiers == KeyModifiers::ALT {
-                    app.scroll_info_down();
+                    app.bibiman.scroll_info_down();
                 } else {
-                    app.select_next_tag(1);
+                    app.bibiman.select_next_tag(1);
                 }
             }
             KeyCode::Char('k') => {
                 if key_event.modifiers == KeyModifiers::ALT {
-                    app.scroll_info_up();
+                    app.bibiman.scroll_info_up();
                 } else {
-                    app.select_previous_tag(1);
+                    app.bibiman.select_previous_tag(1);
                 }
             }
             KeyCode::Char('d') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
-                    app.select_next_tag(5)
+                    app.bibiman.select_next_tag(5)
                 }
             }
             KeyCode::Char('u') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
-                    app.select_previous_tag(5)
+                    app.bibiman.select_previous_tag(5)
                 }
             }
             KeyCode::Char('g') | KeyCode::Home => {
-                app.select_first_tag();
+                app.bibiman.select_first_tag();
             }
             KeyCode::Char('G') | KeyCode::End => {
-                app.select_last_tag();
+                app.bibiman.select_last_tag();
             }
             KeyCode::Char('/') => {
-                app.enter_search_area();
+                app.bibiman.enter_search_area();
             }
             KeyCode::Char('f') | KeyCode::Char('F') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
-                    app.enter_search_area();
+                    app.bibiman.enter_search_area();
                 }
             }
             KeyCode::Tab | KeyCode::BackTab => {
-                app.toggle_area();
+                app.bibiman.toggle_area();
             }
             KeyCode::Esc => {
-                app.reset_current_list();
+                app.bibiman.reset_current_list();
             }
             KeyCode::Enter => {
-                app.filter_for_tags();
+                app.bibiman.filter_for_tags();
             }
             _ => {}
         },
         // Keycodes for the entry area
         CurrentArea::EntryArea => match key_event.code {
             KeyCode::Down => {
-                app.select_next_entry(1);
+                app.bibiman.select_next_entry(1);
             }
             KeyCode::Up => {
-                app.select_previous_entry(1);
+                app.bibiman.select_previous_entry(1);
             }
             KeyCode::Char('j') => {
                 if key_event.modifiers == KeyModifiers::ALT {
-                    app.scroll_info_down();
+                    app.bibiman.scroll_info_down();
                 } else {
-                    app.select_next_entry(1);
+                    app.bibiman.select_next_entry(1);
                 }
             }
             KeyCode::Char('k') => {
                 if key_event.modifiers == KeyModifiers::ALT {
-                    app.scroll_info_up();
+                    app.bibiman.scroll_info_up();
                 } else {
-                    app.select_previous_entry(1);
+                    app.bibiman.select_previous_entry(1);
                 }
             }
             KeyCode::Char('d') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
-                    app.select_next_entry(5);
+                    app.bibiman.select_next_entry(5);
                 }
             }
             KeyCode::Char('u') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
-                    app.select_previous_entry(5);
+                    app.bibiman.select_previous_entry(5);
                 } else {
-                    app.open_doi_url()?;
+                    app.bibiman.open_doi_url()?;
                 }
             }
             KeyCode::Char('g') | KeyCode::Home => {
-                app.select_first_entry();
+                app.bibiman.select_first_entry();
             }
             KeyCode::Char('G') | KeyCode::End => {
-                app.select_last_entry();
+                app.bibiman.select_last_entry();
             }
             KeyCode::Char('h') => {
-                app.select_prev_column();
+                app.bibiman.select_prev_column();
             }
             KeyCode::Char('l') => {
-                app.select_next_column();
+                app.bibiman.select_next_column();
             }
             KeyCode::Char('s') => {
-                app.entry_table.sort_entry_table(true);
+                app.bibiman.entry_table.sort_entry_table(true);
             }
             KeyCode::Char('y') => {
-                App::yank_text(&app.get_selected_citekey());
+                Bibiman::yank_text(&app.bibiman.get_selected_citekey());
             }
             KeyCode::Char('e') => {
-                app.run_editor(tui)?;
+                app.bibiman.run_editor(tui)?;
             }
             KeyCode::Char('o') => {
-                app.open_connected_file()?;
+                app.bibiman.open_connected_file()?;
             }
             KeyCode::Char('/') => {
-                app.enter_search_area();
+                app.bibiman.enter_search_area();
             }
             KeyCode::Char('f') | KeyCode::Char('F') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
-                    app.enter_search_area();
+                    app.bibiman.enter_search_area();
                 }
             }
             KeyCode::Tab | KeyCode::BackTab => {
-                app.toggle_area();
+                app.bibiman.toggle_area();
             }
             KeyCode::Esc => {
-                app.reset_current_list();
+                app.bibiman.reset_current_list();
             }
             _ => {}
         },
         // Keycodes for the search area (rendered in footer)
         CurrentArea::SearchArea => match key_event.code {
             KeyCode::Esc => {
-                app.break_search();
+                app.bibiman.break_search();
             }
             KeyCode::Enter => {
-                app.confirm_search();
+                app.bibiman.confirm_search();
             }
             KeyCode::Backspace => {
-                app.search_pattern_pop();
+                app.bibiman.search_pattern_pop();
             }
             KeyCode::Char(search_pattern) => {
-                app.search_pattern_push(search_pattern);
+                app.bibiman.search_pattern_push(search_pattern);
             }
             _ => {}
         },
@@ -199,8 +198,8 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App, tui: &mut Tui) -> R
                 app.quit();
             }
             KeyCode::Esc => {
-                app.toggle_area();
-                app.former_area = None;
+                app.bibiman.toggle_area();
+                app.bibiman.former_area = None;
             }
             _ => {}
         },

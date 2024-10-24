@@ -15,12 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-pub mod app;
 pub mod command;
+pub mod commandnew;
 pub mod handler;
 pub mod ui;
 
-use crate::tui::app::App;
+use crate::App;
 use crossterm::{
     cursor,
     event::{
@@ -59,9 +59,9 @@ pub struct Tui {
     /// Interface to the Terminal.
     pub terminal: ratatui::Terminal<CrosstermBackend<Stdout>>,
     /// Event sender channel.
-    sender: mpsc::UnboundedSender<Event>,
+    evt_sender: mpsc::UnboundedSender<Event>,
     /// Event receiver channel.
-    receiver: mpsc::UnboundedReceiver<Event>,
+    evt_receiver: mpsc::UnboundedReceiver<Event>,
     /// Event handler thread.
     handler: tokio::task::JoinHandle<()>,
     cancellation_token: CancellationToken,
@@ -71,13 +71,13 @@ impl Tui {
     // Constructs a new instance of [`Tui`].
     pub fn new() -> Result<Self> {
         let terminal = ratatui::Terminal::new(CrosstermBackend::new(stdout()))?;
-        let (sender, receiver) = mpsc::unbounded_channel();
+        let (evt_sender, evt_receiver) = mpsc::unbounded_channel();
         let handler = tokio::spawn(async {});
         let cancellation_token = CancellationToken::new();
         Ok(Self {
             terminal,
-            sender,
-            receiver,
+            evt_sender,
+            evt_receiver,
             handler,
             cancellation_token,
         })
@@ -88,7 +88,7 @@ impl Tui {
         self.cancel();
         self.cancellation_token = CancellationToken::new();
         let event_loop = Self::event_loop(
-            self.sender.clone(),
+            self.evt_sender.clone(),
             self.cancellation_token.clone(),
             tick_rate,
         );
@@ -203,7 +203,10 @@ impl Tui {
     }
 
     pub async fn next(&mut self) -> Result<Event> {
-        self.receiver.recv().await.ok_or_eyre("This is an IO error")
+        self.evt_receiver
+            .recv()
+            .await
+            .ok_or_eyre("This is an IO error")
     }
 }
 

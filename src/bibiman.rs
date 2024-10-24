@@ -15,14 +15,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use super::Event;
-use crate::bib::{bibmain::*, search::BibiSearch};
+use crate::bibiman::{bibisetup::*, search::BibiSearch};
 use crate::cliargs::CLIArgs;
-use crate::tui;
-use crate::{bib::entries::EntryTable, bib::keywords::TagList, tui::handler::handle_key_events};
+use crate::{bibiman::entries::EntryTable, bibiman::keywords::TagList};
 use arboard::Clipboard;
 use color_eyre::eyre::{Ok, Result};
 use std::path::PathBuf;
+
+pub mod bibisetup;
+pub mod entries;
+pub mod keywords;
+pub mod search;
 
 // Areas in which actions are possible
 #[derive(Debug)]
@@ -44,13 +47,11 @@ pub enum FormerArea {
 
 // Application.
 #[derive(Debug)]
-pub struct App {
-    // Is the application running?
-    pub running: bool,
+pub struct Bibiman {
     // main bib file
     pub main_bibfile: PathBuf,
     // main bibliography
-    pub main_biblio: BibiMain,
+    pub main_biblio: BibiSetup,
     // search struct:
     pub search_struct: BibiSearch,
     // tag list
@@ -65,19 +66,16 @@ pub struct App {
     pub former_area: Option<FormerArea>,
 }
 
-impl App {
+impl Bibiman {
     // Constructs a new instance of [`App`].
     pub fn new(args: CLIArgs) -> Result<Self> {
-        // Self::default()
-        let running = true;
         let main_bibfile = args.bibfilearg;
-        let main_biblio = BibiMain::new(main_bibfile.clone());
+        let main_biblio = BibiSetup::new(main_bibfile.clone());
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
         let entry_table = EntryTable::new(main_biblio.entry_list.clone());
         let current_area = CurrentArea::EntryArea;
         Ok(Self {
-            running,
             main_bibfile,
             main_biblio,
             tag_list,
@@ -89,40 +87,8 @@ impl App {
         })
     }
 
-    pub async fn run(&mut self) -> Result<()> {
-        let mut tui = tui::Tui::new()?;
-        tui.enter()?;
-
-        // Start the main loop.
-        while self.running {
-            // Render the user interface.
-            tui.draw(self)?;
-            // Handle events.
-            match tui.next().await? {
-                Event::Tick => self.tick(),
-                Event::Key(key_event) => handle_key_events(key_event, self, &mut tui)?,
-                Event::Mouse(_) => {}
-                Event::Resize(_, _) => {}
-            }
-        }
-
-        // Exit the user interface.
-        tui.exit()?;
-        Ok(())
-    }
-
-    // Handles the tick event of the terminal.
-    pub fn tick(&self) {}
-
-    // General commands
-
-    // Set running to false to quit the application.
-    pub fn quit(&mut self) {
-        self.running = false;
-    }
-
     pub fn update_lists(&mut self) {
-        self.main_biblio = BibiMain::new(self.main_bibfile.clone());
+        self.main_biblio = BibiSetup::new(self.main_bibfile.clone());
         // self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         self.entry_table = EntryTable::new(self.main_biblio.entry_list.clone());

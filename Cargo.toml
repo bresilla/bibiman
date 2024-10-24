@@ -24,3 +24,4 @@ sarge = "7.2.5"
 signal-hook = "0.3.17"
 tokio = { version = "1.39.3", features = ["full"] }
 tokio-util = "0.7.12"
+tui-input = "0.10.1"

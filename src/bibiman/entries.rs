@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::bib::bibmain::BibiData;
+use crate::bibiman::bibisetup::BibiData;
 use ratatui::widgets::{ScrollbarState, TableState};
 
 #[derive(Debug, Clone, PartialEq, Eq)]

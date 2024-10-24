@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::bib::entries::EntryTableColumn;
-use crate::bib::search::BibiSearch;
-use crate::tui::app::{App, FormerArea};
+use crate::bibiman::entries::EntryTableColumn;
+use crate::bibiman::search::BibiSearch;
+use crate::bibiman::{Bibiman, FormerArea};
 use crate::tui::Tui;
 use color_eyre::eyre::{Context, Ok, Result};
 use core::panic;
@@ -25,7 +25,7 @@ use editor_command::EditorBuilder;
 use ratatui::widgets::ScrollbarState;
 use std::process::{Command, Stdio};
 
-impl App {
+impl Bibiman {
     // Entry Table commands
 
     // Movement
@@ -260,7 +260,7 @@ impl App {
     }
 }
 
-impl App {
+impl Bibiman {
     // Tag List commands
 
     // Movement

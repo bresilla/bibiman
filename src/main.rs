@@ -15,12 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use app::App;
 use cliargs::CLIArgs;
 use color_eyre::eyre::Result;
 use errorsetup::init_error_hooks;
-use tui::app::App;
 
-pub mod bib;
+pub mod app;
+pub mod bibiman;
 pub mod cliargs;
 pub mod errorsetup;
 pub mod tui;

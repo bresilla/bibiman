@@ -15,10 +15,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use super::app::{CurrentArea, FormerArea};
-use crate::bib::entries::EntryTableColumn;
-use crate::bib::keywords::TagListItem;
-use crate::tui::app::App;
+use crate::bibiman::entries::EntryTableColumn;
+use crate::bibiman::keywords::TagListItem;
+use crate::bibiman::{Bibiman, CurrentArea, FormerArea};
+use crate::App;
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Layout, Rect},
@@ -87,18 +87,18 @@ impl Widget for &mut App {
             Layout::horizontal([Constraint::Max(25), Constraint::Min(35)]).areas(item_area);
 
         // Render header and footer
-        App::render_header(header_area, buf);
-        self.render_footer(footer_area, buf);
+        Bibiman::render_header(header_area, buf);
+        self.bibiman.render_footer(footer_area, buf);
         // Render list area where entry gets selected
-        self.render_entrytable(entry_area, buf);
-        self.render_file_info(entry_info_area, buf);
+        self.bibiman.render_entrytable(entry_area, buf);
+        self.bibiman.render_file_info(entry_info_area, buf);
         // Render infos related to selected entry
-        self.render_taglist(tag_area, buf);
-        self.render_selected_item(info_area, buf);
+        self.bibiman.render_taglist(tag_area, buf);
+        self.bibiman.render_selected_item(info_area, buf);
     }
 }
 
-impl App {
+impl Bibiman {
     pub fn render_header(area: Rect, buf: &mut Buffer) {
         Paragraph::new("BIBIMAN – BibLaTeX manager TUI")
             .bold()
