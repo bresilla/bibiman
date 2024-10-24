@@ -137,7 +137,7 @@ impl App {
                     self.bibiman.select_previous_entry(amount);
                 }
                 CurrentArea::TagArea => {
-                    self.bibiman.select_next_tag(amount);
+                    self.bibiman.select_previous_tag(amount);
                 }
                 _ => {}
             },
