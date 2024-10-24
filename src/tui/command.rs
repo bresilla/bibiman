@@ -28,7 +28,10 @@ use std::process::{Command, Stdio};
 impl Bibiman {
     // Entry Table commands
 
-    // Movement
+    /// Select next entry in Table holding the bibliographic entries.
+    ///
+    /// Takes u16 value as argument to specify number of entries which
+    /// should be scrolled
     pub fn select_next_entry(&mut self, entries: u16) {
         self.entry_table.entry_info_scroll = 0;
         self.entry_table.entry_info_scroll_state =
@@ -40,6 +43,10 @@ impl Bibiman {
             .position(self.entry_table.entry_table_state.selected().unwrap());
     }
 
+    /// Select previous entry in Table holding the bib entries.
+    ///
+    /// Takes u16 value as argument to specify number of entries which
+    /// should be scrolled
     pub fn select_previous_entry(&mut self, entries: u16) {
         self.entry_table.entry_info_scroll = 0;
         self.entry_table.entry_info_scroll_state =
@@ -51,6 +58,7 @@ impl Bibiman {
             .position(self.entry_table.entry_table_state.selected().unwrap());
     }
 
+    /// Select first entry in bib list
     pub fn select_first_entry(&mut self) {
         self.entry_table.entry_info_scroll = 0;
         self.entry_table.entry_info_scroll_state =
@@ -59,6 +67,7 @@ impl Bibiman {
         self.entry_table.entry_scroll_state = self.entry_table.entry_scroll_state.position(0);
     }
 
+    /// Select last entry in bib list
     pub fn select_last_entry(&mut self) {
         self.entry_table.entry_info_scroll = 0;
         self.entry_table.entry_info_scroll_state =
@@ -70,6 +79,7 @@ impl Bibiman {
             .position(self.entry_table.entry_table_items.len());
     }
 
+    /// Select next (right) column of entry table
     pub fn select_next_column(&mut self) {
         match self.entry_table.entry_table_selected_column {
             EntryTableColumn::Authors => {
@@ -87,6 +97,7 @@ impl Bibiman {
         }
     }
 
+    /// Select previous (left) column of entry table
     pub fn select_prev_column(&mut self) {
         match self.entry_table.entry_table_selected_column {
             EntryTableColumn::Authors => {

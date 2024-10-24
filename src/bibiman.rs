@@ -15,12 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use crate::app::App;
 use crate::bibiman::{bibisetup::*, search::BibiSearch};
 use crate::cliargs::CLIArgs;
+use crate::tui::commandnew::CmdAction;
 use crate::{bibiman::entries::EntryTable, bibiman::keywords::TagList};
 use arboard::Clipboard;
 use color_eyre::eyre::{Ok, Result};
 use std::path::PathBuf;
+use tui_input::Input;
 
 pub mod bibisetup;
 pub mod entries;
@@ -94,7 +97,7 @@ impl Bibiman {
         self.entry_table = EntryTable::new(self.main_biblio.entry_list.clone());
     }
 
-    // Toggle moveable list between entries and tags
+    /// Toggle moveable list between entries and tags
     pub fn toggle_area(&mut self) {
         if let CurrentArea::EntryArea = self.current_area {
             self.entry_table.entry_scroll_state = self.entry_table.entry_scroll_state.position(0);
@@ -213,6 +216,16 @@ impl Bibiman {
     // Add current char to search pattern and filter list immidiatley
     pub fn search_pattern_push(&mut self, search_pattern: char) {
         self.search_struct.search_string.push(search_pattern);
+        if let Some(FormerArea::EntryArea) = self.former_area {
+            self.search_entries();
+            self.filter_tags_by_entries();
+        } else if let Some(FormerArea::TagArea) = self.former_area {
+            self.search_tags();
+        }
+    }
+
+    pub fn search_list_by_pattern(&mut self, searchpattern: &Input) {
+        self.search_struct.search_string = searchpattern.value().to_string();
         if let Some(FormerArea::EntryArea) = self.former_area {
             self.search_entries();
             self.filter_tags_by_entries();

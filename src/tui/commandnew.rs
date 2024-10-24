@@ -20,31 +20,31 @@ use ratatui::crossterm::event::{
 };
 use tui_input::Input;
 
-// Possible scroll areas.
-#[derive(Debug, PartialEq, Eq)]
-pub enum ScrollType {
-    Rows,
-    Cols,
-    InfoArea,
-}
-
 // Possible ressources to open
 #[derive(Debug, PartialEq, Eq)]
 pub enum OpenRessource {
-    PDF,
+    Pdf,
     WebLink,
     Note,
 }
 
 /// Application command.
 #[derive(Debug, PartialEq, Eq)]
-pub enum Command {
+pub enum CmdAction {
     // Toggle area
     ToggleArea,
-    // Next
-    Next(ScrollType, usize),
-    // Previous.
-    Previous(ScrollType, usize),
+    // Scroll list/table down
+    SelectNextRow(u16),
+    // Scroll list/table up.
+    SelectPrevRow(u16),
+    // Select nex table col.
+    SelectNextCol,
+    // Select previous table col.
+    SelectPrevCol,
+    // Scroll info/preview area down
+    ScrollInfoDown,
+    // Scroll info/preview area up
+    ScrollInfoUp,
     // Go to top.
     Top,
     // Go to bottom.
@@ -64,42 +64,55 @@ pub enum Command {
     // Open linked ressource
     Open(OpenRessource),
     // Input command.
-    Input(InputCommand),
+    Input(InputCmdAction),
     // Hexdump command.
     Exit,
     // Do nothing.
     Nothing,
 }
 
-impl From<KeyEvent> for Command {
+impl From<KeyEvent> for CmdAction {
     fn from(key_event: KeyEvent) -> Self {
         match key_event.code {
             // Go to first/last entry of selected list/table
             KeyCode::Char('g') | KeyCode::Home => Self::Top,
             KeyCode::Char('G') | KeyCode::End => Self::Bottom,
             // Scroll columns of EntryTable
-            KeyCode::Right | KeyCode::Char('l') => Self::Next(ScrollType::Cols, 1),
-            KeyCode::Left | KeyCode::Char('h') => Self::Previous(ScrollType::Cols, 1),
+            KeyCode::Right | KeyCode::Char('l') => Self::SelectNextCol,
+            KeyCode::Left | KeyCode::Char('h') => Self::SelectPrevCol,
             // Scroll table/list vertically by 1
-            KeyCode::Down | KeyCode::Char('j') => Self::Next(ScrollType::Rows, 1),
-            KeyCode::Up | KeyCode::Char('k') => Self::Previous(ScrollType::Rows, 1),
+            KeyCode::Down | KeyCode::Char('j') => {
+                if key_event.modifiers == KeyModifiers::ALT {
+                    Self::ScrollInfoDown
+                } else {
+                    Self::SelectNextRow(1)
+                }
+            }
+            KeyCode::Up | KeyCode::Char('k') => {
+                if key_event.modifiers == KeyModifiers::ALT {
+                    Self::ScrollInfoUp
+                } else {
+                    Self::SelectPrevRow(1)
+                }
+            }
             // Scroll table/list vertically by 5
-            KeyCode::PageDown => Self::Next(ScrollType::Rows, 5),
-            KeyCode::PageUp => Self::Previous(ScrollType::Rows, 5),
             KeyCode::Char('d') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
-                    Self::Next(ScrollType::Rows, 5)
+                    Self::SelectNextRow(5)
                 } else {
                     Self::Nothing
                 }
             }
             KeyCode::Char('u') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
-                    Self::Previous(ScrollType::Rows, 5)
+                    Self::SelectPrevRow(5)
                 } else {
                     Self::Open(OpenRessource::WebLink)
                 }
             }
+            // Scroll info/preview area
+            KeyCode::PageDown => Self::ScrollInfoDown,
+            KeyCode::PageUp => Self::ScrollInfoUp,
             // Exit App
             KeyCode::Char('q') => Self::Exit,
             KeyCode::Char('c') | KeyCode::Char('C') => {
@@ -113,10 +126,10 @@ impl From<KeyEvent> for Command {
             KeyCode::Tab => Self::ToggleArea,
             KeyCode::BackTab => Self::ToggleArea,
             // Enter search mode
-            KeyCode::Char('/') => Self::Input(InputCommand::Enter),
+            KeyCode::Char('/') => Self::Input(InputCmdAction::Enter),
             KeyCode::Char('f') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
-                    Self::Input(InputCommand::Enter)
+                    Self::Input(InputCmdAction::Enter)
                 } else {
                     Self::Nothing
                 }
@@ -127,7 +140,7 @@ impl From<KeyEvent> for Command {
             // Reset lists/tables
             KeyCode::Esc => Self::ResetList,
             // Open linked ressource
-            KeyCode::Char('o') => Self::Open(OpenRessource::PDF),
+            KeyCode::Char('o') => Self::Open(OpenRessource::Pdf),
             // KeyCode::Char('u') => Self::Open(OpenRessource::WebLink),
             // Edit currently selected entry
             KeyCode::Char('e') => Self::EditFile,
@@ -139,11 +152,11 @@ impl From<KeyEvent> for Command {
     }
 }
 
-impl From<MouseEvent> for Command {
+impl From<MouseEvent> for CmdAction {
     fn from(mouse_event: MouseEvent) -> Self {
         match mouse_event.kind {
-            MouseEventKind::ScrollDown => Self::Next(ScrollType::Rows, 1),
-            MouseEventKind::ScrollUp => Self::Previous(ScrollType::Rows, 1),
+            MouseEventKind::ScrollDown => Self::SelectNextRow(1),
+            MouseEventKind::ScrollUp => Self::SelectPrevRow(1),
             _ => Self::Nothing,
         }
     }
@@ -151,7 +164,7 @@ impl From<MouseEvent> for Command {
 
 /// Input mode command.
 #[derive(Debug, PartialEq, Eq)]
-pub enum InputCommand {
+pub enum InputCmdAction {
     // Handle input.
     Handle(Event),
     // Enter input mode.
@@ -162,7 +175,7 @@ pub enum InputCommand {
     Exit,
 }
 
-impl InputCommand {
+impl InputCmdAction {
     /// Parses the event.
     pub fn parse(key_event: KeyEvent, input: &Input) -> Self {
         if key_event.code == KeyCode::Esc
