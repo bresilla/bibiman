@@ -1,6 +1,6 @@
 [package]
 name = "bibiman"
-version = "0.4.4"
+version = "0.5.0"
 authors = ["lukeflo <lukeflo@some.email.not>"]
 license = "GPL-3.0-or-later"
 edition = "2021"
@@ -16,7 +16,6 @@ color-eyre = "0.6.3"
 crossterm = { version = "0.28.1", features = ["event-stream"] }
 editor-command = "0.1.1"
 futures = "0.3.30"
-hayagriva = "0.8.0"
 itertools = "0.13.0"
 nucleo-matcher = "0.3.1"
 ratatui = { version = "0.29.0", features = ["unstable-rendered-line-info"]}
