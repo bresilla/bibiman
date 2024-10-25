@@ -131,7 +131,7 @@ impl Bibiman {
         self.former_area = None
     }
 
-    // Yank the passed string to system clipboard
+    /// Yank the passed string to system clipboard
     pub fn yank_text(selection: &str) {
         let mut clipboard = Clipboard::new().unwrap();
         let yanked_text = selection.to_string();
@@ -214,6 +214,17 @@ impl Bibiman {
 
     /// Select next (right) column of entry table
     pub fn select_next_column(&mut self) {
+        if self
+            .entry_table
+            .entry_table_state
+            .selected_column()
+            .unwrap()
+            == 3
+        {
+            self.entry_table.entry_table_state.select_first_column();
+        } else {
+            self.entry_table.entry_table_state.select_next_column();
+        }
         match self.entry_table.entry_table_selected_column {
             EntryTableColumn::Authors => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Title;
@@ -232,6 +243,17 @@ impl Bibiman {
 
     /// Select previous (left) column of entry table
     pub fn select_prev_column(&mut self) {
+        if self
+            .entry_table
+            .entry_table_state
+            .selected_column()
+            .unwrap()
+            == 0
+        {
+            self.entry_table.entry_table_state.select_last_column();
+        } else {
+            self.entry_table.entry_table_state.select_previous_column();
+        }
         match self.entry_table.entry_table_selected_column {
             EntryTableColumn::Authors => {
                 self.entry_table.entry_table_selected_column = EntryTableColumn::Pubtype;
@@ -329,9 +351,7 @@ impl Bibiman {
         let filtered_list =
             BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
         self.entry_table.entry_table_items = filtered_list;
-        if self.entry_table.entry_table_reversed_sort {
-            self.entry_table.sort_entry_table(false);
-        }
+        self.entry_table.sort_entry_table(false);
         self.entry_table.entry_scroll_state = ScrollbarState::content_length(
             self.entry_table.entry_scroll_state,
             self.entry_table.entry_table_items.len(),

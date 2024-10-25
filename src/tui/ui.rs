@@ -43,10 +43,17 @@ const BOX_UNSELECTED_TITLE_STYLE: Style = Style::new()
     .add_modifier(Modifier::BOLD);
 const NORMAL_ROW_BG: Color = Color::Black;
 const ALT_ROW_BG_COLOR: Color = Color::Indexed(234);
-const SELECTED_STYLE: Style = Style::new()
+const SELECTED_ROW_STYLE: Style = Style::new()
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
-const TEXT_FG_COLOR: Color = Color::Indexed(252);
+const SELECTED_TABLE_COL_STYLE: Style = Style::new()
+    // .add_modifier(Modifier::BOLD)
+    .fg(Color::Indexed(254));
+const SELECTEC_TABLE_CELL_STYLE: Style = Style::new()
+    // .bg(Color::Indexed(250))
+    .add_modifier(Modifier::REVERSED);
+const TEXT_FG_COLOR: Color = Color::Indexed(250);
+const TEXT_HIGHLIGHTED_COLOR: Color = Color::Indexed(254);
 const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(245);
 const SORTED_ENTRIES: &str = "▼";
 const SORTED_ENTRIES_REVERSED: &str = "▲";
@@ -81,7 +88,6 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
     )
     .direction(Direction::Vertical)
     .areas(frame.area());
-    // .split(frame.area());
 
     let [list_area, item_area] =
         Layout::vertical([Constraint::Fill(1), Constraint::Fill(1)]).areas(main_area);
@@ -270,7 +276,6 @@ pub fn render_file_info(app: &mut App, frame: &mut Frame, rect: Rect) {
     )
     .right_aligned()
     .bg(HEADER_FOOTER_BG);
-    // .render(count_area, buf);
     frame.render_widget(file_info, file_area);
     frame.render_widget(cur_keywords, keyword_area);
     frame.render_widget(item_count, count_area);
@@ -306,20 +311,9 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
         .fg(TEXT_FG_COLOR)
         .bg(HEADER_FOOTER_BG);
 
-    let header_selected_col = Style::default().underlined();
-
     let header = Row::new(vec![
-        Cell::from(Line::from(vec![
-            {
-                if let EntryTableColumn::Authors =
-                    app.bibiman.entry_table.entry_table_selected_column
-                {
-                    Span::styled("Author", header_selected_col)
-                } else {
-                    Span::raw("Author")
-                }
-            },
-            {
+        Cell::from(
+            Line::from(vec![{ Span::raw("Author") }, {
                 if let EntryTableColumn::Authors = app.bibiman.entry_table.entry_table_sorted_by_col
                 {
                     Span::raw(format!(
@@ -333,18 +327,19 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
                 } else {
                     Span::raw("")
                 }
-            },
-        ])),
-        Cell::from(Line::from(vec![
-            {
-                if let EntryTableColumn::Title = app.bibiman.entry_table.entry_table_selected_column
+            }])
+            .bg(
+                if let EntryTableColumn::Authors =
+                    app.bibiman.entry_table.entry_table_selected_column
                 {
-                    Span::styled("Title", header_selected_col)
+                    Color::Indexed(237)
                 } else {
-                    Span::raw("Title")
-                }
-            },
-            {
+                    HEADER_FOOTER_BG
+                },
+            ),
+        ),
+        Cell::from(
+            Line::from(vec![{ Span::raw("Title") }, {
                 if let EntryTableColumn::Title = app.bibiman.entry_table.entry_table_sorted_by_col {
                     Span::raw(format!(
                         " {}",
@@ -357,18 +352,18 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
                 } else {
                     Span::raw("")
                 }
-            },
-        ])),
-        Cell::from(Line::from(vec![
-            {
-                if let EntryTableColumn::Year = app.bibiman.entry_table.entry_table_selected_column
+            }])
+            .bg(
+                if let EntryTableColumn::Title = app.bibiman.entry_table.entry_table_selected_column
                 {
-                    Span::styled("Year", header_selected_col)
+                    Color::Indexed(237)
                 } else {
-                    Span::raw("Year")
-                }
-            },
-            {
+                    HEADER_FOOTER_BG
+                },
+            ),
+        ),
+        Cell::from(
+            Line::from(vec![{ Span::raw("Year") }, {
                 if let EntryTableColumn::Year = app.bibiman.entry_table.entry_table_sorted_by_col {
                     Span::raw(format!(
                         " {}",
@@ -381,19 +376,18 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
                 } else {
                     Span::raw("")
                 }
-            },
-        ])),
-        Cell::from(Line::from(vec![
-            {
-                if let EntryTableColumn::Pubtype =
-                    app.bibiman.entry_table.entry_table_selected_column
+            }])
+            .bg(
+                if let EntryTableColumn::Year = app.bibiman.entry_table.entry_table_selected_column
                 {
-                    Span::styled("Pubtype", header_selected_col)
+                    Color::Indexed(237)
                 } else {
-                    Span::raw("Pubtype")
-                }
-            },
-            {
+                    HEADER_FOOTER_BG
+                },
+            ),
+        ),
+        Cell::from(
+            Line::from(vec![{ Span::raw("Pubtype") }, {
                 if let EntryTableColumn::Pubtype = app.bibiman.entry_table.entry_table_sorted_by_col
                 {
                     Span::raw(format!(
@@ -407,8 +401,17 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
                 } else {
                     Span::raw("")
                 }
-            },
-        ])),
+            }])
+            .bg(
+                if let EntryTableColumn::Pubtype =
+                    app.bibiman.entry_table.entry_table_selected_column
+                {
+                    Color::Indexed(237)
+                } else {
+                    HEADER_FOOTER_BG
+                },
+            ),
+        ),
     ])
     .style(header_style)
     .height(1);
@@ -446,8 +449,9 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
     .block(block)
     .header(header)
     .column_spacing(2)
-    .row_highlight_style(SELECTED_STYLE)
-    // .bg(Color::Black)
+    .row_highlight_style(SELECTED_ROW_STYLE)
+    .column_highlight_style(SELECTED_TABLE_COL_STYLE)
+    .cell_highlight_style(SELECTEC_TABLE_CELL_STYLE)
     .highlight_spacing(HighlightSpacing::Always);
 
     frame.render_stateful_widget(
@@ -481,7 +485,6 @@ pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
         .add_modifier(Modifier::ITALIC)
         .fg(TEXT_FG_COLOR);
     let lines = {
-        // if app.bibiman.entry_table.entry_table_items.len() > 0 {
         if app
             .bibiman
             .entry_table
@@ -580,10 +583,8 @@ pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
     // We show the list item's info under the list in this paragraph
     let block = Block::bordered()
         .title(Line::raw(" Entry Information ").centered().bold())
-        // .borders(Borders::TOP)
         .border_set(symbols::border::PLAIN)
         .border_style(BOX_UNSELECTED_BORDER_STYLE)
-        // .bg(Color::Black)
         .padding(Padding::horizontal(1));
 
     // INFO: '.line_count' method only possible with unstable-rendered-line-info feature -> API might change: https://github.com/ratatui/ratatui/issues/293#ref-pullrequest-2027056434
@@ -630,7 +631,6 @@ pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
                         .alignment(Alignment::Right),
                 ),
         )
-        // .fg(TEXT_FG_COLOR)
         .wrap(Wrap { trim: false })
         .scroll((scroll_height, 0));
 
@@ -660,7 +660,6 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
         } else {
             BOX_UNSELECTED_BORDER_STYLE
         });
-    // .bg(Color::Black);
 
     // Iterate through all elements in the `items` and stylize them.
     let items: Vec<ListItem> = app
@@ -678,8 +677,12 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
     // Create a List from all list items and highlight the currently selected one
     let list = List::new(items)
         .block(block)
-        .highlight_style(SELECTED_STYLE)
-        .fg(TEXT_FG_COLOR)
+        .highlight_style(SELECTED_ROW_STYLE)
+        .fg(if let CurrentArea::TagArea = app.bibiman.current_area {
+            TEXT_HIGHLIGHTED_COLOR
+        } else {
+            TEXT_FG_COLOR
+        })
         // .highlight_symbol("> ")
         .highlight_spacing(HighlightSpacing::Always);
 
@@ -687,10 +690,7 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
     // Add 2 to compmensate lines of the block border
     let list_length = list.len() + 2;
 
-    // We need to disambiguate this trait method as both `Widget` and `StatefulWidget` share the
-    // same method name `render`.
     frame.render_stateful_widget(list, rect, &mut app.bibiman.tag_list.tag_list_state);
-    // StatefulWidget::render(list, area, buf, &mut app.bibiman.tag_list.tag_list_state);
 
     // Scrollbar for keyword list
     let scrollbar = Scrollbar::default()

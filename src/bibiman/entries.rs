@@ -43,7 +43,10 @@ pub struct EntryTable {
 impl EntryTable {
     pub fn new(entry_list: Vec<BibiData>) -> Self {
         let entry_table_items = Self::set_entry_table(entry_list);
-        let entry_table_state = TableState::default().with_selected(0);
+        let entry_table_state = TableState::default()
+            .with_selected(0)
+            .with_selected_column(0)
+            .with_selected_cell(Some((0, 0)));
         let entry_scroll_state = ScrollbarState::new(entry_table_items.len());
         let entry_info_scroll_state = ScrollbarState::default();
         Self {
