@@ -18,9 +18,9 @@
 use crate::bibiman::CurrentArea;
 // use super::Event;
 use crate::cliargs::CLIArgs;
-use crate::tui::commandnew::{InputCmdAction, OpenRessource};
+use crate::tui::commands::{InputCmdAction, OpenRessource};
 use crate::tui::{self, Tui};
-use crate::{bibiman::Bibiman, tui::commandnew::CmdAction};
+use crate::{bibiman::Bibiman, tui::commands::CmdAction};
 use color_eyre::eyre::{Ok, Result};
 use tui::Event;
 use tui_input::backend::crossterm::EventHandler;
@@ -101,6 +101,7 @@ impl App {
     pub fn run_command(&mut self, cmd: CmdAction, tui: &mut Tui) -> Result<()> {
         match cmd {
             CmdAction::Input(cmd) => match cmd {
+                InputCmdAction::Nothing => {}
                 InputCmdAction::Handle(event) => {
                     self.input.handle_event(&event);
                     self.bibiman.search_list_by_pattern(&self.input);
@@ -111,6 +112,7 @@ impl App {
                     self.bibiman.enter_search_area();
                 }
                 InputCmdAction::Confirm => {
+                    self.input = Input::default();
                     self.input_mode = false;
                     // Logic for TABS to be added
                     self.bibiman.confirm_search();

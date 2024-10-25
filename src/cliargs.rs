@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use std::path::PathBuf;
-
 use sarge::prelude::*;
+use std::env;
+use std::path::PathBuf;
 
 sarge! {
     // Name of the struct
@@ -79,11 +79,14 @@ pub fn version_func() -> String {
         "\
 {} {}
 {}
-{}",
+{}
+
+Target Triple: {}",
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION"),
         env!("CARGO_PKG_AUTHORS"),
-        env!("CARGO_PKG_LICENSE")
+        env!("CARGO_PKG_LICENSE"),
+        env!("TARGET")
     );
     version
 }

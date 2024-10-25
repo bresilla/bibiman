@@ -32,7 +32,6 @@ use ratatui::{
         ScrollbarOrientation, Table, Wrap,
     },
 };
-use tui_input::Input;
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 // const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
@@ -99,14 +98,6 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
     render_entrytable(app, frame, entry_area);
     render_selected_item(app, frame, info_area);
     render_taglist(app, frame, tag_area);
-    // Bibiman::render_header(header_area, buf);
-    // self.bibiman.render_footer(footer_area, buf);
-    // Render list area where entry gets selected
-    // self.bibiman.render_entrytable(entry_area, buf);
-    // self.bibiman.render_file_info(entry_info_area, buf);
-    // Render infos related to selected entry
-    // self.bibiman.render_taglist(tag_area, buf);
-    // self.bibiman.render_selected_item(info_area, buf);
 }
 
 pub fn render_header(frame: &mut Frame, rect: Rect) {
@@ -141,11 +132,13 @@ pub fn render_footer(app: &mut App, frame: &mut Frame, rect: Rect) {
                 .title(Line::styled(search_title, BOX_SELECTED_TITLE_STYLE))
                 .border_style(BOX_SELECTED_BOX_STYLE)
                 .border_set(symbols::border::THICK);
+            render_cursor(app, frame, rect);
             frame.render_widget(
-                Paragraph::new(app.bibiman.search_struct.search_string.clone()).block(block),
+                Paragraph::new(app.bibiman.search_struct.search_string.clone())
+                    .block(block)
+                    .fg(TEXT_FG_COLOR),
                 rect,
             );
-            render_cursor(app, frame, rect);
         }
         _ => {
             let style_emph = Style::new().bold().fg(TEXT_FG_COLOR);
@@ -244,13 +237,28 @@ pub fn render_file_info(app: &mut App, frame: &mut Frame, rect: Rect) {
         {
             vec![
                 Span::raw(
-                    (app.bibiman
+                    // Because method scroll_down_by() of TableState lets numbers
+                    // printed overflow for short moment, we have to check manually
+                    // that we do not print a number higher than len() of table
+                    if app
+                        .bibiman
                         .entry_table
                         .entry_table_state
                         .selected()
                         .unwrap()
-                        + 1)
-                    .to_string(),
+                        + 1
+                        > app.bibiman.entry_table.entry_table_items.len()
+                    {
+                        app.bibiman.entry_table.entry_table_items.len().to_string()
+                    } else {
+                        (app.bibiman
+                            .entry_table
+                            .entry_table_state
+                            .selected()
+                            .unwrap()
+                            + 1)
+                        .to_string()
+                    },
                 )
                 .bold(),
                 Span::raw("/"),
@@ -671,6 +679,7 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
     let list = List::new(items)
         .block(block)
         .highlight_style(SELECTED_STYLE)
+        .fg(TEXT_FG_COLOR)
         // .highlight_symbol("> ")
         .highlight_spacing(HighlightSpacing::Always);
 
@@ -705,13 +714,10 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
 
 /// Render the cursor when in InputMode
 fn render_cursor(app: &mut App, frame: &mut Frame, area: Rect) {
+    let scroll = app.input.visual_scroll(area.width as usize);
     if app.input_mode {
         let (x, y) = (
-            area.x
-                + Input::default()
-                    .with_value(app.input.value().to_string())
-                    .visual_cursor() as u16
-                + 1,
+            area.x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
             area.bottom().saturating_sub(2),
         );
         frame.render_widget(

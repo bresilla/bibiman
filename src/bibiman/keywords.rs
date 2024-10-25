@@ -20,6 +20,7 @@ use ratatui::widgets::{ListState, ScrollbarState};
 #[derive(Debug)]
 pub struct TagList {
     pub tag_list_items: Vec<String>,
+    pub tag_list_at_search_start: Vec<String>,
     pub tag_list_state: ListState,
     pub tag_scroll_state: ScrollbarState,
     pub selected_keywords: Vec<String>,
@@ -47,6 +48,7 @@ impl TagList {
         let tag_scroll_state = ScrollbarState::new(tag_list_items.len());
         Self {
             tag_list_items,
+            tag_list_at_search_start: Vec::new(),
             tag_list_state,
             tag_scroll_state,
             selected_keywords: Vec::new(),

@@ -15,9 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-pub mod command;
-pub mod commandnew;
-pub mod handler;
+// pub mod command;
+pub mod commands;
+// pub mod handler;
 pub mod ui;
 
 use crate::App;

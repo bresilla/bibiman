@@ -146,6 +146,8 @@ impl From<KeyEvent> for CmdAction {
             KeyCode::Char('e') => Self::EditFile,
             // Yank selected item/value
             KeyCode::Char('y') => Self::YankItem,
+            // Sort entry table by selected col
+            KeyCode::Char('s') => Self::SortList,
             // Else do nothing
             _ => Self::Nothing,
         }
@@ -173,14 +175,16 @@ pub enum InputCmdAction {
     Confirm,
     // Exit input mode
     Exit,
+    // Do nothing
+    Nothing,
 }
 
 impl InputCmdAction {
     /// Parses the event.
     pub fn parse(key_event: KeyEvent, input: &Input) -> Self {
-        if key_event.code == KeyCode::Esc
-            || (key_event.code == KeyCode::Backspace && input.value().is_empty())
-        {
+        if key_event.code == KeyCode::Backspace && input.value().is_empty() {
+            Self::Nothing
+        } else if key_event.code == KeyCode::Esc {
             Self::Exit
         } else if key_event.code == KeyCode::Enter {
             Self::Confirm
