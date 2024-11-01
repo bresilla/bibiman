@@ -62,6 +62,13 @@ const HEADER_FOOTER_BG: Color = Color::Indexed(235);
 const SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
 const SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
 
+const INFO_STYLE_AUTHOR: Style = Style::new().fg(Color::Green);
+const INFO_STYLE_TITLE: Style = Style::new().fg(Color::Magenta);
+const INFO_STYLE_YEAR: Style = Style::new().fg(Color::LightMagenta);
+const INFO_STYLE_DOI: Style = Style::new().fg(TEXT_FG_COLOR);
+const INFO_STYLE_FILE: Style = Style::new().fg(TEXT_FG_COLOR);
+const INFO_STYLE_ABSTRACT: Style = Style::new().fg(TEXT_FG_COLOR);
+
 pub const fn alternate_colors(i: usize) -> Color {
     if i % 2 == 0 {
         NORMAL_ROW_BG
@@ -503,15 +510,24 @@ pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
             lines.push(Line::from(vec![
                 Span::styled("Authors: ", style_value),
                 // Span::styled(cur_entry.authors.clone(), Style::new().green()),
-                Span::styled(cur_entry.authors(), Style::new().green()),
+                Span::styled(cur_entry.authors(), INFO_STYLE_AUTHOR),
             ]));
-            lines.push(Line::from(vec![
-                Span::styled("Title: ", style_value),
-                Span::styled(cur_entry.title(), Style::new().magenta()),
-            ]));
+            if cur_entry.subtitle.is_some() {
+                lines.push(Line::from(vec![
+                    Span::styled("Title: ", style_value),
+                    Span::styled(cur_entry.title(), INFO_STYLE_TITLE),
+                    Span::styled(": ", INFO_STYLE_TITLE),
+                    Span::styled(cur_entry.subtitle(), INFO_STYLE_TITLE),
+                ]));
+            } else {
+                lines.push(Line::from(vec![
+                    Span::styled("Title: ", style_value),
+                    Span::styled(cur_entry.title(), INFO_STYLE_TITLE),
+                ]));
+            }
             lines.push(Line::from(vec![
                 Span::styled("Year: ", style_value),
-                Span::styled(cur_entry.year(), Style::new().light_magenta()),
+                Span::styled(cur_entry.year(), INFO_STYLE_YEAR),
             ]));
             // Render keywords in info box in Markdown code style
             if !cur_entry.keywords.is_empty() {
@@ -552,22 +568,19 @@ pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
             if !cur_entry.doi_url.is_empty() {
                 lines.push(Line::from(vec![
                     Span::styled("DOI/URL: ", style_value_sec),
-                    Span::styled(
-                        cur_entry.doi_url(),
-                        Style::default().fg(TEXT_FG_COLOR).underlined(),
-                    ),
+                    Span::styled(cur_entry.doi_url(), INFO_STYLE_DOI.underlined()),
                 ]));
             }
             if !cur_entry.filepath.is_empty() {
                 lines.push(Line::from(vec![
                     Span::styled("File: ", style_value_sec),
-                    Span::styled(cur_entry.filepath(), Style::default().fg(TEXT_FG_COLOR)),
+                    Span::styled(cur_entry.filepath(), INFO_STYLE_FILE),
                 ]));
             }
             lines.push(Line::from(""));
             lines.push(Line::from(vec![Span::styled(
                 cur_entry.abstract_text.clone(),
-                Style::default().fg(TEXT_FG_COLOR),
+                INFO_STYLE_ABSTRACT,
             )]));
             lines
         } else {

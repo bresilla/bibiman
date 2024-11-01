@@ -50,6 +50,7 @@ pub struct BibiData {
     pub abstract_text: String,
     pub doi_url: String,
     pub filepath: String,
+    pub subtitle: Option<String>,
 }
 
 impl BibiSetup {
@@ -99,6 +100,7 @@ impl BibiSetup {
                 abstract_text: Self::get_abstract(&k, &bibliography),
                 doi_url: Self::get_weblink(&k, &bibliography),
                 filepath: Self::get_filepath(&k, &bibliography),
+                subtitle: Self::get_subtitle(&k, &bibliography),
             })
             .collect()
     }
@@ -274,6 +276,21 @@ impl BibiSetup {
         } else {
             let file = "".to_string();
             file
+        }
+    }
+
+    pub fn get_subtitle(citekey: &str, biblio: &Bibliography) -> Option<String> {
+        if biblio.get(&citekey).unwrap().subtitle().is_ok() {
+            Some(
+                biblio
+                    .get(&citekey)
+                    .unwrap()
+                    .subtitle()
+                    .unwrap()
+                    .format_verbatim(),
+            )
+        } else {
+            None
         }
     }
 }

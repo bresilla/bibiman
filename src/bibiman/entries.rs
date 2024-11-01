@@ -76,6 +76,7 @@ impl EntryTable {
                 abstract_text: e.abstract_text,
                 doi_url: e.doi_url,
                 filepath: e.filepath,
+                subtitle: e.subtitle,
             })
             .collect();
 
@@ -140,6 +141,7 @@ pub struct EntryTableItem {
     pub abstract_text: String,
     pub doi_url: String,
     pub filepath: String,
+    pub subtitle: Option<String>,
 }
 
 impl EntryTableItem {
@@ -200,6 +202,10 @@ impl EntryTableItem {
     pub fn filepath(&self) -> &str {
         &self.filepath
     }
+
+    pub fn subtitle(&self) -> &str {
+        &self.subtitle.as_ref().unwrap()
+    }
 }
 
 #[cfg(test)]
@@ -230,6 +236,7 @@ mod tests {
             abstract_text: "An abstract".to_string(),
             doi_url: "www.text.org".to_string(),
             filepath: "/home/test".to_string(),
+            subtitle: None,
         };
 
         let entry_vec = EntryTableItem::ref_vec(&mut entry);
@@ -245,6 +252,7 @@ mod tests {
             abstract_text: "An abstract".to_string(),
             doi_url: "www.text.org".to_string(),
             filepath: "/home/test".to_string(),
+            subtitle: None,
         };
 
         let entry_vec_editors = EntryTableItem::ref_vec(&mut entry_editors);
