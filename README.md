@@ -60,8 +60,7 @@ updated:
 - [x] **Open related PDF** file (`file` BibLaTeX key) with keypress.
 - [x] **Open related URL/DOI** with keypress.
 - [x] **Scrollbar** for better navigating.
-- [x] **Sort Entries** by different each column (`Authors`, `Title`, `Year`,
-      `Pubtype`)
+- [x] **Sort Entries** by each column (`Authors`, `Title`, `Year`, `Pubtype`)
 - [ ] **Open related notes file** for specific entry.
 - [ ] **Add Entry via DOI** as formatted code.
 - [ ] **Implement config file** for setting some default values like main
@@ -77,7 +76,7 @@ Use the following keybindings to manage the TUI:
 | Key                                    | Action                                      |
 | -------------------------------------- | ------------------------------------------- |
 | `j`,`k` \| `Down`,`Up`                 | Move down/up by 1                           |
-| `Ctrl-d` \| `Ctrl-u`                   | Move down/up by 5                           |
+| `Ctrl-d`,`Ctrl-u`                      | Move down/up by 5                           |
 | `g`,`G`                                | Go to first/last entry                      |
 | `h`,`k`                                | Select previous/next entry column           |
 | `s`                                    | Sort current column (toggles)               |
@@ -86,10 +85,10 @@ Use the following keybindings to manage the TUI:
 | `e`                                    | Open editor at selected entry               |
 | `o` \| `u`                             | Open related PDF \| URL/DOI                 |
 | `TAB`                                  | Switch between entries and keywords         |
-| `/` \| `Ctrl-f`                        | Enter search mode                           |
+| `/`,`Ctrl-f`                           | Enter search mode                           |
 | `Enter`                                | Filter by selected keyword / Confirm search |
 | `ESC`                                  | Abort search / Reset current list           |
-| `q` \| `Ctrl-c`                        | Quit TUI                                    |
+| `q`,`Ctrl-c`                           | Quit TUI                                    |
 
 ## Search
 
@@ -128,10 +127,14 @@ Now, `bibiman` also provides the possibility to open PDFs (as value of the
 `file` BibLaTeX field), as well as DOIs and URLs.
 
 For selecting the right program, it uses `xdg-open` on Linux, `open` on MacOS,
-and `start` on Windows. _MacOS is untested right now! Windows does not work,
-have to figure this out_
+and `start` on Windows. Thanks to the report from @bastislack in #2 MacOS seems
+to work.
 
-Furhtermore, DOIs have to begin with either `https://doi...` as full URL or
+_However, Windows does not work. Have to figure this out. Reports from some
+Windows users are very welcome. Reports from some Windows users are very
+welcome._
+
+Furthermore, DOIs have to begin with either `https://doi...` as full URL or
 `10.(...)` as regular DOI style. URLs work if they begin with either `http...`
 or with `www...`.
 
