@@ -34,26 +34,25 @@ use ratatui::{
 
 const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
 // const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
+const TEXT_HIGHLIGHT_COLOR_INDEX: u8 = 254;
+const TEXT_FG_COLOR_INDEX: u8 = 250;
+const TEXT_UNSELECTED_COLOR_INDEX: u8 = 245;
 const BOX_SELECTED_BOX_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
 const BOX_SELECTED_TITLE_STYLE: Style = Style::new().fg(TEXT_FG_COLOR).add_modifier(Modifier::BOLD);
 const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_UNSELECTED_FG_COLOR);
 const BOX_UNSELECTED_TITLE_STYLE: Style = Style::new()
     .fg(TEXT_UNSELECTED_FG_COLOR)
     .add_modifier(Modifier::BOLD);
-const NORMAL_ROW_BG: Color = Color::Black;
-const ALT_ROW_BG_COLOR: Color = Color::Indexed(234);
 const SELECTED_ROW_STYLE: Style = Style::new()
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
-const SELECTED_TABLE_COL_STYLE: Style = Style::new()
-    // .add_modifier(Modifier::BOLD)
-    .fg(Color::Indexed(254));
+const SELECTED_TABLE_COL_STYLE: Style = Style::new().add_modifier(Modifier::BOLD);
+// .fg(Color::Indexed(HIGLIGHT_COLOR_INDEX));
 const SELECTEC_TABLE_CELL_STYLE: Style = Style::new()
     // .bg(Color::Indexed(250))
     .add_modifier(Modifier::REVERSED);
-const TEXT_FG_COLOR: Color = Color::Indexed(250);
-const TEXT_HIGHLIGHTED_COLOR: Color = Color::Indexed(254);
-const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(245);
+const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
+const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(TEXT_UNSELECTED_COLOR_INDEX);
 const SORTED_ENTRIES: &str = "▼";
 const SORTED_ENTRIES_REVERSED: &str = "▲";
 const HEADER_FOOTER_BG: Color = Color::Indexed(235);
@@ -68,11 +67,24 @@ const INFO_STYLE_DOI: Style = Style::new().fg(TEXT_FG_COLOR);
 const INFO_STYLE_FILE: Style = Style::new().fg(TEXT_FG_COLOR);
 const INFO_STYLE_ABSTRACT: Style = Style::new().fg(TEXT_FG_COLOR);
 
-pub const fn alternate_colors(i: usize) -> Color {
-    if i % 2 == 0 {
-        NORMAL_ROW_BG
+pub const fn dimmed_color_list(
+    list_item: i32,
+    sel_item: i32,
+    highlight: u8,
+    max_diff: i32,
+) -> Color {
+    if list_item == sel_item {
+        Color::Indexed(highlight)
+    } else if (list_item - sel_item) > max_diff
+        || (sel_item - list_item) > max_diff
+        || (-1 * (list_item - sel_item)) > max_diff
+        || (-1 * (sel_item - list_item)) > max_diff
+    {
+        Color::Indexed(highlight - max_diff as u8)
+    } else if list_item < sel_item {
+        Color::Indexed(highlight - (sel_item - list_item) as u8)
     } else {
-        ALT_ROW_BG_COLOR
+        Color::Indexed(highlight - (list_item - sel_item) as u8)
     }
 }
 
@@ -422,12 +434,23 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
         .entry_table_items
         .iter_mut()
         .enumerate()
-        .map(|(_i, data)| {
+        .map(|(i, data)| {
             let item = data.ref_vec();
             item.into_iter()
                 .map(|content| Cell::from(Text::from(format!("{content}"))))
                 .collect::<Row>()
-                .style(Style::new().fg(TEXT_FG_COLOR)) //.bg(alternate_colors(i)))
+                .style(
+                    Style::new().fg(dimmed_color_list(
+                        i as i32,
+                        app.bibiman
+                            .entry_table
+                            .entry_table_state
+                            .selected()
+                            .unwrap() as i32,
+                        TEXT_HIGHLIGHT_COLOR_INDEX,
+                        20,
+                    )),
+                )
                 .height(1)
         });
     let entry_table = Table::new(
@@ -673,23 +696,26 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
         .tag_list_items
         .iter()
         .enumerate()
-        .map(|(_i, todo_item)| {
-            // let color = alternate_colors(i);
-            ListItem::from(todo_item.to_owned()) //.bg(color)
+        .map(|(i, keyword)| {
+            ListItem::from(keyword.to_owned()).style(Style::new().fg(
+                if app.bibiman.tag_list.tag_list_state.selected().is_some() {
+                    dimmed_color_list(
+                        i as i32,
+                        app.bibiman.tag_list.tag_list_state.selected().unwrap() as i32,
+                        TEXT_HIGHLIGHT_COLOR_INDEX,
+                        20,
+                    )
+                } else {
+                    TEXT_FG_COLOR
+                },
+            )) //.bg(color)
         })
         .collect();
 
     // Create a List from all list items and highlight the currently selected one
     let list = List::new(items)
         .block(block)
-        .highlight_style(SELECTED_ROW_STYLE)
-        .fg(if let CurrentArea::TagArea = app.bibiman.current_area {
-            TEXT_HIGHLIGHTED_COLOR
-        } else {
-            TEXT_FG_COLOR
-        })
-        // .highlight_symbol("> ")
-        .highlight_spacing(HighlightSpacing::Always);
+        .highlight_style(SELECTED_ROW_STYLE);
 
     // Save list length for calculating scrollbar need
     // Add 2 to compmensate lines of the block border
