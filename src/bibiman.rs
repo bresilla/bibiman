@@ -75,10 +75,10 @@ impl Bibiman {
     // Constructs a new instance of [`App`].
     pub fn new(args: CLIArgs) -> Result<Self> {
         let main_bibfile = args.bibfilearg;
-        let main_biblio = BibiSetup::new(main_bibfile.clone());
+        let main_biblio = BibiSetup::new(&main_bibfile);
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
-        let entry_table = EntryTable::new(main_biblio.entry_list.clone());
+        let entry_table = EntryTable::new(&main_biblio.entry_list);
         let current_area = CurrentArea::EntryArea;
         Ok(Self {
             main_bibfile,
@@ -93,10 +93,10 @@ impl Bibiman {
     }
 
     pub fn update_lists(&mut self) {
-        self.main_biblio = BibiSetup::new(self.main_bibfile.clone());
+        self.main_biblio = BibiSetup::new(&self.main_bibfile);
         // self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
-        self.entry_table = EntryTable::new(self.main_biblio.entry_list.clone());
+        self.entry_table = EntryTable::new(&self.main_biblio.entry_list);
     }
 
     /// Toggle moveable list between entries and tags
@@ -120,7 +120,7 @@ impl Bibiman {
     }
 
     pub fn reset_current_list(&mut self) {
-        self.entry_table = EntryTable::new(self.main_biblio.entry_list.clone());
+        self.entry_table = EntryTable::new(&self.main_biblio.entry_list);
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         if let CurrentArea::TagArea = self.current_area {
             self.tag_list.tag_list_state.select(Some(0))
@@ -282,7 +282,7 @@ impl Bibiman {
         let citekey = self.get_selected_citekey();
         // create independent copy of citekey for finding entry after updating list
         let saved_key = citekey.to_owned();
-        let filepath = self.main_biblio.bibfile.display().to_string();
+        let filepath = self.main_bibfile.display().to_string();
         let filecontent = self.main_biblio.bibfilestring.clone();
         let mut line_count = 0;
 

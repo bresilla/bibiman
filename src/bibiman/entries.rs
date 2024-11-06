@@ -41,7 +41,7 @@ pub struct EntryTable {
 }
 
 impl EntryTable {
-    pub fn new(entry_list: Vec<BibiData>) -> Self {
+    pub fn new(entry_list: &[BibiData]) -> Self {
         let entry_table_items = Self::set_entry_table(entry_list);
         let entry_table_state = TableState::default()
             .with_selected(0)
@@ -62,21 +62,21 @@ impl EntryTable {
         }
     }
 
-    pub fn set_entry_table(entry_list: Vec<BibiData>) -> Vec<EntryTableItem> {
+    pub fn set_entry_table(entry_list: &[BibiData]) -> Vec<EntryTableItem> {
         let mut entry_table: Vec<EntryTableItem> = entry_list
             .into_iter()
             .map(|e| EntryTableItem {
-                authors: e.authors,
+                authors: e.authors.clone(),
                 short_author: String::new(),
-                title: e.title,
-                year: e.year,
-                pubtype: e.pubtype,
-                keywords: e.keywords,
-                citekey: e.citekey,
-                abstract_text: e.abstract_text,
-                doi_url: e.doi_url,
-                filepath: e.filepath,
-                subtitle: e.subtitle,
+                title: e.title.clone(),
+                year: e.year.clone(),
+                pubtype: e.pubtype.clone(),
+                keywords: e.keywords.clone(),
+                citekey: e.citekey.clone(),
+                abstract_text: e.abstract_text.clone(),
+                doi_url: e.doi_url.clone(),
+                filepath: e.filepath.clone(),
+                subtitle: e.subtitle.clone(),
             })
             .collect();
 

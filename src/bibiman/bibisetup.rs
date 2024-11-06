@@ -30,7 +30,7 @@ pub enum FileFormat {
 // TODO: can surely be made more efficient/simpler
 #[derive(Debug)]
 pub struct BibiSetup {
-    pub bibfile: PathBuf,           // path to bibfile
+    // pub bibfile: PathBuf,           // path to bibfile
     pub bibfile_format: FileFormat, // Format of passed file
     pub bibfilestring: String,      // content of bibfile as string
     pub bibliography: Bibliography, // parsed bibliography
@@ -39,7 +39,7 @@ pub struct BibiSetup {
     pub entry_list: Vec<BibiData>,  // List of all entries
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BibiData {
     pub authors: String,
     pub title: String,
@@ -54,17 +54,16 @@ pub struct BibiData {
 }
 
 impl BibiSetup {
-    pub fn new(main_bibfile: PathBuf) -> Self {
+    pub fn new(main_bibfile: &PathBuf) -> Self {
         // TODO: Needs check for config file path as soon as config file is impl
-        let bibfile_format = Self::check_file_format(&main_bibfile);
-        let bibfile = main_bibfile;
-        let bibfilestring = fs::read_to_string(&bibfile).unwrap();
+        let bibfile_format = Self::check_file_format(main_bibfile);
+        let bibfilestring = fs::read_to_string(main_bibfile).unwrap();
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
         let citekeys = Self::get_citekeys(&bibliography);
         let keyword_list = Self::collect_tag_list(&citekeys, &bibliography);
         let entry_list = Self::create_entry_list(&citekeys, &bibliography);
         Self {
-            bibfile,
+            // bibfile,
             bibfile_format,
             bibfilestring,
             bibliography,
