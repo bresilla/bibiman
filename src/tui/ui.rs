@@ -47,10 +47,7 @@ const SELECTED_ROW_STYLE: Style = Style::new()
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const SELECTED_TABLE_COL_STYLE: Style = Style::new().add_modifier(Modifier::BOLD);
-// .fg(Color::Indexed(HIGLIGHT_COLOR_INDEX));
-const SELECTEC_TABLE_CELL_STYLE: Style = Style::new()
-    // .bg(Color::Indexed(250))
-    .add_modifier(Modifier::REVERSED);
+const SELECTEC_TABLE_CELL_STYLE: Style = Style::new().add_modifier(Modifier::REVERSED);
 const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
 const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(TEXT_UNSELECTED_COLOR_INDEX);
 const SORTED_ENTRIES: &str = "▼";
