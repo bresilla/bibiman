@@ -16,7 +16,6 @@
 /////
 
 use crate::bibiman::entries::EntryTableColumn;
-use crate::bibiman::keywords::TagListItem;
 use crate::bibiman::{CurrentArea, FormerArea};
 use crate::App;
 use ratatui::layout::{Direction, Position};
@@ -74,13 +73,6 @@ pub const fn alternate_colors(i: usize) -> Color {
         NORMAL_ROW_BG
     } else {
         ALT_ROW_BG_COLOR
-    }
-}
-
-impl From<&TagListItem> for ListItem<'_> {
-    fn from(value: &TagListItem) -> Self {
-        let line = Line::styled(format!("{}", value.keyword), TEXT_FG_COLOR);
-        ListItem::new(line)
     }
 }
 

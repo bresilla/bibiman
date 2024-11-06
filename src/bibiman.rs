@@ -94,7 +94,6 @@ impl Bibiman {
 
     pub fn update_lists(&mut self) {
         self.main_biblio = BibiSetup::new(&self.main_bibfile);
-        // self.tag_list = TagList::from_iter(self.main_biblio.keyword_list.clone());
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         self.entry_table = EntryTable::new(&self.main_biblio.entry_list);
     }

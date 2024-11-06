@@ -26,21 +26,6 @@ pub struct TagList {
     pub selected_keywords: Vec<String>,
 }
 
-// Structure of the list items.
-#[derive(Debug)]
-pub struct TagListItem {
-    pub keyword: String,
-}
-
-// Function to process inputed characters and convert them (to string, or more complex function)
-impl TagListItem {
-    pub fn new(info: &str) -> Self {
-        Self {
-            keyword: info.to_string(),
-        }
-    }
-}
-
 impl TagList {
     pub fn new(keyword_list: Vec<String>) -> Self {
         let tag_list_items = keyword_list;
