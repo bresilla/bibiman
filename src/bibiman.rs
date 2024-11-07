@@ -449,7 +449,10 @@ impl Bibiman {
     }
 
     pub fn select_last_tag(&mut self) {
-        self.tag_list.tag_list_state.select_last();
+        // self.tag_list.tag_list_state.select_last(); // Doesn't work properly after upgrade to ratatui v.0.29
+        self.tag_list
+            .tag_list_state
+            .select(Some(self.tag_list.tag_list_items.len() - 1));
         self.tag_list.tag_scroll_state = self
             .tag_list
             .tag_scroll_state
@@ -459,7 +462,6 @@ impl Bibiman {
     pub fn get_selected_tag(&self) -> &str {
         let idx = self.tag_list.tag_list_state.selected().unwrap();
         let keyword = &self.tag_list.tag_list_items[idx];
-        // let keyword = &self.tag_list.tag_list_items[idx].keyword;
         keyword
     }
 

@@ -32,44 +32,74 @@ use ratatui::{
     },
 };
 
-const MAIN_BLUE_COLOR: Color = Color::Indexed(39);
-// const MAIN_PURPLE_COLOR: Color = Color::Indexed(129);
+// Color indices
+const MAIN_BLUE_COLOR_INDEX: u8 = 75;
+const MAIN_PURPLE_COLOR_INDEX: u8 = 135;
+const MAIN_GREEN_COLOR_INDEX: u8 = 29;
 const TEXT_HIGHLIGHT_COLOR_INDEX: u8 = 254;
 const TEXT_FG_COLOR_INDEX: u8 = 250;
-const TEXT_UNSELECTED_COLOR_INDEX: u8 = 245;
-const BOX_SELECTED_BOX_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
-const BOX_SELECTED_TITLE_STYLE: Style = Style::new().fg(TEXT_FG_COLOR).add_modifier(Modifier::BOLD);
-const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_UNSELECTED_FG_COLOR);
-const BOX_UNSELECTED_TITLE_STYLE: Style = Style::new()
-    .fg(TEXT_UNSELECTED_FG_COLOR)
+
+// Text colors
+const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
+const TEXT_BRIGHT_FG_COLOR: Color = Color::Indexed(TEXT_HIGHLIGHT_COLOR_INDEX);
+const MAIN_BLUE: Color = Color::Indexed(MAIN_BLUE_COLOR_INDEX);
+const MAIN_PURPLE: Color = Color::Indexed(MAIN_PURPLE_COLOR_INDEX);
+const MAIN_GREEN: Color = Color::Indexed(MAIN_GREEN_COLOR_INDEX);
+
+// Background colors
+const HEADER_FOOTER_BG: Color = Color::Indexed(235);
+
+// Box styles
+// Keyword Box
+const KEYWORD_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
+const KEYWORD_BOX_SELECTED_TITLE_STYLE: Style =
+    Style::new().fg(MAIN_PURPLE).add_modifier(Modifier::BOLD);
+const KEYWORD_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
+const KEYWORD_BOX_UNSELECTED_TITLE_STYLE: Style =
+    Style::new().fg(MAIN_PURPLE).add_modifier(Modifier::BOLD);
+// Entry box
+const ENTRY_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
+const ENTRY_BOX_SELECTED_TITLE_STYLE: Style =
+    Style::new().fg(MAIN_BLUE).add_modifier(Modifier::BOLD);
+const ENTRY_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
+const ENTRY_BOX_UNSELECTED_TITLE_STYLE: Style =
+    Style::new().fg(MAIN_BLUE).add_modifier(Modifier::BOLD);
+// Default box
+const BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
+const BOX_SELECTED_TITLE_STYLE: Style = Style::new()
+    .fg(TEXT_BRIGHT_FG_COLOR)
     .add_modifier(Modifier::BOLD);
-const SELECTED_ROW_STYLE: Style = Style::new()
+const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
+const BOX_UNSELECTED_TITLE_STYLE: Style =
+    Style::new().fg(TEXT_FG_COLOR).add_modifier(Modifier::BOLD);
+
+// Entry table styles
+const ENTRY_SELECTED_ROW_STYLE: Style = Style::new()
+    .fg(MAIN_BLUE)
+    .add_modifier(Modifier::BOLD)
+    .add_modifier(Modifier::REVERSED);
+const KEYWORD_SELECTED_ROW_STYLE: Style = Style::new()
+    .fg(MAIN_PURPLE)
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const SELECTED_TABLE_COL_STYLE: Style = Style::new().add_modifier(Modifier::BOLD);
 const SELECTEC_TABLE_CELL_STYLE: Style = Style::new().add_modifier(Modifier::REVERSED);
-const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
-const TEXT_UNSELECTED_FG_COLOR: Color = Color::Indexed(TEXT_UNSELECTED_COLOR_INDEX);
+
+// Symbols
 const SORTED_ENTRIES: &str = "▼";
 const SORTED_ENTRIES_REVERSED: &str = "▲";
-const HEADER_FOOTER_BG: Color = Color::Indexed(235);
-
 const SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
 const SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
 
-const INFO_STYLE_AUTHOR: Style = Style::new().fg(Color::Green);
-const INFO_STYLE_TITLE: Style = Style::new().fg(Color::Magenta);
-const INFO_STYLE_YEAR: Style = Style::new().fg(Color::LightMagenta);
+// Info area styles
+const INFO_STYLE_AUTHOR: Style = Style::new().fg(MAIN_GREEN);
+const INFO_STYLE_TITLE: Style = Style::new().fg(MAIN_BLUE).add_modifier(Modifier::ITALIC);
+const INFO_STYLE_YEAR: Style = Style::new().fg(MAIN_PURPLE);
 const INFO_STYLE_DOI: Style = Style::new().fg(TEXT_FG_COLOR);
 const INFO_STYLE_FILE: Style = Style::new().fg(TEXT_FG_COLOR);
 const INFO_STYLE_ABSTRACT: Style = Style::new().fg(TEXT_FG_COLOR);
 
-pub const fn dimmed_color_list(
-    list_item: i32,
-    sel_item: i32,
-    highlight: u8,
-    max_diff: i32,
-) -> Color {
+pub const fn color_list(list_item: i32, sel_item: i32, highlight: u8, max_diff: i32) -> Color {
     if list_item == sel_item {
         Color::Indexed(highlight)
     } else if (list_item - sel_item) > max_diff
@@ -117,7 +147,7 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
 pub fn render_header(frame: &mut Frame, rect: Rect) {
     let main_header = Paragraph::new("BIBIMAN – BibLaTeX manager TUI")
         .bold()
-        .fg(MAIN_BLUE_COLOR)
+        .fg(MAIN_BLUE)
         .centered();
     frame.render_widget(main_header, rect)
 }
@@ -143,8 +173,17 @@ pub fn render_footer(app: &mut App, frame: &mut Frame, rect: Rect) {
             };
 
             let block = Block::bordered()
-                .title(Line::styled(search_title, BOX_SELECTED_TITLE_STYLE))
-                .border_style(BOX_SELECTED_BOX_STYLE)
+                .title(Line::styled(
+                    search_title,
+                    if let Some(FormerArea::EntryArea) = app.bibiman.former_area {
+                        ENTRY_BOX_SELECTED_TITLE_STYLE
+                    } else if let Some(FormerArea::TagArea) = app.bibiman.former_area {
+                        KEYWORD_BOX_SELECTED_TITLE_STYLE
+                    } else {
+                        BOX_SELECTED_TITLE_STYLE
+                    },
+                ))
+                .border_style(BOX_SELECTED_BORDER_STYLE)
                 .border_set(symbols::border::THICK);
             render_cursor(app, frame, rect);
             frame.render_widget(
@@ -157,7 +196,7 @@ pub fn render_footer(app: &mut App, frame: &mut Frame, rect: Rect) {
         _ => {
             let style_emph = Style::new().bold().fg(TEXT_FG_COLOR);
             let block = Block::bordered()
-                .title(Line::raw(" Basic Commands ").centered())
+                .title(Line::styled(" Basic Commands ", BOX_UNSELECTED_TITLE_STYLE).centered())
                 .border_style(BOX_UNSELECTED_BORDER_STYLE)
                 .border_set(symbols::border::PLAIN);
             let keybindigns = Paragraph::new(Line::from(vec![
@@ -197,9 +236,9 @@ pub fn render_file_info(app: &mut App, frame: &mut Frame, rect: Rect) {
             symbols::border::PLAIN
         })
         .border_style(if let CurrentArea::EntryArea = app.bibiman.current_area {
-            BOX_SELECTED_BOX_STYLE
+            ENTRY_BOX_SELECTED_BORDER_STYLE
         } else {
-            BOX_UNSELECTED_BORDER_STYLE
+            ENTRY_BOX_UNSELECTED_BORDER_STYLE
         });
 
     frame.render_widget(block, rect);
@@ -295,9 +334,9 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
             Line::styled(
                 " Bibliographic Entries ",
                 if let CurrentArea::EntryArea = app.bibiman.current_area {
-                    BOX_SELECTED_TITLE_STYLE
+                    ENTRY_BOX_SELECTED_TITLE_STYLE
                 } else {
-                    BOX_UNSELECTED_TITLE_STYLE
+                    ENTRY_BOX_UNSELECTED_TITLE_STYLE
                 },
             )
             .centered(),
@@ -309,9 +348,9 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
             symbols::border::PLAIN
         })
         .border_style(if let CurrentArea::EntryArea = app.bibiman.current_area {
-            BOX_SELECTED_BOX_STYLE
+            ENTRY_BOX_SELECTED_BORDER_STYLE
         } else {
-            BOX_UNSELECTED_BORDER_STYLE
+            ENTRY_BOX_UNSELECTED_BORDER_STYLE
         });
 
     let header_style = Style::default()
@@ -437,7 +476,7 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
                 .map(|content| Cell::from(Text::from(format!("{content}"))))
                 .collect::<Row>()
                 .style(
-                    Style::new().fg(dimmed_color_list(
+                    Style::new().fg(color_list(
                         i as i32,
                         app.bibiman
                             .entry_table
@@ -468,7 +507,7 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
     .block(block)
     .header(header)
     .column_spacing(2)
-    .row_highlight_style(SELECTED_ROW_STYLE)
+    .row_highlight_style(ENTRY_SELECTED_ROW_STYLE)
     .column_highlight_style(SELECTED_TABLE_COL_STYLE)
     .cell_highlight_style(SELECTEC_TABLE_CELL_STYLE)
     .highlight_spacing(HighlightSpacing::Always);
@@ -500,9 +539,6 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
 pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
     // We get the info depending on the item's state.
     let style_value = Style::new().bold().fg(TEXT_FG_COLOR);
-    let style_value_sec = Style::new()
-        .add_modifier(Modifier::ITALIC)
-        .fg(TEXT_FG_COLOR);
     let lines = {
         if app
             .bibiman
@@ -579,13 +615,13 @@ pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
             }
             if !cur_entry.doi_url.is_empty() {
                 lines.push(Line::from(vec![
-                    Span::styled("DOI/URL: ", style_value_sec),
+                    Span::styled("DOI/URL: ", style_value),
                     Span::styled(cur_entry.doi_url(), INFO_STYLE_DOI.underlined()),
                 ]));
             }
             if !cur_entry.filepath.is_empty() {
                 lines.push(Line::from(vec![
-                    Span::styled("File: ", style_value_sec),
+                    Span::styled("File: ", style_value),
                     Span::styled(cur_entry.filepath(), INFO_STYLE_FILE),
                 ]));
             }
@@ -668,9 +704,9 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
             Line::styled(
                 " Keywords ",
                 if let CurrentArea::TagArea = app.bibiman.current_area {
-                    BOX_SELECTED_TITLE_STYLE
+                    KEYWORD_BOX_SELECTED_TITLE_STYLE
                 } else {
-                    BOX_UNSELECTED_TITLE_STYLE
+                    KEYWORD_BOX_UNSELECTED_TITLE_STYLE
                 },
             )
             .centered(),
@@ -681,9 +717,9 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
             symbols::border::PLAIN
         })
         .border_style(if let CurrentArea::TagArea = app.bibiman.current_area {
-            BOX_SELECTED_BOX_STYLE
+            KEYWORD_BOX_SELECTED_BORDER_STYLE
         } else {
-            BOX_UNSELECTED_BORDER_STYLE
+            KEYWORD_BOX_UNSELECTED_BORDER_STYLE
         });
 
     // Iterate through all elements in the `items` and stylize them.
@@ -696,7 +732,7 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
         .map(|(i, keyword)| {
             ListItem::from(keyword.to_owned()).style(Style::new().fg(
                 if app.bibiman.tag_list.tag_list_state.selected().is_some() {
-                    dimmed_color_list(
+                    color_list(
                         i as i32,
                         app.bibiman.tag_list.tag_list_state.selected().unwrap() as i32,
                         TEXT_HIGHLIGHT_COLOR_INDEX,
@@ -712,7 +748,7 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
     // Create a List from all list items and highlight the currently selected one
     let list = List::new(items)
         .block(block)
-        .highlight_style(SELECTED_ROW_STYLE);
+        .highlight_style(KEYWORD_SELECTED_ROW_STYLE);
 
     // Save list length for calculating scrollbar need
     // Add 2 to compmensate lines of the block border
