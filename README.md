@@ -1,13 +1,13 @@
 # Bibiman
 
-[![noMSgithub badge](https://nogithub.codeberg.page/badge.svg)](https://nogithub.codeberg.page/)
+<!-- [![noMSgithub badge](https://nogithub.codeberg.page/badge.svg)](https://nogithub.codeberg.page/) -->
 
 `bibiman` is a simple terminal user interface for handling your BibLaTeX
 database as part of a terminal-based scientific workflow.
 
 Here's a small impression how it looks and works:
 
-[![bibiman-demo-vhs.gif](https://i.postimg.cc/zBQGTQjK/bibiman-demo-vhs.gif)](https://postimg.cc/xJKQ2tB1)
+[![bibiman.gif](https://i.postimg.cc/yxkZkMfp/bibiman.gif)](https://postimg.cc/vxwBKNw5)
 
 ## Installation
 
