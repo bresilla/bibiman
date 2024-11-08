@@ -17,8 +17,11 @@
 
 use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
+use color_eyre::owo_colors::OwoColorize;
 use itertools::Itertools;
 use std::{fs, path::PathBuf};
+
+use crate::cliargs;
 
 #[derive(Debug)]
 pub enum FileFormat {
@@ -75,14 +78,30 @@ impl BibiSetup {
 
     // Check which file format the passed file has
     fn check_file_format(main_bibfile: &PathBuf) -> FileFormat {
-        let extension = main_bibfile.extension().unwrap().to_str();
+        if main_bibfile.exists() {
+            let extension = main_bibfile.extension().unwrap().to_str();
 
-        match extension {
-            Some("yml") => FileFormat::Hayagriva,
-            Some("yaml") => FileFormat::Hayagriva,
-            Some("bib") => FileFormat::BibLatex,
-            Some(_) => panic!("The extension {:?} is no valid bibfile", extension.unwrap()),
-            None => panic!("The given path {:?} holds no valid file", main_bibfile),
+            match extension {
+                // Some("yml") => FileFormat::Hayagriva,
+                // Some("yaml") => FileFormat::Hayagriva,
+                Some("bib") => FileFormat::BibLatex,
+                Some(_) => panic!(
+                    "The extension \".{:?}\" is no valid bibfile",
+                    extension.unwrap()
+                ),
+                None => panic!("The given path {:?} holds no valid file", main_bibfile),
+            }
+        } else {
+            println!(
+                "{}",
+                "No bibfile passed as argument. Please select a valid file."
+                    .red()
+                    .bold()
+            );
+            println!("");
+            println!("{}", cliargs::help_func());
+            // panic!("No file passed as argument. Please choose a .bib file.")
+            std::process::exit(1)
         }
     }
 
