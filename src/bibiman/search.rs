@@ -141,6 +141,7 @@ mod tests {
             abstract_text: "An abstract with multiple sentences. Here is the second".to_string(),
             doi_url: "https://www.bibiman.org".to_string(),
             filepath: "/home/file/path.pdf".to_string(),
+            subtitle: None,
         };
 
         let joined_vec = BibiSearch::convert_to_string(&bibvec);
