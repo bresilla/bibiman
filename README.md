@@ -46,9 +46,8 @@ Of course, this can be aliased if you only use one main file. E.g. in
 
 ## Features
 
-For now, `bibiman` only has some very basic features implemented which are
-important for my personal workflow. There are more to come, the list will be
-updated:
+For now, `bibiman` only has mainly features implemented which are important for
+my personal workflow. There are more to come, the list will be updated:
 
 - [x] **Browse** through the bib entries using _Vim-like keybindings_ and a
       _fuzzy search_ mode.
@@ -68,6 +67,9 @@ updated:
 - [ ] **Support Hayagriva(`.yaml`)** format as input (_on hold for now_, because
       the Hayagriva Yaml style doesn't offer keywords; s. issue in
       [Hayagriva repo](https://github.com/typst/hayagriva/issues/240)).
+
+**Please feel free to suggest further features through the issue
+functionality.**
 
 ## Keybindings
 
@@ -131,8 +133,7 @@ and `start` on Windows. Thanks to the report from @bastislack in #2 MacOS seems
 to work.
 
 _However, Windows does not work. Have to figure this out. Reports from some
-Windows users are very welcome. Reports from some Windows users are very
-welcome._
+Windows users are very welcome._
 
 Furthermore, DOIs have to begin with either `https://doi...` as full URL or
 `10.(...)` as regular DOI style. URLs work if they begin with either `http...`
