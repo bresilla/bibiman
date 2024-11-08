@@ -139,8 +139,8 @@ pub struct EntryTableItem {
     pub keywords: String,
     pub citekey: String,
     pub abstract_text: String,
-    pub doi_url: String,
-    pub filepath: String,
+    pub doi_url: Option<String>,
+    pub filepath: Option<String>,
     pub subtitle: Option<String>,
 }
 
@@ -196,11 +196,11 @@ impl EntryTableItem {
     }
 
     pub fn doi_url(&self) -> &str {
-        &self.doi_url
+        &self.doi_url.as_ref().unwrap()
     }
 
     pub fn filepath(&self) -> &str {
-        &self.filepath
+        &self.filepath.as_ref().unwrap()
     }
 
     pub fn subtitle(&self) -> &str {
@@ -234,8 +234,8 @@ mod tests {
             keywords: "key1, key2".to_string(),
             citekey: "miller_2000".to_string(),
             abstract_text: "An abstract".to_string(),
-            doi_url: "www.text.org".to_string(),
-            filepath: "/home/test".to_string(),
+            doi_url: None,
+            filepath: None,
             subtitle: None,
         };
 
@@ -250,8 +250,8 @@ mod tests {
             keywords: "key1, key2".to_string(),
             citekey: "miller_2000".to_string(),
             abstract_text: "An abstract".to_string(),
-            doi_url: "www.text.org".to_string(),
-            filepath: "/home/test".to_string(),
+            doi_url: None,
+            filepath: None,
             subtitle: None,
         };
 

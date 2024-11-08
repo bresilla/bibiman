@@ -375,7 +375,7 @@ impl Bibiman {
         // Pass filepath as argument, pipe stdout and stderr to /dev/null
         // to keep the TUI clean (where is it piped on Windows???)
         let _ = Command::new(&cmd)
-            .arg(&filepath)
+            .arg(&filepath.as_ref().unwrap())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()
@@ -386,7 +386,11 @@ impl Bibiman {
 
     pub fn open_doi_url(&mut self) -> Result<()> {
         let idx = self.entry_table.entry_table_state.selected().unwrap();
-        let web_adress = self.entry_table.entry_table_items[idx].doi_url.clone();
+        let web_adress = self.entry_table.entry_table_items[idx]
+            .doi_url
+            .as_ref()
+            .unwrap();
+        // .clone();
 
         // Resolve strings using the resolving function of dx.doi.org, so the
         // terminal is not blocked by the resolving process
@@ -397,7 +401,7 @@ impl Bibiman {
             let prefix = "https://".to_string();
             prefix + &web_adress
         } else {
-            web_adress
+            web_adress.to_string()
         };
 
         // Build command to execute browser. 'xdg-open' is Linux standard

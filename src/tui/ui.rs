@@ -610,16 +610,16 @@ pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
                 }
                 lines.push(Line::from(content))
             }
-            if !cur_entry.doi_url.is_empty() || !cur_entry.filepath.is_empty() {
+            if cur_entry.doi_url.is_some() || cur_entry.filepath.is_some() {
                 lines.push(Line::raw(""));
             }
-            if !cur_entry.doi_url.is_empty() {
+            if cur_entry.doi_url.is_some() {
                 lines.push(Line::from(vec![
                     Span::styled("DOI/URL: ", style_value),
                     Span::styled(cur_entry.doi_url(), INFO_STYLE_DOI.underlined()),
                 ]));
             }
-            if !cur_entry.filepath.is_empty() {
+            if cur_entry.filepath.is_some() {
                 lines.push(Line::from(vec![
                     Span::styled("File: ", style_value),
                     Span::styled(cur_entry.filepath(), INFO_STYLE_FILE),

@@ -51,8 +51,8 @@ pub struct BibiData {
     pub keywords: String,
     pub citekey: String,
     pub abstract_text: String,
-    pub doi_url: String,
-    pub filepath: String,
+    pub doi_url: Option<String>,
+    pub filepath: Option<String>,
     pub subtitle: Option<String>,
 }
 
@@ -219,10 +219,11 @@ impl BibiSetup {
     }
 
     pub fn get_year(citekey: &str, biblio: &Bibliography) -> String {
-        let year = biblio.get(&citekey).unwrap();
+        let bib = biblio.get(&citekey).unwrap();
+        // let year = biblio.get(&citekey).unwrap();
         let year = {
-            if year.date().is_ok() {
-                let year = year.date().unwrap().to_chunks().format_verbatim();
+            if bib.date().is_ok() {
+                let year = bib.date().unwrap().to_chunks().format_verbatim();
                 let year = year[..4].to_string();
                 year
             } else {
@@ -274,26 +275,22 @@ impl BibiSetup {
         text
     }
 
-    pub fn get_weblink(citekey: &str, biblio: &Bibliography) -> String {
-        if let true = biblio.get(&citekey).unwrap().doi().is_ok() {
-            let url = biblio.get(&citekey).unwrap().doi().unwrap();
-            url
-        } else if let true = biblio.get(&citekey).unwrap().url().is_ok() {
-            let url = biblio.get(&citekey).unwrap().url().unwrap();
-            url
+    pub fn get_weblink(citekey: &str, biblio: &Bibliography) -> Option<String> {
+        let bib = biblio.get(&citekey).unwrap();
+        if bib.doi().is_ok() {
+            Some(bib.doi().unwrap())
+        } else if bib.url().is_ok() {
+            Some(bib.url().unwrap())
         } else {
-            let url = "".to_string();
-            url
+            None
         }
     }
 
-    pub fn get_filepath(citekey: &str, biblio: &Bibliography) -> String {
-        if let true = biblio.get(&citekey).unwrap().file().is_ok() {
-            let file = biblio.get(&citekey).unwrap().file().unwrap();
-            file
+    pub fn get_filepath(citekey: &str, biblio: &Bibliography) -> Option<String> {
+        if biblio.get(&citekey).unwrap().file().is_ok() {
+            Some(biblio.get(&citekey).unwrap().file().unwrap())
         } else {
-            let file = "".to_string();
-            file
+            None
         }
     }
 
