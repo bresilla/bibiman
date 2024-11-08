@@ -138,10 +138,10 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
 
     render_header(frame, header_area);
     render_footer(app, frame, footer_area);
-    render_file_info(app, frame, entry_info_area);
     render_entrytable(app, frame, entry_area);
     render_selected_item(app, frame, info_area);
     render_taglist(app, frame, tag_area);
+    render_file_info(app, frame, entry_info_area);
 }
 
 pub fn render_header(frame: &mut Frame, rect: Rect) {
