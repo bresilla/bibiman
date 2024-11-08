@@ -1,7 +1,7 @@
 [package]
 name = "bibiman"
-version = "0.5.0"
-authors = ["lukeflo <lukeflo@some.email.not>"]
+version = "0.6.0"
+authors = ["lukeflo <lukeflo_git@posteo.de>"]
 license = "GPL-3.0-or-later"
 edition = "2021"
 
