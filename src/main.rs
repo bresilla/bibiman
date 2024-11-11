@@ -26,6 +26,13 @@ pub mod cliargs;
 pub mod errorsetup;
 pub mod tui;
 
+// Color indices
+const MAIN_BLUE_COLOR_INDEX: u8 = 75;
+const MAIN_PURPLE_COLOR_INDEX: u8 = 135;
+const MAIN_GREEN_COLOR_INDEX: u8 = 29;
+const TEXT_HIGHLIGHT_COLOR_INDEX: u8 = 254;
+const TEXT_FG_COLOR_INDEX: u8 = 250;
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // Parse CLI arguments

@@ -15,9 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use super::popup::PopupArea;
 use crate::bibiman::entries::EntryTableColumn;
 use crate::bibiman::{CurrentArea, FormerArea};
+use crate::tui::popup::PopupKind;
 use crate::App;
+use crate::{
+    MAIN_BLUE_COLOR_INDEX, MAIN_GREEN_COLOR_INDEX, MAIN_PURPLE_COLOR_INDEX, TEXT_FG_COLOR_INDEX,
+    TEXT_HIGHLIGHT_COLOR_INDEX,
+};
 use ratatui::layout::{Direction, Position};
 use ratatui::widgets::Clear;
 use ratatui::Frame;
@@ -31,13 +37,7 @@ use ratatui::{
         ScrollbarOrientation, Table, Wrap,
     },
 };
-
-// Color indices
-const MAIN_BLUE_COLOR_INDEX: u8 = 75;
-const MAIN_PURPLE_COLOR_INDEX: u8 = 135;
-const MAIN_GREEN_COLOR_INDEX: u8 = 29;
-const TEXT_HIGHLIGHT_COLOR_INDEX: u8 = 254;
-const TEXT_FG_COLOR_INDEX: u8 = 250;
+use tui_popup::Popup;
 
 // Text colors
 const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
@@ -48,6 +48,7 @@ const MAIN_GREEN: Color = Color::Indexed(MAIN_GREEN_COLOR_INDEX);
 
 // Background colors
 const HEADER_FOOTER_BG: Color = Color::Indexed(235);
+const POPUP_BG: Color = Color::Indexed(233);
 
 // Box styles
 // Keyword Box
@@ -72,6 +73,8 @@ const BOX_SELECTED_TITLE_STYLE: Style = Style::new()
 const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
 const BOX_UNSELECTED_TITLE_STYLE: Style =
     Style::new().fg(TEXT_FG_COLOR).add_modifier(Modifier::BOLD);
+// Popup box
+const POPUP_HELP_BOX: Style = Style::new().fg(TEXT_FG_COLOR).bg(POPUP_BG);
 
 // Entry table styles
 const ENTRY_SELECTED_ROW_STYLE: Style = Style::new()
@@ -142,6 +145,25 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
     render_selected_item(app, frame, info_area);
     render_taglist(app, frame, tag_area);
     render_file_info(app, frame, entry_info_area);
+    if app.bibiman.popup_area.is_popup {
+        render_popup(app, frame);
+    }
+}
+
+pub fn render_popup(app: &mut App, frame: &mut Frame) {
+    let popup = if let Some(PopupKind::Help) = app.bibiman.popup_area.popup_kind {
+        Popup::new(PopupArea::popup_help())
+            .title(" Keybindings ".bold().into_centered_line())
+            .style(POPUP_HELP_BOX)
+            .border_style(Style::new().fg(MAIN_BLUE))
+    } else if let Some(PopupKind::Message) = app.bibiman.popup_area.popup_kind {
+        Popup::new(Text::from(app.bibiman.popup_area.popup_message.as_str()).fg(MAIN_GREEN))
+            .title(" Message ".bold().into_centered_line().fg(MAIN_GREEN))
+            .style(POPUP_HELP_BOX)
+    } else {
+        panic!("No popup text detected")
+    };
+    frame.render_widget(&popup, frame.area())
 }
 
 pub fn render_header(frame: &mut Frame, rect: Rect) {

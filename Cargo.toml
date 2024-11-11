@@ -14,6 +14,7 @@ arboard = { version = "3.4.1", features = ["wayland-data-control"] }
 biblatex = "0.10.0"
 color-eyre = "0.6.3"
 crossterm = { version = "0.28.1", features = ["event-stream"] }
+doi = "0.3.0"
 editor-command = "0.1.1"
 futures = "0.3.30"
 itertools = "0.13.0"
@@ -24,3 +25,4 @@ signal-hook = "0.3.17"
 tokio = { version = "1.39.3", features = ["full"] }
 tokio-util = "0.7.12"
 tui-input = "0.11.0"
+tui-popup = "0.6.0"

@@ -18,6 +18,7 @@
 use crate::bibiman::entries::EntryTableColumn;
 use crate::bibiman::{bibisetup::*, search::BibiSearch};
 use crate::cliargs::CLIArgs;
+use crate::tui::popup::{PopupArea, PopupKind};
 use crate::tui::Tui;
 use crate::{bibiman::entries::EntryTable, bibiman::keywords::TagList};
 use arboard::Clipboard;
@@ -40,6 +41,7 @@ pub enum CurrentArea {
     EntryArea,
     TagArea,
     SearchArea,
+    PopupArea,
 }
 
 // Check which area was active when popup set active
@@ -69,6 +71,8 @@ pub struct Bibiman {
     pub current_area: CurrentArea,
     // mode for popup window
     pub former_area: Option<FormerArea>,
+    // active popup
+    pub popup_area: PopupArea,
 }
 
 impl Bibiman {
@@ -89,7 +93,31 @@ impl Bibiman {
             scroll_info: 0,
             current_area,
             former_area: None,
+            popup_area: PopupArea::default(),
         })
+    }
+
+    pub fn show_help(&mut self) {
+        if let CurrentArea::EntryArea = self.current_area {
+            self.former_area = Some(FormerArea::EntryArea);
+        } else if let CurrentArea::TagArea = self.current_area {
+            self.former_area = Some(FormerArea::TagArea);
+        }
+        self.popup_area.is_popup = true;
+        self.current_area = CurrentArea::PopupArea;
+        self.popup_area.popup_kind = Some(PopupKind::Help);
+    }
+
+    pub fn go_back(&mut self) {
+        if let CurrentArea::PopupArea = self.current_area {
+            self.popup_area.is_popup = false;
+            self.popup_area.popup_kind = None;
+            if let Some(FormerArea::EntryArea) = self.former_area {
+                self.current_area = CurrentArea::EntryArea
+            } else if let Some(FormerArea::TagArea) = self.former_area {
+                self.current_area = CurrentArea::TagArea
+            }
+        };
     }
 
     pub fn update_lists(&mut self) {

@@ -139,8 +139,8 @@ mod tests {
             keywords: "hello, bye".to_string(),
             citekey: "author_1999".to_string(),
             abstract_text: "An abstract with multiple sentences. Here is the second".to_string(),
-            doi_url: "https://www.bibiman.org".to_string(),
-            filepath: "/home/file/path.pdf".to_string(),
+            doi_url: Some("https://www.bibiman.org".to_string()),
+            filepath: Some("/home/file/path.pdf".to_string()),
             subtitle: None,
         };
 

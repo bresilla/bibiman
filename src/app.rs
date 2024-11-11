@@ -19,6 +19,7 @@ use crate::bibiman::CurrentArea;
 // use super::Event;
 use crate::cliargs::CLIArgs;
 use crate::tui::commands::{InputCmdAction, OpenRessource};
+use crate::tui::popup::PopupKind;
 use crate::tui::{self, Tui};
 use crate::{bibiman::Bibiman, tui::commands::CmdAction};
 use color_eyre::eyre::{Ok, Result};
@@ -68,6 +69,11 @@ impl App {
                 // Event::Key(key_event) => handle_key_events(key_event, self, &mut tui)?,
                 // Event::Mouse(_) => {}
                 Event::Key(key_event) => {
+                    if let Some(PopupKind::Message) = self.bibiman.popup_area.popup_kind {
+                        self.bibiman.popup_area.popup_close_message()
+                    } else if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
+                        self.bibiman.go_back()
+                    }
                     let command = if self.input_mode {
                         CmdAction::Input(InputCmdAction::parse(key_event, &self.input))
                     } else {
@@ -187,6 +193,8 @@ impl App {
             CmdAction::Confirm => {
                 if let CurrentArea::TagArea = self.bibiman.current_area {
                     self.bibiman.filter_for_tags();
+                } else if let CurrentArea::PopupArea = self.bibiman.current_area {
+                    self.bibiman.go_back();
                 }
             }
             CmdAction::SortList => {
@@ -196,6 +204,10 @@ impl App {
             }
             CmdAction::YankItem => {
                 Bibiman::yank_text(&self.bibiman.get_selected_citekey());
+                self.bibiman.popup_area.popup_message(
+                    "Yanked citekey to clipboard:",
+                    self.bibiman.get_selected_citekey().to_string(),
+                );
             }
             CmdAction::EditFile => {
                 if let CurrentArea::EntryArea = self.bibiman.current_area {
@@ -215,6 +227,9 @@ impl App {
                 }
                 OpenRessource::Note => {}
             },
+            CmdAction::ShowHelp => {
+                self.bibiman.show_help();
+            }
             CmdAction::Exit => {
                 self.quit();
             }

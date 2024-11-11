@@ -67,6 +67,8 @@ pub enum CmdAction {
     Input(InputCmdAction),
     // Hexdump command.
     Exit,
+    // Show keybindings
+    ShowHelp,
     // Do nothing.
     Nothing,
 }
@@ -148,6 +150,8 @@ impl From<KeyEvent> for CmdAction {
             KeyCode::Char('y') => Self::YankItem,
             // Sort entry table by selected col
             KeyCode::Char('s') => Self::SortList,
+            // Show help popup
+            KeyCode::Char('?') => Self::ShowHelp,
             // Else do nothing
             _ => Self::Nothing,
         }
