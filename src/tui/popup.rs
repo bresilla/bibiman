@@ -21,7 +21,7 @@ use ratatui::{
     widgets::ListState,
 };
 
-use crate::MAIN_PURPLE_COLOR_INDEX;
+use crate::{MAIN_BLUE_COLOR_INDEX, MAIN_PURPLE_COLOR_INDEX};
 
 #[derive(Debug)]
 pub enum PopupKind {
@@ -54,35 +54,85 @@ impl Default for PopupArea {
 impl PopupArea {
     pub fn popup_help<'a>() -> Text<'a> {
         let help = [
-            ("j,k|↓,↑: ", "Select next/previous item"),
-            ("h,l|←,→: ", "Select next/previous column (Entry table)"),
-            ("g|Home: ", "Go to first item"),
-            ("G|End: ", "Go to last item"),
-            ("s: ", "sort entries by selected column (toggles reversed)"),
+            ("General", "first"),
             ("TAB: ", "Toggle areas (Entries, Keywords)"),
             ("/|Ctrl+f: ", "Enter search mode"),
+            ("q|Ctrl+c: ", "Quit bibiman"),
+            ("Entry Table", "sub"),
+            ("j,k|↓,↑: ", "Select next/previous entry"),
+            ("h,l|←,→: ", "Select next/previous column"),
+            ("g|Home: ", "Go to first entry"),
+            ("G|End: ", "Go to last entry"),
+            ("s: ", "sort entries by selected column (toggles reversed)"),
             ("y: ", "yank/copy citekey of selected entry to clipboard"),
             ("e: ", "Open editor at selected entry"),
             ("o: ", "Open with selected entry associated PDF"),
             ("u: ", "Open DOI/URL of selected entry"),
-            ("ESC: ", "Reset all lists/abort search"),
-            ("ENTER: ", "Confirm search/filter by selected keyword"),
-            ("q|Ctrl+c: ", "Quit bibiman"),
+            ("ESC: ", "Reset all lists"),
+            ("Keyword List", "sub"),
+            ("j,k|↓,↑: ", "Select next/previous item"),
+            ("g|Home: ", "Go to first keyword"),
+            ("G|End: ", "Go to last keyword"),
+            ("ENTER: ", "Filter by selected keyword"),
+            ("Search", "sub"),
+            ("↓,↑,←,→: ", "Move cursor"),
+            ("ENTER: ", "Confirm search"),
+            ("ESC: ", "Abort search"),
         ];
 
-        let help_text: Vec<Line<'_>> = help
-            .into_iter()
-            .map(|(keys, help)| {
-                Line::from(vec![
+        // let help_text: Vec<Line<'_>> = help
+        //     .into_iter()
+        //     .map(|(keys, help)| {
+        //         if help == "first" {
+        //             Line::from(
+        //                 Span::raw(keys)
+        //                     .bold()
+        //                     .fg(Color::Indexed(MAIN_BLUE_COLOR_INDEX)),
+        //             )
+        //         } else if help == "sub" {
+        //             Line::from(
+        //                 Span::raw(keys)
+        //                     .bold()
+        //                     .fg(Color::Indexed(MAIN_BLUE_COLOR_INDEX)),
+        //             )
+        //         } else {
+        //             Line::from(vec![
+        //                 Span::raw(keys)
+        //                     .bold()
+        //                     .fg(Color::Indexed(MAIN_PURPLE_COLOR_INDEX)),
+        //                 Span::raw(help),
+        //             ])
+        //         }
+        //     })
+        //     .collect();
+
+        let mut helptext: Vec<Line<'_>> = vec![];
+
+        for (keys, help) in help {
+            if help == "first" {
+                helptext.push(Line::from(
+                    Span::raw(keys)
+                        .bold()
+                        .fg(Color::Indexed(MAIN_BLUE_COLOR_INDEX)),
+                ))
+            } else if help == "sub" {
+                helptext.push(Line::from(""));
+                helptext.push(Line::from(
+                    Span::raw(keys)
+                        .bold()
+                        .fg(Color::Indexed(MAIN_BLUE_COLOR_INDEX)),
+                ))
+            } else {
+                helptext.push(Line::from(vec![
                     Span::raw(keys)
                         .bold()
                         .fg(Color::Indexed(MAIN_PURPLE_COLOR_INDEX)),
                     Span::raw(help),
-                ])
-            })
-            .collect();
+                ]))
+            }
+        }
 
-        let text = Text::from(help_text);
+        let text = Text::from(helptext);
         text
     }
 
