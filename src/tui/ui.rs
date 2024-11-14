@@ -48,7 +48,7 @@ const MAIN_GREEN: Color = Color::Indexed(MAIN_GREEN_COLOR_INDEX);
 
 // Background colors
 const HEADER_FOOTER_BG: Color = Color::Indexed(235);
-const POPUP_BG: Color = Color::Indexed(233);
+const POPUP_BG: Color = Color::Indexed(234);
 
 // Box styles
 // Keyword Box
@@ -166,17 +166,25 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
         };
 
         let par = Paragraph::new(text).scroll((scroll_pos, 0));
+        let par_width = par.line_width();
 
         // Needed to use scrollable Parapgraph as popup content
         let sized_par = SizedWrapper {
             inner: par,
-            width: (frame.area().width / 2) as usize,
+            // width: (frame.area().width / 2) as usize,
+            width: if par_width > frame.area().width as usize {
+                frame.area().width as usize
+            } else {
+                par_width
+            },
+            // width: par_width,
             height: (frame.area().height / 2) as usize,
         };
 
         let popup = Popup::new(sized_par)
             .title(" Keybindings (j,k|↓,↑)".bold().into_centered_line())
             .style(POPUP_HELP_BOX)
+            .border_set(symbols::border::THICK)
             .border_style(Style::new().fg(MAIN_BLUE));
 
         frame.render_widget_ref(popup, frame.area())
@@ -184,6 +192,8 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
         let popup =
             Popup::new(Text::from(app.bibiman.popup_area.popup_message.as_str()).fg(MAIN_GREEN))
                 .title(" Message ".bold().into_centered_line().fg(MAIN_GREEN))
+                .border_set(symbols::border::THICK)
+                .border_style(Style::new().fg(MAIN_GREEN))
                 .style(POPUP_HELP_BOX);
         frame.render_widget(&popup, frame.area())
     } else {
