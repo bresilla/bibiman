@@ -64,7 +64,7 @@ impl EntryTable {
 
     pub fn set_entry_table(entry_list: &[BibiData]) -> Vec<EntryTableItem> {
         let mut entry_table: Vec<EntryTableItem> = entry_list
-            .into_iter()
+            .iter()
             .map(|e| EntryTableItem {
                 authors: e.authors.clone(),
                 short_author: String::new(),
@@ -196,15 +196,15 @@ impl EntryTableItem {
     }
 
     pub fn doi_url(&self) -> &str {
-        &self.doi_url.as_ref().unwrap()
+        self.doi_url.as_ref().unwrap()
     }
 
     pub fn filepath(&self) -> &str {
-        &self.filepath.as_ref().unwrap()
+        self.filepath.as_ref().unwrap()
     }
 
     pub fn subtitle(&self) -> &str {
-        &self.subtitle.as_ref().unwrap()
+        self.subtitle.as_ref().unwrap()
     }
 }
 

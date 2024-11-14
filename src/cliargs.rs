@@ -37,6 +37,12 @@ pub struct CLIArgs {
     pub bibfilearg: PathBuf,
 }
 
+impl Default for CLIArgs {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CLIArgs {
     pub fn new() -> Self {
         let (cli_args, pos_args) = ArgumentsCLI::parse().expect("Could not parse CLI arguments");

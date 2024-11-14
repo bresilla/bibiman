@@ -228,9 +228,9 @@ impl App {
             }
             CmdAction::YankItem => {
                 if let CurrentArea::EntryArea = self.bibiman.current_area {
-                    Bibiman::yank_text(&self.bibiman.get_selected_citekey());
+                    Bibiman::yank_text(self.bibiman.get_selected_citekey());
                     self.bibiman.popup_area.popup_message(
-                        "Yanked citekey to clipboard:",
+                        "Yanked citekey to clipboard:".to_owned(),
                         self.bibiman.get_selected_citekey().to_string(),
                     );
                 }

@@ -303,8 +303,7 @@ impl Bibiman {
     // Get the citekey of the selected entry
     pub fn get_selected_citekey(&self) -> &str {
         let idx = self.entry_table.entry_table_state.selected().unwrap();
-        let citekey = &self.entry_table.entry_table_items[idx].citekey;
-        citekey
+        &self.entry_table.entry_table_items[idx].citekey
     }
 
     pub fn run_editor(&mut self, tui: &mut Tui) -> Result<()> {
@@ -317,10 +316,10 @@ impl Bibiman {
         let mut line_count = 0;
 
         for line in filecontent.lines() {
-            line_count = line_count + 1;
+            line_count += 1;
             // if reaching the citekey break the loop
             // if reaching end of lines without match, reset to 0
-            if line.contains(&citekey) {
+            if line.contains(citekey) {
                 break;
             } else if line_count == filecontent.len() {
                 eprintln!(
@@ -364,7 +363,7 @@ impl Bibiman {
             {
                 break;
             }
-            idx_count = idx_count + 1
+            idx_count += 1
         }
 
         // Set selected entry to vec-index of match
@@ -379,7 +378,7 @@ impl Bibiman {
         // so deleting a char, will show former entries too
         let orig_list = self.entry_table.entry_table_at_search_start.clone();
         let filtered_list =
-            BibiSearch::search_entry_list(&mut self.search_struct.search_string, orig_list.clone());
+            BibiSearch::search_entry_list(&self.search_struct.search_string, orig_list.clone());
         self.entry_table.entry_table_items = filtered_list;
         self.entry_table.sort_entry_table(false);
         self.entry_table.entry_scroll_state = ScrollbarState::content_length(
@@ -406,7 +405,7 @@ impl Bibiman {
         // Pass filepath as argument, pipe stdout and stderr to /dev/null
         // to keep the TUI clean (where is it piped on Windows???)
         let _ = Command::new(&cmd)
-            .arg(&filepath.as_ref().unwrap())
+            .arg(filepath.as_ref().unwrap())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .spawn()
@@ -427,10 +426,10 @@ impl Bibiman {
         // terminal is not blocked by the resolving process
         let url = if web_adress.starts_with("10.") {
             let prefix = "https://doi.org/".to_string();
-            prefix + &web_adress
+            prefix + web_adress
         } else if web_adress.starts_with("www.") {
             let prefix = "https://".to_string();
-            prefix + &web_adress
+            prefix + web_adress
         } else {
             web_adress.to_string()
         };
@@ -496,8 +495,7 @@ impl Bibiman {
 
     pub fn get_selected_tag(&self) -> &str {
         let idx = self.tag_list.tag_list_state.selected().unwrap();
-        let keyword = &self.tag_list.tag_list_items[idx];
-        keyword
+        &self.tag_list.tag_list_items[idx]
     }
 
     pub fn search_tags(&mut self) {
@@ -529,7 +527,7 @@ impl Bibiman {
             }
         }
 
-        filtered_keywords.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+        filtered_keywords.sort_by_key(|a| a.to_lowercase());
         filtered_keywords.dedup();
 
         self.search_struct.filtered_tag_list = filtered_keywords.clone();
@@ -546,7 +544,7 @@ impl Bibiman {
     pub fn filter_for_tags(&mut self) {
         let orig_list = &self.entry_table.entry_table_items;
         let keyword = self.get_selected_tag();
-        let filtered_list = BibiSearch::filter_entries_by_tag(&keyword, &orig_list);
+        let filtered_list = BibiSearch::filter_entries_by_tag(keyword, orig_list);
         // self.tag_list.selected_keyword = keyword.to_string();
         self.tag_list.selected_keywords.push(keyword.to_string());
         self.entry_table.entry_table_items = filtered_list;

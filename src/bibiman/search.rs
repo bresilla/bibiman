@@ -22,38 +22,25 @@ use nucleo_matcher::{
 };
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct BibiSearch {
     pub search_string: String, // Search string show in footer, used for search
     pub inner_search: bool,    // True, if we trigger a search for already filtered list
     pub filtered_tag_list: Vec<String>,
 }
 
-impl Default for BibiSearch {
-    fn default() -> Self {
-        Self {
-            search_string: String::new(),
-            inner_search: false,
-            filtered_tag_list: Vec::new(),
-        }
-    }
-}
-
 impl BibiSearch {
     // Stringify EntryTableItem by joining/concat
     fn convert_to_string(inner_vec: &EntryTableItem) -> String {
-        let entry_table_item_str = {
-            format!(
-                "{} {} {} {} {} {}",
-                &inner_vec.authors,
-                &inner_vec.title,
-                &inner_vec.year,
-                &inner_vec.pubtype,
-                &inner_vec.keywords,
-                &inner_vec.citekey
-            )
-        };
-        entry_table_item_str
+        format!(
+            "{} {} {} {} {} {}",
+            &inner_vec.authors,
+            &inner_vec.title,
+            &inner_vec.year,
+            &inner_vec.pubtype,
+            &inner_vec.keywords,
+            &inner_vec.citekey
+        )
     }
 
     // Return a filtered entry list

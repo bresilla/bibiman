@@ -107,8 +107,8 @@ pub const fn color_list(list_item: i32, sel_item: i32, highlight: u8, max_diff: 
         Color::Indexed(highlight)
     } else if (list_item - sel_item) > max_diff
         || (sel_item - list_item) > max_diff
-        || (-1 * (list_item - sel_item)) > max_diff
-        || (-1 * (sel_item - list_item)) > max_diff
+        || -(list_item - sel_item) > max_diff
+        || -(sel_item - list_item) > max_diff
     {
         Color::Indexed(highlight - max_diff as u8)
     } else if list_item < sel_item {
@@ -152,7 +152,7 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
 
 pub fn render_popup(app: &mut App, frame: &mut Frame) {
     if let Some(PopupKind::Help) = app.bibiman.popup_area.popup_kind {
-        let text: Text = Text::from(PopupArea::popup_help());
+        let text: Text = PopupArea::popup_help();
 
         // Calculate max scroll position depending on hight of terminal window
         let scroll_pos = if app.bibiman.popup_area.popup_scroll_pos
@@ -175,7 +175,7 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
         };
 
         let popup = Popup::new(sized_par)
-            .title(" Keybindings ".bold().into_centered_line())
+            .title(" Keybindings (j,k|↓,↑)".bold().into_centered_line())
             .style(POPUP_HELP_BOX)
             .border_style(Style::new().fg(MAIN_BLUE));
 
@@ -204,18 +204,9 @@ pub fn render_footer(app: &mut App, frame: &mut Frame, rect: Rect) {
         CurrentArea::SearchArea => {
             let search_title = {
                 match app.bibiman.former_area {
-                    Some(FormerArea::EntryArea) => {
-                        let search_title = " Search Entries ".to_string();
-                        search_title
-                    }
-                    Some(FormerArea::TagArea) => {
-                        let search_title = " Search Keywords ".to_string();
-                        search_title
-                    }
-                    _ => {
-                        let search_title = " Search ".to_string();
-                        search_title
-                    }
+                    Some(FormerArea::EntryArea) => " Search Entries ".to_string(),
+                    Some(FormerArea::TagArea) => " Search Keywords ".to_string(),
+                    _ => " Search ".to_string(),
                 }
             };
 
@@ -520,7 +511,7 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
         .map(|(i, data)| {
             let item = data.ref_vec();
             item.into_iter()
-                .map(|content| Cell::from(Text::from(format!("{content}"))))
+                .map(|content| Cell::from(Text::from(content.to_string())))
                 .collect::<Row>()
                 .style(
                     Style::new().fg(color_list(
@@ -529,7 +520,7 @@ pub fn render_entrytable(app: &mut App, frame: &mut Frame, rect: Rect) {
                             .entry_table
                             .entry_table_state
                             .selected()
-                            .unwrap() as i32,
+                            .unwrap_or(0) as i32,
                         TEXT_HIGHLIGHT_COLOR_INDEX,
                         20,
                     )),
@@ -681,7 +672,7 @@ pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
         } else {
             let lines = vec![
                 Line::from(" "),
-                Line::from("No entry selected".bold().into_centered_line().red()),
+                "No entry selected".bold().into_centered_line().red(),
             ];
             lines
         }

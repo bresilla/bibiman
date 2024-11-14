@@ -30,7 +30,7 @@ pub enum PopupKind {
     Selection,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct PopupArea {
     pub is_popup: bool,
     pub popup_kind: Option<PopupKind>,
@@ -38,19 +38,6 @@ pub struct PopupArea {
     pub popup_scroll_pos: u16,
     pub popup_list: Vec<String>,
     pub popup_state: ListState,
-}
-
-impl Default for PopupArea {
-    fn default() -> Self {
-        PopupArea {
-            is_popup: false,
-            popup_kind: None,
-            popup_message: String::new(),
-            popup_scroll_pos: 0,
-            popup_list: Vec::new(),
-            popup_state: ListState::default(),
-        }
-    }
 }
 
 impl PopupArea {
@@ -78,35 +65,10 @@ impl PopupArea {
             ("ENTER: ", "Filter by selected keyword"),
             ("Search", "sub"),
             ("↓,↑,←,→: ", "Move cursor"),
+            ("BACKSPACE: ", "Delete Character"),
             ("ENTER: ", "Confirm search"),
             ("ESC: ", "Abort search"),
         ];
-
-        // let help_text: Vec<Line<'_>> = help
-        //     .into_iter()
-        //     .map(|(keys, help)| {
-        //         if help == "first" {
-        //             Line::from(
-        //                 Span::raw(keys)
-        //                     .bold()
-        //                     .fg(Color::Indexed(MAIN_BLUE_COLOR_INDEX)),
-        //             )
-        //         } else if help == "sub" {
-        //             Line::from(
-        //                 Span::raw(keys)
-        //                     .bold()
-        //                     .fg(Color::Indexed(MAIN_BLUE_COLOR_INDEX)),
-        //             )
-        //         } else {
-        //             Line::from(vec![
-        //                 Span::raw(keys)
-        //                     .bold()
-        //                     .fg(Color::Indexed(MAIN_PURPLE_COLOR_INDEX)),
-        //                 Span::raw(help),
-        //             ])
-        //         }
-        //     })
-        //     .collect();
 
         let mut helptext: Vec<Line<'_>> = vec![];
 
@@ -134,13 +96,12 @@ impl PopupArea {
             }
         }
 
-        let text = Text::from(helptext);
-        text
+        Text::from(helptext)
     }
 
-    pub fn popup_message(&mut self, message: &str, object: String) {
+    pub fn popup_message(&mut self, message: String, object: String) {
         if object.is_empty() {
-            self.popup_message = message.into();
+            self.popup_message = message;
         } else {
             self.popup_message = format!("{} \"{}\"", message, object);
         }

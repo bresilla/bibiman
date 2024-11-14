@@ -98,7 +98,7 @@ impl BibiSetup {
                     .red()
                     .bold()
             );
-            println!("");
+            println!();
             println!("{}", cliargs::help_func());
             // panic!("No file passed as argument. Please choose a .bib file.")
             std::process::exit(1)
@@ -107,18 +107,18 @@ impl BibiSetup {
 
     fn create_entry_list(citekeys: &[String], bibliography: &Bibliography) -> Vec<BibiData> {
         citekeys
-            .into_iter()
+            .iter()
             .map(|k| BibiData {
-                authors: Self::get_authors(&k, &bibliography),
-                title: Self::get_title(&k, &bibliography),
-                year: Self::get_year(&k, &bibliography),
-                pubtype: Self::get_pubtype(&k, &bibliography),
-                keywords: Self::get_keywords(&k, &bibliography),
+                authors: Self::get_authors(k, bibliography),
+                title: Self::get_title(k, bibliography),
+                year: Self::get_year(k, bibliography),
+                pubtype: Self::get_pubtype(k, bibliography),
+                keywords: Self::get_keywords(k, bibliography),
                 citekey: k.to_owned(),
-                abstract_text: Self::get_abstract(&k, &bibliography),
-                doi_url: Self::get_weblink(&k, &bibliography),
-                filepath: Self::get_filepath(&k, &bibliography),
-                subtitle: Self::get_subtitle(&k, &bibliography),
+                abstract_text: Self::get_abstract(k, bibliography),
+                doi_url: Self::get_weblink(k, bibliography),
+                filepath: Self::get_filepath(k, bibliography),
+                subtitle: Self::get_subtitle(k, bibliography),
             })
             .collect()
     }
@@ -140,13 +140,8 @@ impl BibiSetup {
 
         // Loop over entries and collect all keywords
         for i in citekeys {
-            if biblio.get(&i).unwrap().keywords().is_ok() {
-                let items = biblio
-                    .get(&i)
-                    .unwrap()
-                    .keywords()
-                    .unwrap()
-                    .format_verbatim();
+            if biblio.get(i).unwrap().keywords().is_ok() {
+                let items = biblio.get(i).unwrap().keywords().unwrap().format_verbatim();
                 // Split keyword string into slices, trim leading and trailing
                 // whitespaces, remove empty slices, and collect them
                 let mut key_vec: Vec<String> = items
@@ -160,123 +155,91 @@ impl BibiSetup {
         }
 
         // Sort the vector and remove duplicates
-        keyword_list.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+        // keyword_list.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+        keyword_list.sort_by_key(|a| a.to_lowercase());
         keyword_list.dedup();
         keyword_list
     }
 
     pub fn get_authors(citekey: &str, biblio: &Bibliography) -> String {
-        if biblio.get(&citekey).unwrap().author().is_ok() {
-            let authors = biblio.get(&citekey).unwrap().author().unwrap();
+        if biblio.get(citekey).unwrap().author().is_ok() {
+            let authors = biblio.get(citekey).unwrap().author().unwrap();
             if authors.len() > 1 {
-                let all_authors = authors.iter().map(|a| &a.name).join(", ");
-                all_authors
+                authors.iter().map(|a| &a.name).join(", ")
             } else if authors.len() == 1 {
-                let authors = authors[0].name.to_string();
-                authors
+                authors[0].name.to_string()
             } else {
-                let editors_authors = format!("empty");
-                editors_authors
+                "empty".to_string()
+            }
+        } else if !biblio.get(citekey).unwrap().editors().unwrap().is_empty() {
+            let editors = biblio.get(citekey).unwrap().editors().unwrap();
+            if editors[0].0.len() > 1 {
+                format!("{} (ed.)", editors[0].0.iter().map(|e| &e.name).join(", "))
+            } else if editors[0].0.len() == 1 {
+                format!("{} (ed.)", editors[0].0[0].name)
+            } else {
+                "empty".to_string()
             }
         } else {
-            if !biblio.get(&citekey).unwrap().editors().unwrap().is_empty() {
-                let editors = biblio.get(&citekey).unwrap().editors().unwrap();
-                if editors[0].0.len() > 1 {
-                    // let editors = format!("{} (ed.) et al.", editors[0].0[0].name);
-                    let mut editors = editors[0].0.iter().map(|e| &e.name).join(", ");
-                    editors.push_str(" (ed.)");
-                    editors
-                } else if editors[0].0.len() == 1 {
-                    let editors = format!("{} (ed.)", editors[0].0[0].name);
-                    editors
-                } else {
-                    let editors_authors = format!("empty");
-                    editors_authors
-                }
-            } else {
-                let editors_authors = format!("empty");
-                editors_authors
-            }
+            "empty".to_string()
         }
     }
 
     pub fn get_title(citekey: &str, biblio: &Bibliography) -> String {
-        let title = {
-            if biblio.get(&citekey).unwrap().title().is_ok() {
-                let title = biblio
-                    .get(&citekey)
-                    .unwrap()
-                    .title()
-                    .unwrap()
-                    .format_verbatim();
-                title
-            } else {
-                let title = format!("no title");
-                title
-            }
-        };
-        title
+        if biblio.get(citekey).unwrap().title().is_ok() {
+            biblio
+                .get(citekey)
+                .unwrap()
+                .title()
+                .unwrap()
+                .format_verbatim()
+        } else {
+            "no title".to_string()
+        }
     }
 
     pub fn get_year(citekey: &str, biblio: &Bibliography) -> String {
-        let bib = biblio.get(&citekey).unwrap();
-        // let year = biblio.get(&citekey).unwrap();
-        let year = {
-            if bib.date().is_ok() {
-                let year = bib.date().unwrap().to_chunks().format_verbatim();
-                let year = year[..4].to_string();
-                year
-            } else {
-                let year = format!("n.d.");
-                year
-            }
-        };
-        year
+        let bib = biblio.get(citekey).unwrap();
+        if bib.date().is_ok() {
+            let year = bib.date().unwrap().to_chunks().format_verbatim();
+            year[..4].to_string()
+        } else {
+            "n.d.".to_string()
+        }
     }
 
     pub fn get_pubtype(citekey: &str, biblio: &Bibliography) -> String {
-        let pubtype = biblio.get(&citekey).unwrap().entry_type.to_string();
-        pubtype
+        biblio.get(citekey).unwrap().entry_type.to_string()
     }
 
     pub fn get_keywords(citekey: &str, biblio: &Bibliography) -> String {
-        let keywords = {
-            if biblio.get(&citekey).unwrap().keywords().is_ok() {
-                let keywords = biblio
-                    .get(&citekey)
-                    .unwrap()
-                    .keywords()
-                    .unwrap()
-                    .format_verbatim();
-                keywords
-            } else {
-                let keywords = String::from("");
-                keywords
-            }
-        };
-        keywords
+        if biblio.get(citekey).unwrap().keywords().is_ok() {
+            biblio
+                .get(citekey)
+                .unwrap()
+                .keywords()
+                .unwrap()
+                .format_verbatim()
+        } else {
+            "".to_string()
+        }
     }
 
     pub fn get_abstract(citekey: &str, biblio: &Bibliography) -> String {
-        let text = {
-            if biblio.get(&citekey).unwrap().abstract_().is_ok() {
-                let abstract_text = biblio
-                    .get(&citekey)
-                    .unwrap()
-                    .abstract_()
-                    .unwrap()
-                    .format_verbatim();
-                abstract_text
-            } else {
-                let abstract_text = format!("No abstract");
-                abstract_text
-            }
-        };
-        text
+        if biblio.get(citekey).unwrap().abstract_().is_ok() {
+            biblio
+                .get(citekey)
+                .unwrap()
+                .abstract_()
+                .unwrap()
+                .format_verbatim()
+        } else {
+            "no abstract".to_string()
+        }
     }
 
     pub fn get_weblink(citekey: &str, biblio: &Bibliography) -> Option<String> {
-        let bib = biblio.get(&citekey).unwrap();
+        let bib = biblio.get(citekey).unwrap();
         if bib.doi().is_ok() {
             Some(bib.doi().unwrap())
         } else if bib.url().is_ok() {
@@ -287,18 +250,18 @@ impl BibiSetup {
     }
 
     pub fn get_filepath(citekey: &str, biblio: &Bibliography) -> Option<String> {
-        if biblio.get(&citekey).unwrap().file().is_ok() {
-            Some(biblio.get(&citekey).unwrap().file().unwrap())
+        if biblio.get(citekey).unwrap().file().is_ok() {
+            Some(biblio.get(citekey).unwrap().file().unwrap())
         } else {
             None
         }
     }
 
     pub fn get_subtitle(citekey: &str, biblio: &Bibliography) -> Option<String> {
-        if biblio.get(&citekey).unwrap().subtitle().is_ok() {
+        if biblio.get(citekey).unwrap().subtitle().is_ok() {
             Some(
                 biblio
-                    .get(&citekey)
+                    .get(citekey)
                     .unwrap()
                     .subtitle()
                     .unwrap()
