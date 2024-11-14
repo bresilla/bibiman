@@ -37,7 +37,7 @@ use ratatui::{
         ScrollbarOrientation, Table, Wrap,
     },
 };
-use tui_popup::Popup;
+use tui_popup::{Popup, SizedWrapper};
 
 // Text colors
 const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
@@ -151,19 +151,44 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
 }
 
 pub fn render_popup(app: &mut App, frame: &mut Frame) {
-    let popup = if let Some(PopupKind::Help) = app.bibiman.popup_area.popup_kind {
-        Popup::new(PopupArea::popup_help())
+    if let Some(PopupKind::Help) = app.bibiman.popup_area.popup_kind {
+        let text: Text = Text::from(PopupArea::popup_help());
+
+        // Calculate max scroll position depending on hight of terminal window
+        let scroll_pos = if app.bibiman.popup_area.popup_scroll_pos
+            > text.lines.len() as u16 - (frame.area().height / 2)
+        {
+            app.bibiman.popup_area.popup_scroll_pos =
+                text.lines.len() as u16 - (frame.area().height / 2);
+            app.bibiman.popup_area.popup_scroll_pos
+        } else {
+            app.bibiman.popup_area.popup_scroll_pos
+        };
+
+        let par = Paragraph::new(text).scroll((scroll_pos, 0));
+
+        // Needed to use scrollable Parapgraph as popup content
+        let sized_par = SizedWrapper {
+            inner: par,
+            width: (frame.area().width / 2) as usize,
+            height: (frame.area().height / 2) as usize,
+        };
+
+        let popup = Popup::new(sized_par)
             .title(" Keybindings ".bold().into_centered_line())
             .style(POPUP_HELP_BOX)
-            .border_style(Style::new().fg(MAIN_BLUE))
+            .border_style(Style::new().fg(MAIN_BLUE));
+
+        frame.render_widget_ref(popup, frame.area())
     } else if let Some(PopupKind::Message) = app.bibiman.popup_area.popup_kind {
-        Popup::new(Text::from(app.bibiman.popup_area.popup_message.as_str()).fg(MAIN_GREEN))
-            .title(" Message ".bold().into_centered_line().fg(MAIN_GREEN))
-            .style(POPUP_HELP_BOX)
+        let popup =
+            Popup::new(Text::from(app.bibiman.popup_area.popup_message.as_str()).fg(MAIN_GREEN))
+                .title(" Message ".bold().into_centered_line().fg(MAIN_GREEN))
+                .style(POPUP_HELP_BOX);
+        frame.render_widget(&popup, frame.area())
     } else {
         panic!("No popup text detected")
     };
-    frame.render_widget(&popup, frame.area())
 }
 
 pub fn render_header(frame: &mut Frame, rect: Rect) {

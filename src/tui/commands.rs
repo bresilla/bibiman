@@ -52,7 +52,7 @@ pub enum CmdAction {
     // Search list
     SearchList,
     // Reset lists
-    ResetList,
+    Reset,
     // Confirm search/selection
     Confirm,
     // Sort table/list
@@ -140,7 +140,7 @@ impl From<KeyEvent> for CmdAction {
             // Confirm selection
             KeyCode::Enter => Self::Confirm,
             // Reset lists/tables
-            KeyCode::Esc => Self::ResetList,
+            KeyCode::Esc => Self::Reset,
             // Open linked ressource
             KeyCode::Char('o') => Self::Open(OpenRessource::Pdf),
             // KeyCode::Char('u') => Self::Open(OpenRessource::WebLink),

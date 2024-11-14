@@ -70,10 +70,11 @@ impl App {
                 // Event::Mouse(_) => {}
                 Event::Key(key_event) => {
                     if let Some(PopupKind::Message) = self.bibiman.popup_area.popup_kind {
-                        self.bibiman.popup_area.popup_close_message()
-                    } else if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
-                        self.bibiman.go_back()
+                        self.bibiman.close_popup()
                     }
+                    // else if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
+                    //     self.bibiman.go_back()
+                    // }
                     let command = if self.input_mode {
                         CmdAction::Input(InputCmdAction::parse(key_event, &self.input))
                     } else {
@@ -137,6 +138,13 @@ impl App {
                 CurrentArea::TagArea => {
                     self.bibiman.select_next_tag(amount);
                 }
+                CurrentArea::PopupArea => {
+                    if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
+                        // self.bibiman.popup_area.popup_scroll_pos =
+                        //     self.bibiman.popup_area.popup_scroll_pos + 1
+                        self.bibiman.popup_area.popup_scroll_down();
+                    }
+                }
                 _ => {}
             },
             CmdAction::SelectPrevRow(amount) => match self.bibiman.current_area {
@@ -146,6 +154,13 @@ impl App {
                 }
                 CurrentArea::TagArea => {
                     self.bibiman.select_previous_tag(amount);
+                }
+                CurrentArea::PopupArea => {
+                    if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
+                        // self.bibiman.popup_area.popup_scroll_pos =
+                        //     self.bibiman.popup_area.popup_scroll_pos - 1
+                        self.bibiman.popup_area.popup_scroll_up();
+                    }
                 }
                 _ => {}
             },
@@ -187,14 +202,23 @@ impl App {
                 self.bibiman.toggle_area();
             }
             CmdAction::SearchList => {}
-            CmdAction::ResetList => {
-                self.bibiman.reset_current_list();
+            CmdAction::Reset => {
+                if let CurrentArea::PopupArea = self.bibiman.current_area {
+                    if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
+                        self.bibiman.popup_area.popup_scroll_pos = 0;
+                        self.bibiman.close_popup()
+                    }
+                } else {
+                    self.bibiman.reset_current_list();
+                }
             }
             CmdAction::Confirm => {
                 if let CurrentArea::TagArea = self.bibiman.current_area {
                     self.bibiman.filter_for_tags();
                 } else if let CurrentArea::PopupArea = self.bibiman.current_area {
-                    self.bibiman.go_back();
+                    if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
+                        self.bibiman.close_popup();
+                    }
                 }
             }
             CmdAction::SortList => {
@@ -203,11 +227,13 @@ impl App {
                 }
             }
             CmdAction::YankItem => {
-                Bibiman::yank_text(&self.bibiman.get_selected_citekey());
-                self.bibiman.popup_area.popup_message(
-                    "Yanked citekey to clipboard:",
-                    self.bibiman.get_selected_citekey().to_string(),
-                );
+                if let CurrentArea::EntryArea = self.bibiman.current_area {
+                    Bibiman::yank_text(&self.bibiman.get_selected_citekey());
+                    self.bibiman.popup_area.popup_message(
+                        "Yanked citekey to clipboard:",
+                        self.bibiman.get_selected_citekey().to_string(),
+                    );
+                }
             }
             CmdAction::EditFile => {
                 if let CurrentArea::EntryArea = self.bibiman.current_area {

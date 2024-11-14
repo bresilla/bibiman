@@ -35,6 +35,7 @@ pub struct PopupArea {
     pub is_popup: bool,
     pub popup_kind: Option<PopupKind>,
     pub popup_message: String,
+    pub popup_scroll_pos: u16,
     pub popup_list: Vec<String>,
     pub popup_state: ListState,
 }
@@ -45,6 +46,7 @@ impl Default for PopupArea {
             is_popup: false,
             popup_kind: None,
             popup_message: String::new(),
+            popup_scroll_pos: 0,
             popup_list: Vec::new(),
             popup_state: ListState::default(),
         }
@@ -146,9 +148,11 @@ impl PopupArea {
         self.is_popup = true;
     }
 
-    pub fn popup_close_message(&mut self) {
-        self.is_popup = false;
-        self.popup_message.clear();
-        self.popup_kind = None
+    pub fn popup_scroll_down(&mut self) {
+        self.popup_scroll_pos = self.popup_scroll_pos.saturating_add(1)
+    }
+
+    pub fn popup_scroll_up(&mut self) {
+        self.popup_scroll_pos = self.popup_scroll_pos.saturating_sub(1)
     }
 }

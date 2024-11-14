@@ -108,16 +108,19 @@ impl Bibiman {
         self.popup_area.popup_kind = Some(PopupKind::Help);
     }
 
-    pub fn go_back(&mut self) {
-        if let CurrentArea::PopupArea = self.current_area {
-            self.popup_area.is_popup = false;
-            self.popup_area.popup_kind = None;
-            if let Some(FormerArea::EntryArea) = self.former_area {
-                self.current_area = CurrentArea::EntryArea
-            } else if let Some(FormerArea::TagArea) = self.former_area {
-                self.current_area = CurrentArea::TagArea
-            }
-        };
+    pub fn close_popup(&mut self) {
+        // Reset all popup fields to default values
+        self.popup_area = PopupArea::default();
+
+        // Go back to previously selected area
+        if let Some(FormerArea::EntryArea) = self.former_area {
+            self.current_area = CurrentArea::EntryArea
+        } else if let Some(FormerArea::TagArea) = self.former_area {
+            self.current_area = CurrentArea::TagArea
+        }
+
+        // Clear former_area field
+        self.former_area = None;
     }
 
     pub fn update_lists(&mut self) {
