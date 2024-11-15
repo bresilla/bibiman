@@ -28,7 +28,6 @@ pub enum PopupKind {
     Help,
     Message,
     Selection,
-    Search,
 }
 
 #[derive(Debug, Default)]
@@ -109,6 +108,12 @@ impl PopupArea {
         }
         self.popup_kind = Some(PopupKind::Message);
         self.is_popup = true;
+    }
+
+    pub fn popup_selection(&mut self, items: Vec<String>) {
+        self.popup_list = items;
+        self.popup_kind = Some(PopupKind::Selection);
+        self.is_popup = true
     }
 
     pub fn popup_scroll_down(&mut self) {

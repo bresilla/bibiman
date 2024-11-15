@@ -25,7 +25,7 @@ use crate::{
     TEXT_HIGHLIGHT_COLOR_INDEX,
 };
 use ratatui::layout::{Direction, Position};
-use ratatui::widgets::Clear;
+use ratatui::widgets::{Clear, ListState, StatefulWidget};
 use ratatui::Frame;
 use ratatui::{
     layout::{Alignment, Constraint, Layout, Rect},
@@ -83,6 +83,10 @@ const ENTRY_SELECTED_ROW_STYLE: Style = Style::new()
     .add_modifier(Modifier::REVERSED);
 const KEYWORD_SELECTED_ROW_STYLE: Style = Style::new()
     .fg(MAIN_PURPLE)
+    .add_modifier(Modifier::BOLD)
+    .add_modifier(Modifier::REVERSED);
+const SELECTION_SELECTED_ROW_STYLE: Style = Style::new()
+    // .fg(MAIN_BLUE)
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const SELECTED_TABLE_COL_STYLE: Style = Style::new().add_modifier(Modifier::BOLD);
@@ -157,54 +161,86 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
 }
 
 pub fn render_popup(app: &mut App, frame: &mut Frame) {
-    if let Some(PopupKind::Help) = app.bibiman.popup_area.popup_kind {
-        let text: Text = PopupArea::popup_help();
+    match app.bibiman.popup_area.popup_kind {
+        Some(PopupKind::Help) => {
+            let text: Text = PopupArea::popup_help();
 
-        // Calculate max scroll position depending on hight of terminal window
-        let scroll_pos = if app.bibiman.popup_area.popup_scroll_pos
-            > text.lines.len() as u16 - (frame.area().height / 2)
-        {
-            app.bibiman.popup_area.popup_scroll_pos =
-                text.lines.len() as u16 - (frame.area().height / 2);
-            app.bibiman.popup_area.popup_scroll_pos
-        } else {
-            app.bibiman.popup_area.popup_scroll_pos
-        };
-
-        let par = Paragraph::new(text).scroll((scroll_pos, 0));
-        let par_width = par.line_width();
-
-        // Needed to use scrollable Parapgraph as popup content
-        let sized_par = SizedWrapper {
-            inner: par,
-            // width: (frame.area().width / 2) as usize,
-            width: if par_width > frame.area().width as usize {
-                frame.area().width as usize
+            // Calculate max scroll position depending on hight of terminal window
+            let scroll_pos = if app.bibiman.popup_area.popup_scroll_pos
+                > text.lines.len() as u16 - (frame.area().height / 2)
+            {
+                app.bibiman.popup_area.popup_scroll_pos =
+                    text.lines.len() as u16 - (frame.area().height / 2);
+                app.bibiman.popup_area.popup_scroll_pos
             } else {
-                par_width
-            },
-            // width: par_width,
-            height: (frame.area().height / 2) as usize,
-        };
+                app.bibiman.popup_area.popup_scroll_pos
+            };
 
-        let popup = Popup::new(sized_par)
-            .title(" Keybindings (j,k|↓,↑)".bold().into_centered_line())
-            .style(POPUP_HELP_BOX)
-            .border_set(symbols::border::THICK)
-            .border_style(Style::new().fg(MAIN_BLUE));
+            let par = Paragraph::new(text).scroll((scroll_pos, 0));
+            let par_width = par.line_width();
 
-        frame.render_widget_ref(popup, frame.area())
-    } else if let Some(PopupKind::Message) = app.bibiman.popup_area.popup_kind {
-        let popup =
-            Popup::new(Text::from(app.bibiman.popup_area.popup_message.as_str()).fg(MAIN_GREEN))
-                .title(" Message ".bold().into_centered_line().fg(MAIN_GREEN))
+            // Needed to use scrollable Parapgraph as popup content
+            let sized_par = SizedWrapper {
+                inner: par,
+                // width: (frame.area().width / 2) as usize,
+                width: if par_width > frame.area().width as usize {
+                    frame.area().width as usize
+                } else {
+                    par_width
+                },
+                // width: par_width,
+                height: (frame.area().height / 2) as usize,
+            };
+
+            let popup = Popup::new(sized_par)
+                .title(" Keybindings (j,k|↓,↑)".bold().into_centered_line())
+                .style(POPUP_HELP_BOX)
                 .border_set(symbols::border::THICK)
-                .border_style(Style::new().fg(MAIN_GREEN))
-                .style(POPUP_HELP_BOX);
-        frame.render_widget(&popup, frame.area())
-    } else {
-        panic!("No popup text detected")
-    };
+                .border_style(Style::new().fg(MAIN_BLUE));
+
+            frame.render_widget_ref(popup, frame.area())
+        }
+        Some(PopupKind::Message) => {
+            let popup = Popup::new(
+                Text::from(app.bibiman.popup_area.popup_message.as_str()).fg(MAIN_GREEN),
+            )
+            .title(" Message ".bold().into_centered_line().fg(MAIN_GREEN))
+            .border_set(symbols::border::THICK)
+            .border_style(Style::new().fg(MAIN_GREEN))
+            .style(POPUP_HELP_BOX);
+            frame.render_widget(&popup, frame.area())
+        }
+        Some(PopupKind::Selection) => {
+            // let list_items: Vec<ListItem> = app
+            //     .bibiman
+            //     .popup_area
+            //     .popup_list
+            //     .iter()
+            //     .map(|item| ListItem::from(item.to_owned()))
+            //     .collect();
+
+            // let list = List::new(list_items).highlight_style(SELECTION_SELECTED_ROW_STYLE);
+
+            // let sized_list = SizedWrapper {
+            //     inner: list.clone(),
+            //     width: (frame.area().width / 2) as usize,
+            //     height: list.len(),
+            // };
+
+            // let popup = Popup::new(sized_list)
+            //     .title(" Select ".bold().into_centered_line().fg(MAIN_PURPLE))
+            //     .border_set(symbols::border::THICK)
+            //     // .border_style(Style::new().fg(MAIN_GREEN))
+            //     .style(POPUP_HELP_BOX);
+
+            // frame.render_stateful_widget(
+            //     &popup,
+            //     frame.area(),
+            //     &mut app.bibiman.popup_area.popup_state,
+            // )
+        }
+        None => {}
+    }
 }
 
 pub fn render_header(frame: &mut Frame, rect: Rect) {

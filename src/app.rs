@@ -141,6 +141,8 @@ impl App {
                 CurrentArea::PopupArea => {
                     if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
                         self.bibiman.popup_area.popup_scroll_down();
+                    } else if let Some(PopupKind::Selection) = self.bibiman.popup_area.popup_kind {
+                        self.bibiman.popup_area.popup_state.scroll_down_by(1)
                     }
                 }
                 _ => {}
@@ -156,6 +158,8 @@ impl App {
                 CurrentArea::PopupArea => {
                     if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
                         self.bibiman.popup_area.popup_scroll_up();
+                    } else if let Some(PopupKind::Selection) = self.bibiman.popup_area.popup_kind {
+                        self.bibiman.popup_area.popup_state.scroll_up_by(1)
                     }
                 }
                 _ => {}
