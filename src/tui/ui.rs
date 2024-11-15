@@ -66,13 +66,13 @@ const ENTRY_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
 const ENTRY_BOX_UNSELECTED_TITLE_STYLE: Style =
     Style::new().fg(MAIN_BLUE).add_modifier(Modifier::BOLD);
 // Default box
-const BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
+// const BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
 const BOX_SELECTED_TITLE_STYLE: Style = Style::new()
     .fg(TEXT_BRIGHT_FG_COLOR)
     .add_modifier(Modifier::BOLD);
 const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
-const BOX_UNSELECTED_TITLE_STYLE: Style =
-    Style::new().fg(TEXT_FG_COLOR).add_modifier(Modifier::BOLD);
+// const BOX_UNSELECTED_TITLE_STYLE: Style =
+// Style::new().fg(TEXT_FG_COLOR).add_modifier(Modifier::BOLD);
 // Popup box
 const POPUP_HELP_BOX: Style = Style::new().fg(TEXT_FG_COLOR).bg(POPUP_BG);
 
@@ -124,7 +124,11 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
         [
             Constraint::Length(1),
             Constraint::Fill(1),
-            Constraint::Length(3),
+            Constraint::Length(if let CurrentArea::SearchArea = app.bibiman.current_area {
+                1
+            } else {
+                0
+            }),
         ],
     )
     .direction(Direction::Vertical)
@@ -140,7 +144,9 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
         Layout::horizontal([Constraint::Max(25), Constraint::Min(35)]).areas(item_area);
 
     render_header(frame, header_area);
-    render_footer(app, frame, footer_area);
+    if let CurrentArea::SearchArea = app.bibiman.current_area {
+        render_footer(app, frame, footer_area);
+    }
     render_entrytable(app, frame, entry_area);
     render_selected_item(app, frame, info_area);
     render_taglist(app, frame, tag_area);
@@ -210,64 +216,37 @@ pub fn render_header(frame: &mut Frame, rect: Rect) {
 }
 
 pub fn render_footer(app: &mut App, frame: &mut Frame, rect: Rect) {
-    match app.bibiman.current_area {
-        CurrentArea::SearchArea => {
-            let search_title = {
-                match app.bibiman.former_area {
-                    Some(FormerArea::EntryArea) => " Search Entries ".to_string(),
-                    Some(FormerArea::TagArea) => " Search Keywords ".to_string(),
-                    _ => " Search ".to_string(),
-                }
-            };
+    let search_title = {
+        match app.bibiman.former_area {
+            Some(FormerArea::EntryArea) => "Search Entries: ".to_string(),
+            Some(FormerArea::TagArea) => "Search Keywords: ".to_string(),
+            _ => " Search ".to_string(),
+        }
+    };
 
-            let block = Block::bordered()
-                .title(Line::styled(
-                    search_title,
-                    if let Some(FormerArea::EntryArea) = app.bibiman.former_area {
-                        ENTRY_BOX_SELECTED_TITLE_STYLE
-                    } else if let Some(FormerArea::TagArea) = app.bibiman.former_area {
-                        KEYWORD_BOX_SELECTED_TITLE_STYLE
-                    } else {
-                        BOX_SELECTED_TITLE_STYLE
-                    },
-                ))
-                .border_style(BOX_SELECTED_BORDER_STYLE)
-                .border_set(symbols::border::THICK);
-            render_cursor(app, frame, rect);
-            frame.render_widget(
-                Paragraph::new(app.bibiman.search_struct.search_string.clone())
-                    .block(block)
-                    .fg(TEXT_FG_COLOR),
-                rect,
-            );
-        }
-        _ => {
-            let style_emph = Style::new().bold().fg(TEXT_FG_COLOR);
-            let block = Block::bordered()
-                .title(Line::styled(" Basic Commands ", BOX_UNSELECTED_TITLE_STYLE).centered())
-                .border_style(BOX_UNSELECTED_BORDER_STYLE)
-                .border_set(symbols::border::PLAIN);
-            let keybindigns = Paragraph::new(Line::from(vec![
-                Span::styled("j/k: ", style_emph),
-                Span::raw("move | "),
-                Span::styled("g/G: ", style_emph),
-                Span::raw("top/bottom | "),
-                Span::styled("TAB: ", style_emph),
-                Span::raw("switch tab | "),
-                Span::styled("y: ", style_emph),
-                Span::raw("yank citekey | "),
-                Span::styled("e: ", style_emph),
-                Span::raw("edit | "),
-                Span::styled("/: ", style_emph),
-                Span::raw("search | "),
-                Span::styled("o/u: ", style_emph),
-                Span::raw("open PDF/DOI"),
-            ]))
-            .block(block)
-            .centered();
-            frame.render_widget(keybindigns, rect);
-        }
-    }
+    let title_lenght: u16 = search_title.chars().count() as u16;
+
+    let block = Block::new()
+        .padding(Padding::horizontal(1))
+        .bg(HEADER_FOOTER_BG);
+
+    let search_string = Paragraph::new(Line::from(vec![
+        Span::styled(
+            search_title,
+            if let Some(FormerArea::EntryArea) = app.bibiman.former_area {
+                ENTRY_BOX_SELECTED_TITLE_STYLE
+            } else if let Some(FormerArea::TagArea) = app.bibiman.former_area {
+                KEYWORD_BOX_SELECTED_TITLE_STYLE
+            } else {
+                BOX_SELECTED_TITLE_STYLE
+            },
+        ),
+        Span::raw(app.bibiman.search_struct.search_string.clone()),
+    ]))
+    .block(block);
+
+    render_cursor(app, frame, rect, title_lenght + 1);
+    frame.render_widget(search_string, rect);
 }
 
 // Render info of the current file and process
@@ -825,12 +804,12 @@ pub fn render_taglist(app: &mut App, frame: &mut Frame, rect: Rect) {
 }
 
 /// Render the cursor when in InputMode
-fn render_cursor(app: &mut App, frame: &mut Frame, area: Rect) {
+fn render_cursor(app: &mut App, frame: &mut Frame, area: Rect, x_offset: u16) {
     let scroll = app.input.visual_scroll(area.width as usize);
     if app.input_mode {
         let (x, y) = (
-            area.x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + 1,
-            area.bottom().saturating_sub(2),
+            area.x + ((app.input.visual_cursor()).max(scroll) - scroll) as u16 + x_offset,
+            area.bottom().saturating_sub(1),
         );
         frame.render_widget(
             Clear,
