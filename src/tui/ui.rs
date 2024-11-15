@@ -25,10 +25,10 @@ use crate::{
     TEXT_HIGHLIGHT_COLOR_INDEX,
 };
 use ratatui::layout::{Direction, Position};
-use ratatui::widgets::{Clear, ListState, StatefulWidget};
+use ratatui::widgets::Clear;
 use ratatui::Frame;
 use ratatui::{
-    layout::{Alignment, Constraint, Layout, Rect},
+    layout::{Alignment, Constraint, Flex, Layout, Rect},
     style::{Color, Modifier, Style, Stylize},
     symbols,
     text::{Line, Span, Text},
@@ -37,7 +37,6 @@ use ratatui::{
         ScrollbarOrientation, Table, Wrap,
     },
 };
-use tui_popup::{Popup, SizedWrapper};
 
 // Text colors
 const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
@@ -163,52 +162,60 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
 pub fn render_popup(app: &mut App, frame: &mut Frame) {
     match app.bibiman.popup_area.popup_kind {
         Some(PopupKind::Help) => {
+            let block = Block::bordered()
+                .title_top(" Keybindings (j,k|↓,↑)".bold())
+                .title_alignment(Alignment::Center)
+                .style(POPUP_HELP_BOX)
+                .border_set(symbols::border::THICK)
+                .border_style(Style::new().fg(MAIN_BLUE));
+
             let text: Text = PopupArea::popup_help();
 
             // Calculate max scroll position depending on hight of terminal window
+            // Needed length is number of text lines plus two for borders at bottom and top
+            // minus half the height of the frame (or the height set for the popup)
+            let popup_height: u16 = frame.area().height / 2;
+
             let scroll_pos = if app.bibiman.popup_area.popup_scroll_pos
-                > text.lines.len() as u16 - (frame.area().height / 2)
+                > text.lines.len() as u16 + 2 - popup_height
             {
                 app.bibiman.popup_area.popup_scroll_pos =
-                    text.lines.len() as u16 - (frame.area().height / 2);
+                    text.lines.len() as u16 + 2 - popup_height;
                 app.bibiman.popup_area.popup_scroll_pos
             } else {
                 app.bibiman.popup_area.popup_scroll_pos
             };
 
-            let par = Paragraph::new(text).scroll((scroll_pos, 0));
+            let par = Paragraph::new(text).scroll((scroll_pos, 0)).block(block);
             let par_width = par.line_width();
 
-            // Needed to use scrollable Parapgraph as popup content
-            let sized_par = SizedWrapper {
-                inner: par,
-                // width: (frame.area().width / 2) as usize,
-                width: if par_width > frame.area().width as usize {
-                    frame.area().width as usize
-                } else {
-                    par_width
-                },
-                // width: par_width,
-                height: (frame.area().height / 2) as usize,
-            };
+            let popup_area = popup_area(frame.area(), par_width as u16, popup_height);
 
-            let popup = Popup::new(sized_par)
-                .title(" Keybindings (j,k|↓,↑)".bold().into_centered_line())
-                .style(POPUP_HELP_BOX)
-                .border_set(symbols::border::THICK)
-                .border_style(Style::new().fg(MAIN_BLUE));
-
-            frame.render_widget_ref(popup, frame.area())
+            frame.render_widget(Clear, popup_area);
+            frame.render_widget(par, popup_area)
         }
         Some(PopupKind::Message) => {
-            let popup = Popup::new(
-                Text::from(app.bibiman.popup_area.popup_message.as_str()).fg(MAIN_GREEN),
-            )
-            .title(" Message ".bold().into_centered_line().fg(MAIN_GREEN))
-            .border_set(symbols::border::THICK)
-            .border_style(Style::new().fg(MAIN_GREEN))
-            .style(POPUP_HELP_BOX);
-            frame.render_widget(&popup, frame.area())
+            let area = frame.area();
+
+            let block = Block::bordered()
+                .title_top(" Message ".bold().fg(MAIN_GREEN))
+                .border_style(Style::new().fg(MAIN_GREEN))
+                .style(POPUP_HELP_BOX);
+
+            let content = Paragraph::new(app.bibiman.popup_area.popup_message.clone())
+                .block(block)
+                .style(Style::new().fg(MAIN_GREEN));
+
+            // Calculate popup size. Width is number of string chars plus 2 for border
+            let popup_area = popup_area(
+                area,
+                (app.bibiman.popup_area.popup_message.chars().count() + 2) as u16,
+                3,
+            );
+
+            // Clear area and draw popup
+            frame.render_widget(Clear, popup_area);
+            frame.render_widget(&content, popup_area)
         }
         Some(PopupKind::Selection) => {
             // let list_items: Vec<ListItem> = app
@@ -858,4 +865,15 @@ fn render_cursor(app: &mut App, frame: &mut Frame, area: Rect, x_offset: u16) {
         );
         frame.set_cursor_position(Position::new(x, y));
     }
+}
+
+/// helper function to create a centered rect using up certain percentage of the available rect `r`
+fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
+    // let vertical = Layout::vertical([Constraint::Percentage(percent_y)]).flex(Flex::Center);
+    // let horizontal = Layout::horizontal([Constraint::Percentage(percent_x)]).flex(Flex::Center);
+    let vertical = Layout::vertical([Constraint::Length(percent_y)]).flex(Flex::Center);
+    let horizontal = Layout::horizontal([Constraint::Length(percent_x)]).flex(Flex::Center);
+    let [area] = vertical.areas(area);
+    let [area] = horizontal.areas(area);
+    area
 }
