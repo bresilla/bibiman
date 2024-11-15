@@ -28,6 +28,7 @@ pub enum PopupKind {
     Help,
     Message,
     Selection,
+    Search,
 }
 
 #[derive(Debug, Default)]
@@ -47,6 +48,7 @@ impl PopupArea {
             ("TAB: ", "Toggle areas (Entries, Keywords)"),
             ("/|Ctrl+f: ", "Enter search mode"),
             ("q|Ctrl+c: ", "Quit bibiman"),
+            ("?: ", "Show help"),
             ("Entry Table", "sub"),
             ("j,k|↓,↑: ", "Select next/previous entry"),
             ("h,l|←,→: ", "Select next/previous column"),

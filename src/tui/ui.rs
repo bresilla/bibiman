@@ -210,7 +210,7 @@ pub fn render_header(frame: &mut Frame, rect: Rect) {
 }
 
 pub fn render_footer(app: &mut App, frame: &mut Frame, rect: Rect) {
-    match &app.bibiman.current_area {
+    match app.bibiman.current_area {
         CurrentArea::SearchArea => {
             let search_title = {
                 match app.bibiman.former_area {
