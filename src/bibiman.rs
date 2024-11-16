@@ -54,7 +54,7 @@ pub enum FormerArea {
 
 // Application.
 #[derive(Debug)]
-pub struct Bibiman {
+pub struct Bibiman<'a> {
     // main bib file
     pub main_bibfile: PathBuf,
     // main bibliography
@@ -72,10 +72,10 @@ pub struct Bibiman {
     // mode for popup window
     pub former_area: Option<FormerArea>,
     // active popup
-    pub popup_area: PopupArea,
+    pub popup_area: PopupArea<'a>,
 }
 
-impl Bibiman {
+impl Bibiman<'_> {
     // Constructs a new instance of [`App`].
     pub fn new(args: CLIArgs) -> Result<Self> {
         let main_bibfile = args.bibfilearg;
@@ -185,7 +185,7 @@ impl Bibiman {
     }
 }
 
-impl Bibiman {
+impl Bibiman<'_> {
     // Entry Table commands
 
     /// Select next entry in Table holding the bibliographic entries.
@@ -300,19 +300,15 @@ impl Bibiman {
         }
     }
 
-    // Get the citekey of the selected entry
-    pub fn get_selected_citekey(&self) -> &str {
-        let idx = self.entry_table.entry_table_state.selected().unwrap();
-        &self.entry_table.entry_table_items[idx].citekey
-    }
-
     pub fn run_editor(&mut self, tui: &mut Tui) -> Result<()> {
         // get filecontent and citekey for calculating line number
-        let citekey = self.get_selected_citekey();
+        let citekey: &str = &self.entry_table.entry_table_items
+            [self.entry_table.entry_table_state.selected().unwrap()]
+        .citekey;
         // create independent copy of citekey for finding entry after updating list
         let saved_key = citekey.to_owned();
-        let filepath = self.main_bibfile.display().to_string();
-        let filecontent = self.main_biblio.bibfilestring.clone();
+        let filepath = self.main_bibfile.as_os_str();
+        let filecontent: &str = &self.main_biblio.bibfilestring;
         let mut line_count = 0;
 
         for line in filecontent.lines() {
@@ -324,7 +320,8 @@ impl Bibiman {
             } else if line_count == filecontent.len() {
                 eprintln!(
                     "Citekey {} not found, opening file {} at line 1",
-                    &citekey, &filepath
+                    citekey,
+                    filepath.to_string_lossy()
                 );
                 line_count = 0;
                 break;
@@ -340,8 +337,7 @@ impl Bibiman {
             .build()
             .unwrap();
         // Prepare arguments to open file at specific line
-        let args: Vec<String> = vec![format!("+{}", line_count), filepath];
-        let status = cmd.args(&args).status()?;
+        let status = cmd.arg(format!("+{}", line_count)).arg(filepath).status()?;
         if !status.success() {
             eprintln!("Spawning editor failed with status {}", status);
         }
@@ -457,7 +453,7 @@ impl Bibiman {
     }
 }
 
-impl Bibiman {
+impl Bibiman<'_> {
     // Tag List commands
 
     // Movement
@@ -560,7 +556,7 @@ impl Bibiman {
     }
 }
 
-impl Bibiman {
+impl Bibiman<'_> {
     // Search Area
 
     // Enter the search area

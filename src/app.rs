@@ -29,18 +29,18 @@ use tui_input::Input;
 
 // Application.
 #[derive(Debug)]
-pub struct App {
+pub struct App<'a> {
     // Is the application running?
     pub running: bool,
     // bibimain
-    pub bibiman: Bibiman,
+    pub bibiman: Bibiman<'a>,
     // Input mode
     pub input: Input,
     // Input mode bool
     pub input_mode: bool,
 }
 
-impl App {
+impl App<'_> {
     // Constructs a new instance of [`App`].
     pub fn new(args: CLIArgs) -> Result<Self> {
         // Self::default()
@@ -228,10 +228,18 @@ impl App {
             }
             CmdAction::YankItem => {
                 if let CurrentArea::EntryArea = self.bibiman.current_area {
-                    Bibiman::yank_text(self.bibiman.get_selected_citekey());
+                    let citekey: &str = &self.bibiman.entry_table.entry_table_items[self
+                        .bibiman
+                        .entry_table
+                        .entry_table_state
+                        .selected()
+                        .unwrap()]
+                    .citekey;
+
+                    Bibiman::yank_text(citekey);
                     self.bibiman.popup_area.popup_message(
-                        "Yanked citekey to clipboard:".to_owned(),
-                        self.bibiman.get_selected_citekey().to_string(),
+                        "Yanked citekey to clipboard: ",
+                        citekey, // self.bibiman.get_selected_citekey(),
                     );
                 }
             }

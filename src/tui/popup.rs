@@ -31,16 +31,16 @@ pub enum PopupKind {
 }
 
 #[derive(Debug, Default)]
-pub struct PopupArea {
+pub struct PopupArea<'a> {
     pub is_popup: bool,
     pub popup_kind: Option<PopupKind>,
     pub popup_message: String,
     pub popup_scroll_pos: u16,
-    pub popup_list: Vec<String>,
+    pub popup_list: Vec<&'a str>,
     pub popup_state: ListState,
 }
 
-impl PopupArea {
+impl PopupArea<'_> {
     pub fn popup_help<'a>() -> Text<'a> {
         let help = [
             ("General", "first"),
@@ -100,17 +100,17 @@ impl PopupArea {
         Text::from(helptext)
     }
 
-    pub fn popup_message(&mut self, message: String, object: String) {
+    pub fn popup_message(&mut self, message: &str, object: &str) {
         if object.is_empty() {
-            self.popup_message = message;
+            self.popup_message = message.to_owned();
         } else {
-            self.popup_message = format!("{} \"{}\"", message, object);
+            self.popup_message = message.to_owned() + object; //format!("{} \"{}\"", message, object);
         }
         self.popup_kind = Some(PopupKind::Message);
         self.is_popup = true;
     }
 
-    pub fn popup_selection(&mut self, items: Vec<String>) {
+    pub fn popup_selection(&mut self, items: Vec<&'static str>) {
         self.popup_list = items;
         self.popup_kind = Some(PopupKind::Selection);
         self.is_popup = true
