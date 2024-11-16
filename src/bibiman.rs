@@ -54,7 +54,7 @@ pub enum FormerArea {
 
 // Application.
 #[derive(Debug)]
-pub struct Bibiman<'a> {
+pub struct Bibiman {
     // main bib file
     pub main_bibfile: PathBuf,
     // main bibliography
@@ -72,10 +72,10 @@ pub struct Bibiman<'a> {
     // mode for popup window
     pub former_area: Option<FormerArea>,
     // active popup
-    pub popup_area: PopupArea<'a>,
+    pub popup_area: PopupArea,
 }
 
-impl Bibiman<'_> {
+impl Bibiman {
     // Constructs a new instance of [`App`].
     pub fn new(args: CLIArgs) -> Result<Self> {
         let main_bibfile = args.bibfilearg;
@@ -185,7 +185,7 @@ impl Bibiman<'_> {
     }
 }
 
-impl Bibiman<'_> {
+impl Bibiman {
     // Entry Table commands
 
     /// Select next entry in Table holding the bibliographic entries.
@@ -453,7 +453,7 @@ impl Bibiman<'_> {
     }
 }
 
-impl Bibiman<'_> {
+impl Bibiman {
     // Tag List commands
 
     // Movement
@@ -556,7 +556,7 @@ impl Bibiman<'_> {
     }
 }
 
-impl Bibiman<'_> {
+impl Bibiman {
     // Search Area
 
     // Enter the search area

@@ -20,13 +20,13 @@ use ratatui::crossterm::event::{
 };
 use tui_input::Input;
 
-// Possible ressources to open
-#[derive(Debug, PartialEq, Eq)]
-pub enum OpenRessource {
-    Pdf,
-    WebLink,
-    Note,
-}
+// // Possible ressources to open
+// #[derive(Debug, PartialEq, Eq)]
+// pub enum OpenRessource {
+//     Pdf,
+//     WebLink,
+//     Note,
+// }
 
 /// Application command.
 #[derive(Debug, PartialEq, Eq)]
@@ -62,7 +62,7 @@ pub enum CmdAction {
     // Edit file
     EditFile,
     // Open linked ressource
-    Open(OpenRessource),
+    Open,
     // Input command.
     Input(InputCmdAction),
     // Hexdump command.
@@ -109,7 +109,8 @@ impl From<KeyEvent> for CmdAction {
                 if key_event.modifiers == KeyModifiers::CONTROL {
                     Self::SelectPrevRow(5)
                 } else {
-                    Self::Open(OpenRessource::WebLink)
+                    Self::Nothing
+                    // Self::Open(OpenRessource::WebLink)
                 }
             }
             // Scroll info/preview area
@@ -142,7 +143,7 @@ impl From<KeyEvent> for CmdAction {
             // Reset lists/tables
             KeyCode::Esc => Self::Reset,
             // Open linked ressource
-            KeyCode::Char('o') => Self::Open(OpenRessource::Pdf),
+            KeyCode::Char('o') => Self::Open,
             // KeyCode::Char('u') => Self::Open(OpenRessource::WebLink),
             // Edit currently selected entry
             KeyCode::Char('e') => Self::EditFile,

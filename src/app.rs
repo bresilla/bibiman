@@ -15,32 +15,33 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::bibiman::CurrentArea;
+use crate::bibiman::{CurrentArea, FormerArea};
 // use super::Event;
 use crate::cliargs::CLIArgs;
-use crate::tui::commands::{InputCmdAction, OpenRessource};
+use crate::tui::commands::InputCmdAction;
 use crate::tui::popup::PopupKind;
 use crate::tui::{self, Tui};
 use crate::{bibiman::Bibiman, tui::commands::CmdAction};
 use color_eyre::eyre::{Ok, Result};
+use color_eyre::owo_colors::colors::css::LemonChiffon;
 use tui::Event;
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 
 // Application.
 #[derive(Debug)]
-pub struct App<'a> {
+pub struct App {
     // Is the application running?
     pub running: bool,
     // bibimain
-    pub bibiman: Bibiman<'a>,
+    pub bibiman: Bibiman,
     // Input mode
     pub input: Input,
     // Input mode bool
     pub input_mode: bool,
 }
 
-impl App<'_> {
+impl App {
     // Constructs a new instance of [`App`].
     pub fn new(args: CLIArgs) -> Result<Self> {
         // Self::default()
@@ -207,6 +208,8 @@ impl App<'_> {
                     if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
                         self.bibiman.popup_area.popup_scroll_pos = 0;
                         self.bibiman.close_popup()
+                    } else if let Some(PopupKind::Selection) = self.bibiman.popup_area.popup_kind {
+                        self.bibiman.close_popup()
                     }
                 } else {
                     self.bibiman.reset_current_list();
@@ -218,6 +221,9 @@ impl App<'_> {
                 } else if let CurrentArea::PopupArea = self.bibiman.current_area {
                     if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
                         self.bibiman.close_popup();
+                    } else if let Some(PopupKind::Selection) = self.bibiman.popup_area.popup_kind {
+                        // run command to open file/Url
+                        self.bibiman.close_popup()
                     }
                 }
             }
@@ -248,19 +254,40 @@ impl App<'_> {
                     self.bibiman.run_editor(tui)?;
                 }
             }
-            CmdAction::Open(ressource) => match ressource {
-                OpenRessource::Pdf => {
-                    if let CurrentArea::EntryArea = self.bibiman.current_area {
-                        self.bibiman.open_connected_file()?;
+            CmdAction::Open => {
+                if let CurrentArea::EntryArea = self.bibiman.current_area {
+                    let idx = self
+                        .bibiman
+                        .entry_table
+                        .entry_table_state
+                        .selected()
+                        .unwrap();
+                    let entry = self.bibiman.entry_table.entry_table_items[idx].clone();
+                    let mut items = vec![];
+                    if entry.doi_url.is_some() {
+                        items.push(entry.doi_url.unwrap())
                     }
-                }
-                OpenRessource::WebLink => {
-                    if let CurrentArea::EntryArea = self.bibiman.current_area {
-                        self.bibiman.open_doi_url()?;
+                    if entry.filepath.is_some() {
+                        items.push(entry.filepath.unwrap())
                     }
+                    self.bibiman.popup_area.popup_selection(items);
+                    self.bibiman.former_area = Some(FormerArea::EntryArea);
+                    self.bibiman.current_area = CurrentArea::PopupArea
                 }
-                OpenRessource::Note => {}
-            },
+            }
+            // match ressource {
+            //     OpenRessource::Pdf => {
+            //         if let CurrentArea::EntryArea = self.bibiman.current_area {
+            //             self.bibiman.open_connected_file()?;
+            //         }
+            //     }
+            //     OpenRessource::WebLink => {
+            //         if let CurrentArea::EntryArea = self.bibiman.current_area {
+            //             self.bibiman.open_doi_url()?;
+            //         }
+            //     }
+            //     OpenRessource::Note => {}
+            // },
             CmdAction::ShowHelp => {
                 self.bibiman.show_help();
             }

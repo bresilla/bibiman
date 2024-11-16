@@ -163,7 +163,8 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
     match app.bibiman.popup_area.popup_kind {
         Some(PopupKind::Help) => {
             let block = Block::bordered()
-                .title_top(" Keybindings (j,k|↓,↑)".bold())
+                .title_top(" Keybindings ".bold())
+                .title_bottom(" (j,k|↓,↑) ".bold())
                 .title_alignment(Alignment::Center)
                 .style(POPUP_HELP_BOX)
                 .border_set(symbols::border::THICK)
@@ -218,16 +219,34 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
             frame.render_widget(&content, popup_area)
         }
         Some(PopupKind::Selection) => {
-            // let list_items: Vec<ListItem> = app
-            //     .bibiman
-            //     .popup_area
-            //     .popup_list
-            //     .iter()
-            //     .map(|item| ListItem::from(item.to_owned()))
-            //     .collect();
+            let list_items: Vec<ListItem> = app
+                .bibiman
+                .popup_area
+                .popup_list
+                .iter()
+                .map(|item| ListItem::from(item.to_owned()))
+                .collect();
 
-            // let list = List::new(list_items).highlight_style(SELECTION_SELECTED_ROW_STYLE);
+            let block = Block::bordered()
+                .title_top(" Open ".bold())
+                .title_bottom(" (j,k|↓,↑) ".bold())
+                .title_alignment(Alignment::Center)
+                .style(POPUP_HELP_BOX)
+                .border_set(symbols::border::THICK)
+                .border_style(Style::new().fg(MAIN_PURPLE));
 
+            let list = List::new(list_items)
+                .block(block)
+                .highlight_style(SELECTION_SELECTED_ROW_STYLE);
+
+            app.bibiman.popup_area.popup_state.select(Some(0));
+
+            let popup_width = frame.area().width / 2;
+            let popup_heigth = list.len() + 2;
+            let popup_area = popup_area(frame.area(), popup_width, popup_heigth as u16);
+
+            frame.render_widget(Clear, popup_area);
+            frame.render_stateful_widget(list, popup_area, &mut app.bibiman.popup_area.popup_state)
             // let sized_list = SizedWrapper {
             //     inner: list.clone(),
             //     width: (frame.area().width / 2) as usize,
