@@ -239,8 +239,6 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
                 .block(block)
                 .highlight_style(SELECTION_SELECTED_ROW_STYLE);
 
-            app.bibiman.popup_area.popup_state.select(Some(0));
-
             let popup_width = frame.area().width / 2;
             let popup_heigth = list.len() + 2;
             let popup_area = popup_area(frame.area(), popup_width, popup_heigth as u16);

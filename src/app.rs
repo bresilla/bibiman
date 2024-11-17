@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::bibiman::{CurrentArea, FormerArea};
+use crate::bibiman::{self, CurrentArea, FormerArea};
 // use super::Event;
 use crate::cliargs::CLIArgs;
 use crate::tui::commands::InputCmdAction;
@@ -23,7 +23,6 @@ use crate::tui::popup::PopupKind;
 use crate::tui::{self, Tui};
 use crate::{bibiman::Bibiman, tui::commands::CmdAction};
 use color_eyre::eyre::{Ok, Result};
-use color_eyre::owo_colors::colors::css::LemonChiffon;
 use tui::Event;
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
@@ -222,6 +221,9 @@ impl App {
                     if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
                         self.bibiman.close_popup();
                     } else if let Some(PopupKind::Selection) = self.bibiman.popup_area.popup_kind {
+                        let idx = self.bibiman.popup_area.popup_state.selected().unwrap();
+                        let object = self.bibiman.popup_area.popup_list[idx].as_str();
+                        bibiman::open_connected_res(object)?;
                         // run command to open file/Url
                         self.bibiman.close_popup()
                     }
@@ -272,7 +274,8 @@ impl App {
                     }
                     self.bibiman.popup_area.popup_selection(items);
                     self.bibiman.former_area = Some(FormerArea::EntryArea);
-                    self.bibiman.current_area = CurrentArea::PopupArea
+                    self.bibiman.current_area = CurrentArea::PopupArea;
+                    self.bibiman.popup_area.popup_state.select(Some(0))
                 }
             }
             // match ressource {
