@@ -195,7 +195,7 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
             frame.render_widget(Clear, popup_area);
             frame.render_widget(par, popup_area)
         }
-        Some(PopupKind::Message) => {
+        Some(PopupKind::MessageConfirm) => {
             let area = frame.area();
 
             let block = Block::bordered()
@@ -206,6 +206,29 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
             let content = Paragraph::new(app.bibiman.popup_area.popup_message.clone())
                 .block(block)
                 .style(Style::new().fg(MAIN_GREEN));
+
+            // Calculate popup size. Width is number of string chars plus 2 for border
+            let popup_area = popup_area(
+                area,
+                (app.bibiman.popup_area.popup_message.chars().count() + 2) as u16,
+                3,
+            );
+
+            // Clear area and draw popup
+            frame.render_widget(Clear, popup_area);
+            frame.render_widget(&content, popup_area)
+        }
+        Some(PopupKind::MessageError) => {
+            let area = frame.area();
+
+            let block = Block::bordered()
+                .title_top(" Warning ".bold().fg(Color::Red))
+                .border_style(Style::new().fg(Color::Red))
+                .style(POPUP_HELP_BOX);
+
+            let content = Paragraph::new(app.bibiman.popup_area.popup_message.clone())
+                .block(block)
+                .style(Style::new().fg(Color::Red));
 
             // Calculate popup size. Width is number of string chars plus 2 for border
             let popup_area = popup_area(

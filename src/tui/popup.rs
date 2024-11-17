@@ -26,7 +26,8 @@ use crate::{MAIN_BLUE_COLOR_INDEX, MAIN_PURPLE_COLOR_INDEX};
 #[derive(Debug)]
 pub enum PopupKind {
     Help,
-    Message,
+    MessageConfirm,
+    MessageError,
     Selection,
 }
 
@@ -100,13 +101,17 @@ impl PopupArea {
         Text::from(helptext)
     }
 
-    pub fn popup_message(&mut self, message: &str, object: &str) {
+    pub fn popup_message(&mut self, message: &str, object: &str, msg_confirm: bool) {
         if object.is_empty() {
             self.popup_message = message.to_owned();
         } else {
             self.popup_message = message.to_owned() + object; //format!("{} \"{}\"", message, object);
         }
-        self.popup_kind = Some(PopupKind::Message);
+        if msg_confirm {
+            self.popup_kind = Some(PopupKind::MessageConfirm);
+        } else {
+            self.popup_kind = Some(PopupKind::MessageError)
+        }
         self.is_popup = true;
     }
 

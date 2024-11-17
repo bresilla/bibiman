@@ -70,12 +70,13 @@ impl App {
                 // Event::Key(key_event) => handle_key_events(key_event, self, &mut tui)?,
                 // Event::Mouse(_) => {}
                 Event::Key(key_event) => {
-                    if let Some(PopupKind::Message) = self.bibiman.popup_area.popup_kind {
+                    // Automatically close message popups on next keypress
+                    if let Some(PopupKind::MessageConfirm) = self.bibiman.popup_area.popup_kind {
+                        self.bibiman.close_popup()
+                    } else if let Some(PopupKind::MessageError) = self.bibiman.popup_area.popup_kind
+                    {
                         self.bibiman.close_popup()
                     }
-                    // else if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
-                    //     self.bibiman.go_back()
-                    // }
                     let command = if self.input_mode {
                         CmdAction::Input(InputCmdAction::parse(key_event, &self.input))
                     } else {
@@ -270,6 +271,7 @@ impl App {
                     self.bibiman.popup_area.popup_message(
                         "Yanked citekey to clipboard: ",
                         citekey, // self.bibiman.get_selected_citekey(),
+                        true,
                     );
                 }
             }
@@ -299,22 +301,15 @@ impl App {
                         self.bibiman.former_area = Some(FormerArea::EntryArea);
                         self.bibiman.current_area = CurrentArea::PopupArea;
                         self.bibiman.popup_area.popup_state.select(Some(0))
+                    } else {
+                        self.bibiman.popup_area.popup_message(
+                            "Selected entry has no connected ressources: ",
+                            &entry.citekey,
+                            false,
+                        )
                     }
                 }
             }
-            // match ressource {
-            //     OpenRessource::Pdf => {
-            //         if let CurrentArea::EntryArea = self.bibiman.current_area {
-            //             self.bibiman.open_connected_file()?;
-            //         }
-            //     }
-            //     OpenRessource::WebLink => {
-            //         if let CurrentArea::EntryArea = self.bibiman.current_area {
-            //             self.bibiman.open_doi_url()?;
-            //         }
-            //     }
-            //     OpenRessource::Note => {}
-            // },
             CmdAction::ShowHelp => {
                 self.bibiman.show_help();
             }
