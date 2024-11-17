@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::app::App;
 use crate::bibiman::entries::EntryTableColumn;
 use crate::bibiman::{bibisetup::*, search::BibiSearch};
 use crate::cliargs::CLIArgs;
@@ -23,12 +22,11 @@ use crate::tui::popup::{PopupArea, PopupKind};
 use crate::tui::Tui;
 use crate::{bibiman::entries::EntryTable, bibiman::keywords::TagList};
 use arboard::Clipboard;
-use color_eyre::eyre::{Context, Ok, Result};
-use core::panic;
+use color_eyre::eyre::{Ok, Result};
 use editor_command::EditorBuilder;
 use ratatui::widgets::ScrollbarState;
 use std::path::PathBuf;
-use std::process::{Command, Stdio};
+use std::process::Command;
 use tui_input::Input;
 
 pub mod bibisetup;
@@ -383,78 +381,6 @@ impl Bibiman {
             self.entry_table.entry_table_items.len(),
         );
     }
-
-    // Open file connected with entry through 'file' or 'pdf' field
-    pub fn open_connected_file(&self) -> Result<()> {
-        let idx = self.entry_table.entry_table_state.selected().unwrap();
-        let filepath = self.entry_table.entry_table_items[idx]
-            .filepath
-            .as_ref()
-            .unwrap();
-
-        // Build command to execute pdf-reader. 'xdg-open' is Linux standard
-        let cmd = {
-            match std::env::consts::OS {
-                "linux" => String::from("xdg-open"),
-                "macos" => String::from("open"),
-                "windows" => String::from("start"),
-                _ => panic!("Couldn't detect OS for setting correct opener"),
-            }
-        };
-
-        // Pass filepath as argument, pipe stdout and stderr to /dev/null
-        // to keep the TUI clean (where is it piped on Windows???)
-        let _ = Command::new(&cmd)
-            .arg(filepath)
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .wrap_err("Opening file not possible");
-
-        Ok(())
-    }
-
-    pub fn open_doi_url(&self) -> Result<()> {
-        let idx = self.entry_table.entry_table_state.selected().unwrap();
-        let web_adress = self.entry_table.entry_table_items[idx]
-            .doi_url
-            .as_ref()
-            .unwrap();
-        // .clone();
-
-        // Resolve strings using the resolving function of dx.doi.org, so the
-        // terminal is not blocked by the resolving process
-        let url = if web_adress.starts_with("10.") {
-            let prefix = "https://doi.org/".to_string();
-            prefix + web_adress
-        } else if web_adress.starts_with("www.") {
-            let prefix = "https://".to_string();
-            prefix + web_adress
-        } else {
-            web_adress.to_string()
-        };
-
-        // Build command to execute browser. 'xdg-open' is Linux standard
-        let cmd = {
-            match std::env::consts::OS {
-                "linux" => String::from("xdg-open"),
-                "macos" => String::from("open"),
-                "windows" => String::from("start"),
-                _ => panic!("Couldn't detect OS for setting correct opener"),
-            }
-        };
-
-        // Pass filepath as argument, pipe stdout and stderr to /dev/null
-        // to keep the TUI clean (where is it piped on Windows???)
-        let _ = Command::new(&cmd)
-            .arg(url)
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .wrap_err("Opening file not possible");
-
-        Ok(())
-    }
 }
 
 impl Bibiman {
@@ -645,27 +571,4 @@ impl Bibiman {
             self.search_tags();
         }
     }
-}
-
-pub fn open_connected_res(object: &str) -> Result<()> {
-    // Build command to execute pdf-reader. 'xdg-open' is Linux standard
-    let cmd = {
-        match std::env::consts::OS {
-            "linux" => String::from("xdg-open"),
-            "macos" => String::from("open"),
-            "windows" => String::from("start"),
-            _ => panic!("Couldn't detect OS for setting correct opener"),
-        }
-    };
-
-    // Pass filepath as argument, pipe stdout and stderr to /dev/null
-    // to keep the TUI clean (where is it piped on Windows???)
-    let _ = Command::new(&cmd)
-        .arg(object)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .wrap_err("Opening file not possible");
-
-    Ok(())
 }

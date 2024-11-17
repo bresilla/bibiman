@@ -64,6 +64,7 @@ my personal workflow. There are more to come, the list will be updated:
 - [ ] **Add Entry via DOI** as formatted code.
 - [ ] **Implement config file** for setting some default values like main
       bibfile, PDF-opener, or editor
+- [ ] **Implement logging** of important processes
 - [ ] **Support Hayagriva(`.yaml`)** format as input (_on hold for now_, because
       the Hayagriva Yaml style doesn't offer keywords; s. issue in
       [Hayagriva repo](https://github.com/typst/hayagriva/issues/240)).
@@ -142,8 +143,7 @@ or with `www...`.
 ## Issues and code improvement
 
 This is my first Rust project and, thus, also a learning process. If you find
-any issues or code flaws, please open an issue. I plan to make PRs possible in
-the future when its a little bit less early alpha state.
+any issues or code flaws, please open an issue.
 
 ## Alternatives
 

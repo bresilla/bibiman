@@ -15,14 +15,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use crate::bibiman::{self, CurrentArea, FormerArea};
+use crate::bibiman::{CurrentArea, FormerArea};
+use color_eyre::eyre::{Context, Ok, Result};
 // use super::Event;
 use crate::cliargs::CLIArgs;
 use crate::tui::commands::InputCmdAction;
 use crate::tui::popup::PopupKind;
 use crate::tui::{self, Tui};
 use crate::{bibiman::Bibiman, tui::commands::CmdAction};
-use color_eyre::eyre::{Ok, Result};
+use std::process::{Command, Stdio};
 use tui::Event;
 use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
@@ -221,9 +222,30 @@ impl App {
                     if let Some(PopupKind::Help) = self.bibiman.popup_area.popup_kind {
                         self.bibiman.close_popup();
                     } else if let Some(PopupKind::Selection) = self.bibiman.popup_area.popup_kind {
-                        let idx = self.bibiman.popup_area.popup_state.selected().unwrap();
-                        let object = self.bibiman.popup_area.popup_list[idx].as_str();
-                        bibiman::open_connected_res(object)?;
+                        // Index of selected entry
+                        let entry_idx = self
+                            .bibiman
+                            .entry_table
+                            .entry_table_state
+                            .selected()
+                            .unwrap();
+
+                        // Index of selected popup field
+                        let popup_idx = self.bibiman.popup_area.popup_state.selected().unwrap();
+
+                        // Choose ressource depending an selected popup field
+                        if self.bibiman.popup_area.popup_list[popup_idx].contains("Weblink") {
+                            let object = prepare_weblink(
+                                self.bibiman.entry_table.entry_table_items[entry_idx].doi_url(),
+                            );
+                            open_connected_res(&object)?;
+                        } else if self.bibiman.popup_area.popup_list[popup_idx].contains("File") {
+                            let object =
+                                self.bibiman.entry_table.entry_table_items[entry_idx].filepath();
+                            open_connected_res(object)?;
+                        } else {
+                            eprintln!("Unable to find ressource to open");
+                        };
                         // run command to open file/Url
                         self.bibiman.close_popup()
                     }
@@ -265,17 +287,19 @@ impl App {
                         .selected()
                         .unwrap();
                     let entry = self.bibiman.entry_table.entry_table_items[idx].clone();
-                    let mut items = vec![];
-                    if entry.doi_url.is_some() {
-                        items.push(entry.doi_url.unwrap())
+                    if entry.filepath.is_some() || entry.doi_url.is_some() {
+                        let mut items = vec![];
+                        if entry.doi_url.is_some() {
+                            items.push("Weblink (DOI/URL)".to_owned())
+                        }
+                        if entry.filepath.is_some() {
+                            items.push("File (PDF/EPUB)".to_owned())
+                        }
+                        self.bibiman.popup_area.popup_selection(items);
+                        self.bibiman.former_area = Some(FormerArea::EntryArea);
+                        self.bibiman.current_area = CurrentArea::PopupArea;
+                        self.bibiman.popup_area.popup_state.select(Some(0))
                     }
-                    if entry.filepath.is_some() {
-                        items.push(entry.filepath.unwrap())
-                    }
-                    self.bibiman.popup_area.popup_selection(items);
-                    self.bibiman.former_area = Some(FormerArea::EntryArea);
-                    self.bibiman.current_area = CurrentArea::PopupArea;
-                    self.bibiman.popup_area.popup_state.select(Some(0))
                 }
             }
             // match ressource {
@@ -300,5 +324,40 @@ impl App {
             CmdAction::Nothing => {}
         }
         Ok(())
+    }
+}
+
+pub fn open_connected_res(object: &str) -> Result<()> {
+    // Build command to execute pdf-reader. 'xdg-open' is Linux standard
+    let cmd = {
+        match std::env::consts::OS {
+            "linux" => String::from("xdg-open"),
+            "macos" => String::from("open"),
+            "windows" => String::from("start"),
+            _ => panic!("Couldn't detect OS for setting correct opener"),
+        }
+    };
+
+    // Pass filepath as argument, pipe stdout and stderr to /dev/null
+    // to keep the TUI clean (where is it piped on Windows???)
+    let _ = Command::new(&cmd)
+        .arg(object)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .wrap_err("Opening file not possible");
+
+    Ok(())
+}
+
+pub fn prepare_weblink(url: &str) -> String {
+    if url.starts_with("10.") {
+        let prefix = "https://doi.org/".to_string();
+        prefix + url
+    } else if url.starts_with("www.") {
+        let prefix = "https://".to_string();
+        prefix + url
+    } else {
+        url.to_string()
     }
 }
