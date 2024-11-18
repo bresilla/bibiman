@@ -252,7 +252,7 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
 
             let block = Block::bordered()
                 .title_top(" Open ".bold())
-                .title_bottom(" (j,k|↓,↑) ━ (ENTER) ━ (ESC)".bold())
+                .title_bottom(" (j,k|↓,↑) ━ (ENTER) ━ (ESC) ".bold())
                 .title_alignment(Alignment::Center)
                 .style(POPUP_HELP_BOX)
                 .border_set(symbols::border::THICK)
