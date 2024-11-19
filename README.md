@@ -11,8 +11,14 @@ Here's a small impression how it looks and works:
 
 ## Installation
 
-For now, `bibiman` is only available via Codeberg. You have to build it from
-source yourself using `cargo` and `rustup`:
+You can install `bibiman` directly from `crates.io` using `cargo`:
+
+```bash
+cargo install bibiman
+```
+
+To use the version including the newest commits, you can clone the repo and
+build it from source using `cargo`:
 
 ```bash
 git clone https://codeberg.org/lukeflo/bibiman
@@ -21,17 +27,11 @@ cd bibiman
 # Build the binary to /target/release
 cargo build --release
 
-# optional: create symlink:
-ln -sf /target/release/bibiman ~/.local/bin
-
 # OR
 # Install the binary to CARGO_HOME/bin which normally is in PATH
 cargo install --path=. --locked
 
 ```
-
-If you use the symlink option, you have to make sure that the directory
-containing the symlink is in your `PATH`.
 
 ## Usage
 
