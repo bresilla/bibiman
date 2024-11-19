@@ -7,7 +7,7 @@ database as part of a terminal-based scientific workflow.
 
 Here's a small impression how it looks and works:
 
-[![bibiman.gif](https://i.postimg.cc/yxkZkMfp/bibiman.gif)](https://postimg.cc/vxwBKNw5)
+[![bibiman.gif](https://i.postimg.cc/7YTMFkkn/bibiman.gif)](https://postimg.cc/Ln21PGhJ)
 
 ## Installation
 
