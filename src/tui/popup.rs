@@ -21,7 +21,7 @@ use ratatui::{
     widgets::ListState,
 };
 
-use crate::{MAIN_BLUE_COLOR_INDEX, MAIN_PURPLE_COLOR_INDEX};
+use crate::{MAIN_ENTRY_COLOR_INDEX, MAIN_KEYWORD_COLOR_INDEX};
 
 #[derive(Debug)]
 pub enum PopupKind {
@@ -81,20 +81,20 @@ impl PopupArea {
                 helptext.push(Line::from(
                     Span::raw(keys)
                         .bold()
-                        .fg(Color::Indexed(MAIN_BLUE_COLOR_INDEX)),
+                        .fg(Color::Indexed(MAIN_ENTRY_COLOR_INDEX)),
                 ))
             } else if help == "sub" {
                 helptext.push(Line::from(""));
                 helptext.push(Line::from(
                     Span::raw(keys)
                         .bold()
-                        .fg(Color::Indexed(MAIN_BLUE_COLOR_INDEX)),
+                        .fg(Color::Indexed(MAIN_ENTRY_COLOR_INDEX)),
                 ))
             } else {
                 helptext.push(Line::from(vec![
                     Span::raw(keys)
                         .bold()
-                        .fg(Color::Indexed(MAIN_PURPLE_COLOR_INDEX)),
+                        .fg(Color::Indexed(MAIN_KEYWORD_COLOR_INDEX)),
                     Span::raw(help),
                 ]))
             }

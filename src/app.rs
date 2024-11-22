@@ -23,6 +23,7 @@ use crate::tui::commands::InputCmdAction;
 use crate::tui::popup::PopupKind;
 use crate::tui::{self, Tui};
 use crate::{bibiman::Bibiman, tui::commands::CmdAction};
+use std::ffi::OsStr;
 use std::process::{Command, Stdio};
 use tui::Event;
 use tui_input::backend::crossterm::EventHandler;
@@ -236,14 +237,14 @@ impl App {
 
                         // Choose ressource depending an selected popup field
                         if self.bibiman.popup_area.popup_list[popup_idx].contains("Weblink") {
-                            let object = prepare_weblink(
-                                self.bibiman.entry_table.entry_table_items[entry_idx].doi_url(),
-                            );
-                            open_connected_res(&object)?;
+                            let object =
+                                self.bibiman.entry_table.entry_table_items[entry_idx].doi_url();
+                            let url = prepare_weblink(object);
+                            open_connected_link(&url)?;
                         } else if self.bibiman.popup_area.popup_list[popup_idx].contains("File") {
                             let object =
                                 self.bibiman.entry_table.entry_table_items[entry_idx].filepath();
-                            open_connected_res(object)?;
+                            open_connected_file(object)?;
                         } else {
                             eprintln!("Unable to find ressource to open");
                         };
@@ -322,8 +323,9 @@ impl App {
     }
 }
 
-pub fn open_connected_res(object: &str) -> Result<()> {
+pub fn open_connected_file(file: &OsStr) -> Result<()> {
     // Build command to execute pdf-reader. 'xdg-open' is Linux standard
+    // TODO: make custom opener command possible through config
     let cmd = {
         match std::env::consts::OS {
             "linux" => String::from("xdg-open"),
@@ -336,7 +338,7 @@ pub fn open_connected_res(object: &str) -> Result<()> {
     // Pass filepath as argument, pipe stdout and stderr to /dev/null
     // to keep the TUI clean (where is it piped on Windows???)
     let _ = Command::new(&cmd)
-        .arg(object)
+        .arg(file)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
@@ -345,13 +347,35 @@ pub fn open_connected_res(object: &str) -> Result<()> {
     Ok(())
 }
 
+pub fn open_connected_link(link: &str) -> Result<()> {
+    // Build command to execute pdf-reader. 'xdg-open' is Linux standard
+    // TODO: make custom opener command possible through config
+    let cmd = {
+        match std::env::consts::OS {
+            "linux" => String::from("xdg-open"),
+            "macos" => String::from("open"),
+            "windows" => String::from("start"),
+            _ => panic!("Couldn't detect OS for setting correct opener"),
+        }
+    };
+
+    // Pass filepath as argument, pipe stdout and stderr to /dev/null
+    // to keep the TUI clean (where is it piped on Windows???)
+    let _ = Command::new(&cmd)
+        .arg(link)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .wrap_err("Opening link not possible");
+
+    Ok(())
+}
+
 pub fn prepare_weblink(url: &str) -> String {
     if url.starts_with("10.") {
-        let prefix = "https://doi.org/".to_string();
-        prefix + url
+        "https://doi.org/".to_string() + url
     } else if url.starts_with("www.") {
-        let prefix = "https://".to_string();
-        prefix + url
+        "https://".to_string() + url
     } else {
         url.to_string()
     }

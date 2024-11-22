@@ -21,8 +21,8 @@ use crate::bibiman::{CurrentArea, FormerArea};
 use crate::tui::popup::PopupKind;
 use crate::App;
 use crate::{
-    MAIN_BLUE_COLOR_INDEX, MAIN_GREEN_COLOR_INDEX, MAIN_PURPLE_COLOR_INDEX, TEXT_FG_COLOR_INDEX,
-    TEXT_HIGHLIGHT_COLOR_INDEX,
+    CONFIRM_COLOR_INDEX, MAIN_ENTRY_COLOR_INDEX, MAIN_INFO_COLOR_INDEX, MAIN_KEYWORD_COLOR_INDEX,
+    TEXT_FG_COLOR_INDEX, TEXT_HIGHLIGHT_COLOR_INDEX, WARN_COLOR_INDEX,
 };
 use ratatui::layout::{Direction, Position};
 use ratatui::widgets::Clear;
@@ -41,9 +41,11 @@ use ratatui::{
 // Text colors
 const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
 const TEXT_BRIGHT_FG_COLOR: Color = Color::Indexed(TEXT_HIGHLIGHT_COLOR_INDEX);
-const MAIN_BLUE: Color = Color::Indexed(MAIN_BLUE_COLOR_INDEX);
-const MAIN_PURPLE: Color = Color::Indexed(MAIN_PURPLE_COLOR_INDEX);
-const MAIN_GREEN: Color = Color::Indexed(MAIN_GREEN_COLOR_INDEX);
+const ENTRY_COLOR: Color = Color::Indexed(MAIN_ENTRY_COLOR_INDEX);
+const KEYWORD_COLOR: Color = Color::Indexed(MAIN_KEYWORD_COLOR_INDEX);
+const CONFIRM_COLOR: Color = Color::Indexed(CONFIRM_COLOR_INDEX);
+const WARN_COLOR: Color = Color::Indexed(WARN_COLOR_INDEX);
+const INFO_COLOR: Color = Color::Indexed(MAIN_INFO_COLOR_INDEX);
 
 // Background colors
 const HEADER_FOOTER_BG: Color = Color::Indexed(235);
@@ -53,17 +55,17 @@ const POPUP_BG: Color = Color::Indexed(234);
 // Keyword Box
 const KEYWORD_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
 const KEYWORD_BOX_SELECTED_TITLE_STYLE: Style =
-    Style::new().fg(MAIN_PURPLE).add_modifier(Modifier::BOLD);
+    Style::new().fg(KEYWORD_COLOR).add_modifier(Modifier::BOLD);
 const KEYWORD_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
 const KEYWORD_BOX_UNSELECTED_TITLE_STYLE: Style =
-    Style::new().fg(MAIN_PURPLE).add_modifier(Modifier::BOLD);
+    Style::new().fg(KEYWORD_COLOR).add_modifier(Modifier::BOLD);
 // Entry box
 const ENTRY_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
 const ENTRY_BOX_SELECTED_TITLE_STYLE: Style =
-    Style::new().fg(MAIN_BLUE).add_modifier(Modifier::BOLD);
+    Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::BOLD);
 const ENTRY_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
 const ENTRY_BOX_UNSELECTED_TITLE_STYLE: Style =
-    Style::new().fg(MAIN_BLUE).add_modifier(Modifier::BOLD);
+    Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::BOLD);
 // Default box
 // const BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
 const BOX_SELECTED_TITLE_STYLE: Style = Style::new()
@@ -77,15 +79,15 @@ const POPUP_HELP_BOX: Style = Style::new().fg(TEXT_FG_COLOR).bg(POPUP_BG);
 
 // Entry table styles
 const ENTRY_SELECTED_ROW_STYLE: Style = Style::new()
-    .fg(MAIN_BLUE)
+    .fg(ENTRY_COLOR)
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const KEYWORD_SELECTED_ROW_STYLE: Style = Style::new()
-    .fg(MAIN_PURPLE)
+    .fg(KEYWORD_COLOR)
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const SELECTION_SELECTED_ROW_STYLE: Style = Style::new()
-    // .fg(MAIN_BLUE)
+    // .fg(ENTRY_COLOR)
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
 const SELECTED_TABLE_COL_STYLE: Style = Style::new().add_modifier(Modifier::BOLD);
@@ -98,9 +100,9 @@ const SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
 const SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
 
 // Info area styles
-const INFO_STYLE_AUTHOR: Style = Style::new().fg(MAIN_GREEN);
-const INFO_STYLE_TITLE: Style = Style::new().fg(MAIN_BLUE).add_modifier(Modifier::ITALIC);
-const INFO_STYLE_YEAR: Style = Style::new().fg(MAIN_PURPLE);
+const INFO_STYLE_AUTHOR: Style = Style::new().fg(INFO_COLOR);
+const INFO_STYLE_TITLE: Style = Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::ITALIC);
+const INFO_STYLE_YEAR: Style = Style::new().fg(KEYWORD_COLOR);
 const INFO_STYLE_DOI: Style = Style::new().fg(TEXT_FG_COLOR);
 const INFO_STYLE_FILE: Style = Style::new().fg(TEXT_FG_COLOR);
 const INFO_STYLE_ABSTRACT: Style = Style::new().fg(TEXT_FG_COLOR);
@@ -168,7 +170,7 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
                 .title_alignment(Alignment::Center)
                 .style(POPUP_HELP_BOX)
                 .border_set(symbols::border::THICK)
-                .border_style(Style::new().fg(MAIN_BLUE));
+                .border_style(Style::new().fg(ENTRY_COLOR));
 
             let text: Text = PopupArea::popup_help();
 
@@ -199,13 +201,13 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
             let area = frame.area();
 
             let block = Block::bordered()
-                .title_top(" Message ".bold().fg(MAIN_GREEN))
-                .border_style(Style::new().fg(MAIN_GREEN))
+                .title_top(" Message ".bold().fg(CONFIRM_COLOR))
+                .border_style(Style::new().fg(CONFIRM_COLOR))
                 .style(POPUP_HELP_BOX);
 
             let content = Paragraph::new(app.bibiman.popup_area.popup_message.clone())
                 .block(block)
-                .style(Style::new().fg(MAIN_GREEN));
+                .style(Style::new().fg(CONFIRM_COLOR));
 
             // Calculate popup size. Width is number of string chars plus 2 for border
             let popup_area = popup_area(
@@ -222,13 +224,13 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
             let area = frame.area();
 
             let block = Block::bordered()
-                .title_top(" Warning ".bold().fg(Color::Red))
+                .title_top(" Warning ".bold().fg(WARN_COLOR))
                 .border_style(Style::new().fg(Color::Red))
                 .style(POPUP_HELP_BOX);
 
             let content = Paragraph::new(app.bibiman.popup_area.popup_message.clone())
                 .block(block)
-                .style(Style::new().fg(Color::Red));
+                .style(Style::new().fg(WARN_COLOR));
 
             // Calculate popup size. Width is number of string chars plus 2 for border
             let popup_area = popup_area(
@@ -256,7 +258,7 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
                 .title_alignment(Alignment::Center)
                 .style(POPUP_HELP_BOX)
                 .border_set(symbols::border::THICK)
-                .border_style(Style::new().fg(MAIN_PURPLE));
+                .border_style(Style::new().fg(KEYWORD_COLOR));
 
             let list = List::new(list_items)
                 .block(block)
@@ -275,9 +277,9 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
             // };
 
             // let popup = Popup::new(sized_list)
-            //     .title(" Select ".bold().into_centered_line().fg(MAIN_PURPLE))
+            //     .title(" Select ".bold().into_centered_line().fg(KEYWORD_COLOR))
             //     .border_set(symbols::border::THICK)
-            //     // .border_style(Style::new().fg(MAIN_GREEN))
+            //     // .border_style(Style::new().fg(CONFIRM_COLOR))
             //     .style(POPUP_HELP_BOX);
 
             // frame.render_stateful_widget(
@@ -293,7 +295,7 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
 pub fn render_header(frame: &mut Frame, rect: Rect) {
     let main_header = Paragraph::new("BIBIMAN – BibLaTeX manager TUI")
         .bold()
-        .fg(MAIN_BLUE)
+        .fg(ENTRY_COLOR)
         .centered();
     frame.render_widget(main_header, rect)
 }
@@ -732,7 +734,7 @@ pub fn render_selected_item(app: &mut App, frame: &mut Frame, rect: Rect) {
             if cur_entry.filepath.is_some() {
                 lines.push(Line::from(vec![
                     Span::styled("File: ", style_value),
-                    Span::styled(cur_entry.filepath(), INFO_STYLE_FILE),
+                    Span::styled(cur_entry.filepath().to_string_lossy(), INFO_STYLE_FILE),
                 ]));
             }
             lines.push(Line::from(""));

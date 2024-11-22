@@ -19,6 +19,7 @@ use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
 use color_eyre::owo_colors::OwoColorize;
 use itertools::Itertools;
+use std::ffi::OsString;
 use std::{fs, path::PathBuf};
 
 use crate::cliargs;
@@ -52,7 +53,7 @@ pub struct BibiData {
     pub citekey: String,
     pub abstract_text: String,
     pub doi_url: Option<String>,
-    pub filepath: Option<String>,
+    pub filepath: Option<OsString>,
     pub subtitle: Option<String>,
 }
 
@@ -249,9 +250,9 @@ impl BibiSetup {
         }
     }
 
-    pub fn get_filepath(citekey: &str, biblio: &Bibliography) -> Option<String> {
+    pub fn get_filepath(citekey: &str, biblio: &Bibliography) -> Option<OsString> {
         if biblio.get(citekey).unwrap().file().is_ok() {
-            Some(biblio.get(citekey).unwrap().file().unwrap())
+            Some(biblio.get(citekey).unwrap().file().unwrap().into())
         } else {
             None
         }

@@ -27,9 +27,11 @@ pub mod errorsetup;
 pub mod tui;
 
 // Color indices
-const MAIN_BLUE_COLOR_INDEX: u8 = 75;
-const MAIN_PURPLE_COLOR_INDEX: u8 = 135;
-const MAIN_GREEN_COLOR_INDEX: u8 = 29;
+const MAIN_ENTRY_COLOR_INDEX: u8 = 36;
+const MAIN_KEYWORD_COLOR_INDEX: u8 = 101;
+const MAIN_INFO_COLOR_INDEX: u8 = 99;
+const CONFIRM_COLOR_INDEX: u8 = 47;
+const WARN_COLOR_INDEX: u8 = 124;
 const TEXT_HIGHLIGHT_COLOR_INDEX: u8 = 254;
 const TEXT_FG_COLOR_INDEX: u8 = 250;
 

@@ -15,6 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use std::ffi::{OsStr, OsString};
+
 use crate::bibiman::bibisetup::BibiData;
 use ratatui::widgets::{ScrollbarState, TableState};
 
@@ -140,7 +142,7 @@ pub struct EntryTableItem {
     pub citekey: String,
     pub abstract_text: String,
     pub doi_url: Option<String>,
-    pub filepath: Option<String>,
+    pub filepath: Option<OsString>,
     pub subtitle: Option<String>,
 }
 
@@ -199,7 +201,7 @@ impl EntryTableItem {
         self.doi_url.as_ref().unwrap()
     }
 
-    pub fn filepath(&self) -> &str {
+    pub fn filepath(&self) -> &OsStr {
         self.filepath.as_ref().unwrap()
     }
 
