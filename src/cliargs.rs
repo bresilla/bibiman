@@ -24,7 +24,7 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 
 // struct for CLIArgs
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CLIArgs {
     pub helparg: bool,
     pub versionarg: bool,
@@ -64,8 +64,8 @@ pub fn parse_files(args: &mut CLIArgs, pos_arg: OsString) {
         }
     } else {
         println!(
-            "{} {}",
-            "The positional argument is neither a valid file, nor a path:"
+            "{}\n{}",
+            "The positional argument is neither a valid file, nor a directory:"
                 .red()
                 .bold(),
             path.as_os_str().to_string_lossy().bright_red().italic()

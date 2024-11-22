@@ -19,7 +19,7 @@ pub mod commands;
 pub mod popup;
 pub mod ui;
 
-use crate::App;
+use crate::{cliargs::CLIArgs, App};
 use crossterm::{
     cursor,
     event::{
@@ -194,11 +194,11 @@ impl Tui {
     //
     // [`Draw`]: ratatui::Terminal::draw
     // [`rendering`]: crate::ui::render
-    pub fn draw(&mut self, app: &mut App) -> Result<()> {
+    pub fn draw(&mut self, app: &mut App, args: &CLIArgs) -> Result<()> {
         // self.terminal.draw(|frame| ui::render(app, frame))?;
         self.terminal
             // .draw(|frame| frame.render_widget(app, frame.area()))?;
-            .draw(|frame| ui::render_ui(app, frame))?;
+            .draw(|frame| ui::render_ui(app, args, frame))?;
         Ok(())
     }
 

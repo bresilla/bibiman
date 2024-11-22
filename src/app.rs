@@ -44,7 +44,7 @@ pub struct App {
 
 impl App {
     // Constructs a new instance of [`App`].
-    pub fn new(args: CLIArgs) -> Result<Self> {
+    pub fn new(args: &CLIArgs) -> Result<Self> {
         // Self::default()
         let running = true;
         let input = Input::default();
@@ -57,14 +57,14 @@ impl App {
         })
     }
 
-    pub async fn run(&mut self) -> Result<()> {
+    pub async fn run(&mut self, args: &CLIArgs) -> Result<()> {
         let mut tui = tui::Tui::new()?;
         tui.enter()?;
 
         // Start the main loop.
         while self.running {
             // Render the user interface.
-            tui.draw(self)?;
+            tui.draw(self, args)?;
             // Handle events.
             match tui.next().await? {
                 Event::Tick => self.tick(),
@@ -83,10 +83,10 @@ impl App {
                     } else {
                         CmdAction::from(key_event)
                     };
-                    self.run_command(command, &mut tui)?
+                    self.run_command(command, args, &mut tui)?
                 }
                 Event::Mouse(mouse_event) => {
-                    self.run_command(CmdAction::from(mouse_event), &mut tui)?
+                    self.run_command(CmdAction::from(mouse_event), args, &mut tui)?
                 }
 
                 Event::Resize(_, _) => {}
@@ -108,7 +108,7 @@ impl App {
         self.running = false;
     }
 
-    pub fn run_command(&mut self, cmd: CmdAction, tui: &mut Tui) -> Result<()> {
+    pub fn run_command(&mut self, cmd: CmdAction, args: &CLIArgs, tui: &mut Tui) -> Result<()> {
         match cmd {
             CmdAction::Input(cmd) => match cmd {
                 InputCmdAction::Nothing => {}
@@ -278,7 +278,7 @@ impl App {
             }
             CmdAction::EditFile => {
                 if let CurrentArea::EntryArea = self.bibiman.current_area {
-                    self.bibiman.run_editor(tui)?;
+                    self.bibiman.run_editor(args, tui)?;
                 }
             }
             CmdAction::Open => {

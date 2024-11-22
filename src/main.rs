@@ -55,8 +55,8 @@ async fn main() -> Result<()> {
     init_error_hooks()?;
 
     // Create an application.
-    let mut app = App::new(parsed_args)?;
+    let mut app = App::new(&parsed_args)?;
 
-    app.run().await?;
+    app.run(&parsed_args).await?;
     Ok(())
 }

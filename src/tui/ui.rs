@@ -18,6 +18,7 @@
 use super::popup::PopupArea;
 use crate::bibiman::entries::EntryTableColumn;
 use crate::bibiman::{CurrentArea, FormerArea};
+use crate::cliargs::CLIArgs;
 use crate::tui::popup::PopupKind;
 use crate::App;
 use crate::{
@@ -123,7 +124,7 @@ pub const fn color_list(list_item: i32, sel_item: i32, highlight: u8, max_diff: 
     }
 }
 
-pub fn render_ui(app: &mut App, frame: &mut Frame) {
+pub fn render_ui(app: &mut App, args: &CLIArgs, frame: &mut Frame) {
     let [header_area, main_area, footer_area] = Layout::new(
         Direction::Vertical,
         [
@@ -155,7 +156,7 @@ pub fn render_ui(app: &mut App, frame: &mut Frame) {
     render_entrytable(app, frame, entry_area);
     render_selected_item(app, frame, info_area);
     render_taglist(app, frame, tag_area);
-    render_file_info(app, frame, entry_info_area);
+    render_file_info(app, args, frame, entry_info_area);
     if app.bibiman.popup_area.is_popup {
         render_popup(app, frame);
     }
@@ -270,23 +271,6 @@ pub fn render_popup(app: &mut App, frame: &mut Frame) {
 
             frame.render_widget(Clear, popup_area);
             frame.render_stateful_widget(list, popup_area, &mut app.bibiman.popup_area.popup_state)
-            // let sized_list = SizedWrapper {
-            //     inner: list.clone(),
-            //     width: (frame.area().width / 2) as usize,
-            //     height: list.len(),
-            // };
-
-            // let popup = Popup::new(sized_list)
-            //     .title(" Select ".bold().into_centered_line().fg(KEYWORD_COLOR))
-            //     .border_set(symbols::border::THICK)
-            //     // .border_style(Style::new().fg(CONFIRM_COLOR))
-            //     .style(POPUP_HELP_BOX);
-
-            // frame.render_stateful_widget(
-            //     &popup,
-            //     frame.area(),
-            //     &mut app.bibiman.popup_area.popup_state,
-            // )
         }
         None => {}
     }
@@ -338,7 +322,7 @@ pub fn render_footer(app: &mut App, frame: &mut Frame, rect: Rect) {
 // 1. Basename of the currently loaded file
 // 2. Keyword by which the entries are filtered at the moment
 // 3. Currently selected entry and total count of entries
-pub fn render_file_info(app: &mut App, frame: &mut Frame, rect: Rect) {
+pub fn render_file_info(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: Rect) {
     let block = Block::new() // can also be Block::new
         // Leave Top empty to simulate one large box with borders of entry list
         .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
@@ -367,10 +351,7 @@ pub fn render_file_info(app: &mut App, frame: &mut Frame, rect: Rect) {
         Span::raw("File: ").bold(),
         Span::raw(
             // TODO: Only for testing! Need to replace with dir or files vec
-            app.bibiman.main_bibfiles[0]
-                .file_name()
-                .unwrap()
-                .to_string_lossy(),
+            args.pos_args[0].file_name().unwrap().to_string_lossy(),
         )
         .bold(),
     ])

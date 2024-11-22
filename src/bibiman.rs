@@ -25,7 +25,6 @@ use arboard::Clipboard;
 use color_eyre::eyre::{Ok, Result};
 use editor_command::EditorBuilder;
 use ratatui::widgets::ScrollbarState;
-use std::path::PathBuf;
 use std::process::Command;
 use tui_input::Input;
 
@@ -55,7 +54,7 @@ pub enum FormerArea {
 #[derive(Debug)]
 pub struct Bibiman {
     // main bib file
-    pub main_bibfiles: Vec<PathBuf>,
+    // pub main_bibfiles: Vec<PathBuf>,
     // main bibliography
     pub main_biblio: BibiSetup,
     // search struct:
@@ -76,15 +75,15 @@ pub struct Bibiman {
 
 impl Bibiman {
     // Constructs a new instance of [`App`].
-    pub fn new(args: CLIArgs) -> Result<Self> {
-        let main_bibfiles = args.pos_args;
-        let main_biblio = BibiSetup::new(&main_bibfiles);
+    pub fn new(args: &CLIArgs) -> Result<Self> {
+        // let main_bibfiles = args.pos_args.clone();
+        let main_biblio = BibiSetup::new(&args.pos_args);
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
         let entry_table = EntryTable::new(&main_biblio.entry_list);
         let current_area = CurrentArea::EntryArea;
         Ok(Self {
-            main_bibfiles,
+            // main_bibfiles,
             main_biblio,
             tag_list,
             search_struct,
@@ -122,8 +121,8 @@ impl Bibiman {
         self.former_area = None;
     }
 
-    pub fn update_lists(&mut self) {
-        self.main_biblio = BibiSetup::new(&self.main_bibfiles);
+    pub fn update_lists(&mut self, args: &CLIArgs) {
+        self.main_biblio = BibiSetup::new(&args.pos_args);
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         self.entry_table = EntryTable::new(&self.main_biblio.entry_list);
     }
@@ -299,7 +298,7 @@ impl Bibiman {
         }
     }
 
-    pub fn run_editor(&mut self, tui: &mut Tui) -> Result<()> {
+    pub fn run_editor(&mut self, args: &CLIArgs, tui: &mut Tui) -> Result<()> {
         // get filecontent and citekey for calculating line number
         let citekey: &str = &self.entry_table.entry_table_items
             [self.entry_table.entry_table_state.selected().unwrap()]
@@ -308,7 +307,7 @@ impl Bibiman {
         let saved_key = citekey.to_owned();
         // TODO: Only for testing purposes, needs better logic to find correct file
         // when using multi file approach
-        let filepath = self.main_bibfiles[0].as_os_str();
+        let filepath = args.pos_args[0].clone().into_os_string();
         let filecontent: &str = &self.main_biblio.bibfilestring;
         let mut line_count = 0;
 
@@ -348,7 +347,7 @@ impl Bibiman {
         tui.terminal.clear()?;
 
         // Update the database and the lists to show changes
-        self.update_lists();
+        self.update_lists(args);
 
         // Search for entry, selected before editing, by matching citekeys
         // Use earlier saved copy of citekey to match
