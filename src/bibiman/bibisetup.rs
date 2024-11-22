@@ -17,7 +17,6 @@
 
 use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
-use color_eyre::eyre::Result;
 use color_eyre::owo_colors::OwoColorize;
 use itertools::Itertools;
 use std::ffi::OsString;
@@ -54,7 +53,7 @@ pub struct BibiData {
 impl BibiSetup {
     pub fn new(main_bibfiles: &[PathBuf]) -> Self {
         // TODO: Needs check for config file path as soon as config file is impl
-        Self::check_files(main_bibfiles).expect("Something went wrong checking files");
+        Self::check_files(main_bibfiles);
         let bibfilestring = Self::bibfiles_to_string(main_bibfiles);
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
         let citekeys = Self::get_citekeys(&bibliography);
@@ -71,7 +70,7 @@ impl BibiSetup {
     }
 
     // Check which file format the passed file has
-    fn check_files(main_bibfiles: &[PathBuf]) -> Result<()> {
+    fn check_files(main_bibfiles: &[PathBuf]) {
         if main_bibfiles.is_empty() {
             println!(
                 "{}",
@@ -81,29 +80,18 @@ impl BibiSetup {
             );
             println!();
             println!("{}", cliargs::help_func());
-            // panic!("No file passed as argument. Please choose a .bib file.")
             std::process::exit(1)
         } else {
+            // Loop over all files and check for the correct extension
             main_bibfiles.iter().for_each(|f| if f.extension().is_some() && f.extension().unwrap() != "bib" {
                 panic!("File \'{}\' has no valid extension. Please select a file with \'.bib\' extension", f.to_str().unwrap())
             });
         }
-
-        Ok(())
     }
 
     fn bibfiles_to_string(main_bibfiles: &[PathBuf]) -> String {
-        // let file_strings = String::new();
-
-        // for f in main_bibfiles {
-        //     file_strings.
-        // }
-
-        // main_bibfiles
-        //     .iter()
-        //     .for_each(|f| format!("{}\n{}", file_strings, fs::read_to_string(f).unwrap()));
-
-        // file_strings
+        // Map PathBufs to String anc join the vector into one big string
+        // This behaviour is needed by the biblatex crate for parsing
         let file_strings: Vec<String> = main_bibfiles
             .iter()
             .map(|f| fs::read_to_string(f).unwrap())
