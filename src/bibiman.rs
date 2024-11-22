@@ -55,7 +55,7 @@ pub enum FormerArea {
 #[derive(Debug)]
 pub struct Bibiman {
     // main bib file
-    pub main_bibfile: PathBuf,
+    pub main_bibfiles: Vec<PathBuf>,
     // main bibliography
     pub main_biblio: BibiSetup,
     // search struct:
@@ -77,14 +77,14 @@ pub struct Bibiman {
 impl Bibiman {
     // Constructs a new instance of [`App`].
     pub fn new(args: CLIArgs) -> Result<Self> {
-        let main_bibfile = args.bibfilearg;
-        let main_biblio = BibiSetup::new(&main_bibfile);
+        let main_bibfiles = args.bibfilearg;
+        let main_biblio = BibiSetup::new(&main_bibfiles);
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
         let entry_table = EntryTable::new(&main_biblio.entry_list);
         let current_area = CurrentArea::EntryArea;
         Ok(Self {
-            main_bibfile,
+            main_bibfiles,
             main_biblio,
             tag_list,
             search_struct,
@@ -123,7 +123,7 @@ impl Bibiman {
     }
 
     pub fn update_lists(&mut self) {
-        self.main_biblio = BibiSetup::new(&self.main_bibfile);
+        self.main_biblio = BibiSetup::new(&self.main_bibfiles);
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         self.entry_table = EntryTable::new(&self.main_biblio.entry_list);
     }
@@ -306,7 +306,9 @@ impl Bibiman {
         .citekey;
         // create independent copy of citekey for finding entry after updating list
         let saved_key = citekey.to_owned();
-        let filepath = self.main_bibfile.as_os_str();
+        // TODO: Only for testing purposes, needs better logic to find correct file
+        // when using multi file approach
+        let filepath = self.main_bibfiles[0].as_os_str();
         let filecontent: &str = &self.main_biblio.bibfilestring;
         let mut line_count = 0;
 

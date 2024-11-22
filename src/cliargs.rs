@@ -34,7 +34,7 @@ sarge! {
 pub struct CLIArgs {
     pub helparg: bool,
     pub versionarg: bool,
-    pub bibfilearg: PathBuf,
+    pub bibfilearg: Vec<PathBuf>,
 }
 
 impl Default for CLIArgs {
@@ -47,10 +47,9 @@ impl CLIArgs {
     pub fn new() -> Self {
         let (cli_args, pos_args) = ArgumentsCLI::parse().expect("Could not parse CLI arguments");
         let bibfilearg = if pos_args.len() > 1 {
-            PathBuf::from(&pos_args[1])
-            // pos_args[1].to_string()
+            parse_files(pos_args)
         } else {
-            PathBuf::new()
+            panic!("No bibfile provided")
         };
         Self {
             helparg: cli_args.help,
@@ -58,6 +57,15 @@ impl CLIArgs {
             bibfilearg,
         }
     }
+}
+
+pub fn parse_files(args: Vec<String>) -> Vec<PathBuf> {
+    let mut files: Vec<PathBuf> = Vec::new();
+    for f in args {
+        files.push(PathBuf::from(f))
+    }
+    files.remove(0);
+    files
 }
 
 pub fn help_func() -> String {

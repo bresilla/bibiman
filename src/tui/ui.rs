@@ -366,8 +366,8 @@ pub fn render_file_info(app: &mut App, frame: &mut Frame, rect: Rect) {
     let file_info = Line::from(vec![
         Span::raw("File: ").bold(),
         Span::raw(
-            app.bibiman
-                .main_bibfile
+            // TODO: Only for testing! Need to replace with dir or files vec
+            app.bibiman.main_bibfiles[0]
                 .file_name()
                 .unwrap()
                 .to_string_lossy(),

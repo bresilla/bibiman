@@ -17,6 +17,7 @@
 
 use biblatex::{self, Bibliography};
 use biblatex::{ChunksExt, Type};
+use color_eyre::eyre::Result;
 use color_eyre::owo_colors::OwoColorize;
 use itertools::Itertools;
 use std::ffi::OsString;
@@ -24,18 +25,11 @@ use std::{fs, path::PathBuf};
 
 use crate::cliargs;
 
-#[derive(Debug)]
-pub enum FileFormat {
-    BibLatex,
-    Hayagriva,
-}
-
 // Set necessary fields
 // TODO: can surely be made more efficient/simpler
 #[derive(Debug)]
 pub struct BibiSetup {
     // pub bibfile: PathBuf,           // path to bibfile
-    pub bibfile_format: FileFormat, // Format of passed file
     pub bibfilestring: String,      // content of bibfile as string
     pub bibliography: Bibliography, // parsed bibliography
     pub citekeys: Vec<String>,      // list of all citekeys
@@ -58,17 +52,16 @@ pub struct BibiData {
 }
 
 impl BibiSetup {
-    pub fn new(main_bibfile: &PathBuf) -> Self {
+    pub fn new(main_bibfiles: &[PathBuf]) -> Self {
         // TODO: Needs check for config file path as soon as config file is impl
-        let bibfile_format = Self::check_file_format(main_bibfile);
-        let bibfilestring = fs::read_to_string(main_bibfile).unwrap();
+        Self::check_files(main_bibfiles).expect("Something went wrong checking files");
+        let bibfilestring = Self::bibfiles_to_string(main_bibfiles);
         let bibliography = biblatex::Bibliography::parse(&bibfilestring).unwrap();
         let citekeys = Self::get_citekeys(&bibliography);
         let keyword_list = Self::collect_tag_list(&citekeys, &bibliography);
         let entry_list = Self::create_entry_list(&citekeys, &bibliography);
         Self {
             // bibfile,
-            bibfile_format,
             bibfilestring,
             bibliography,
             citekeys,
@@ -78,21 +71,8 @@ impl BibiSetup {
     }
 
     // Check which file format the passed file has
-    fn check_file_format(main_bibfile: &PathBuf) -> FileFormat {
-        if main_bibfile.exists() {
-            let extension = main_bibfile.extension().unwrap().to_str();
-
-            match extension {
-                // Some("yml") => FileFormat::Hayagriva,
-                // Some("yaml") => FileFormat::Hayagriva,
-                Some("bib") => FileFormat::BibLatex,
-                Some(_) => panic!(
-                    "The extension \".{:?}\" is no valid bibfile",
-                    extension.unwrap()
-                ),
-                None => panic!("The given path {:?} holds no valid file", main_bibfile),
-            }
-        } else {
+    fn check_files(main_bibfiles: &[PathBuf]) -> Result<()> {
+        if main_bibfiles.is_empty() {
             println!(
                 "{}",
                 "No bibfile passed as argument. Please select a valid file."
@@ -103,7 +83,33 @@ impl BibiSetup {
             println!("{}", cliargs::help_func());
             // panic!("No file passed as argument. Please choose a .bib file.")
             std::process::exit(1)
+        } else {
+            main_bibfiles.iter().for_each(|f| if f.extension().is_some() && f.extension().unwrap() != "bib" {
+                panic!("File \'{}\' has no valid extension. Please select a file with \'.bib\' extension", f.to_str().unwrap())
+            });
         }
+
+        Ok(())
+    }
+
+    fn bibfiles_to_string(main_bibfiles: &[PathBuf]) -> String {
+        // let file_strings = String::new();
+
+        // for f in main_bibfiles {
+        //     file_strings.
+        // }
+
+        // main_bibfiles
+        //     .iter()
+        //     .for_each(|f| format!("{}\n{}", file_strings, fs::read_to_string(f).unwrap()));
+
+        // file_strings
+        let file_strings: Vec<String> = main_bibfiles
+            .iter()
+            .map(|f| fs::read_to_string(f).unwrap())
+            .collect();
+
+        file_strings.join("\n")
     }
 
     fn create_entry_list(citekeys: &[String], bibliography: &Bibliography) -> Vec<BibiData> {
