@@ -15,57 +15,65 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
-use sarge::prelude::*;
+use color_eyre::eyre::Result;
+use color_eyre::owo_colors::OwoColorize;
+use lexopt::prelude::*;
 use std::env;
+use std::ffi::OsString;
 use std::path::PathBuf;
-
-sarge! {
-    // Name of the struct
-    ArgumentsCLI,
-
-    // Show help and exit.
-    'h' help: bool,
-
-    // Show version and exit.
-    'v' version: bool,
-}
+use walkdir::WalkDir;
 
 // struct for CLIArgs
+#[derive(Debug, Default)]
 pub struct CLIArgs {
     pub helparg: bool,
     pub versionarg: bool,
-    pub bibfilearg: Vec<PathBuf>,
-}
-
-impl Default for CLIArgs {
-    fn default() -> Self {
-        Self::new()
-    }
+    pub pos_args: Vec<PathBuf>,
 }
 
 impl CLIArgs {
-    pub fn new() -> Self {
-        let (cli_args, pos_args) = ArgumentsCLI::parse().expect("Could not parse CLI arguments");
-        let bibfilearg = if pos_args.len() > 1 {
-            parse_files(pos_args)
-        } else {
-            panic!("No bibfile provided")
-        };
-        Self {
-            helparg: cli_args.help,
-            versionarg: cli_args.version,
-            bibfilearg,
+    pub fn parse_args() -> Result<CLIArgs, lexopt::Error> {
+        let mut args = CLIArgs::default();
+        let mut parser = lexopt::Parser::from_env();
+
+        while let Some(arg) = parser.next()? {
+            match arg {
+                Short('h') | Long("help") => args.helparg = true,
+                Short('v') | Long("version") => args.versionarg = true,
+                Value(pos_arg) => parse_files(&mut args, pos_arg),
+                _ => return Err(arg.unexpected()),
+            }
         }
+        Ok(args)
     }
 }
 
-pub fn parse_files(args: Vec<String>) -> Vec<PathBuf> {
-    let mut files: Vec<PathBuf> = Vec::new();
-    for f in args {
-        files.push(PathBuf::from(f))
+pub fn parse_files(args: &mut CLIArgs, pos_arg: OsString) {
+    // convert to PathBuf to use methods for testing the path
+    let path = PathBuf::from(pos_arg);
+    // If pos arg is file, just push it to path vec
+    if path.is_file() {
+        args.pos_args.push(path);
+    // If pos arg is dir, walk dir and collect bibfiles
+    } else if path.is_dir() {
+        for file in WalkDir::new(path) {
+            let f = file.unwrap().into_path();
+            if f.is_file() && f.extension().unwrap() == "bib" {
+                args.pos_args.push(f)
+            }
+        }
+    } else {
+        println!(
+            "{} {}",
+            "The positional argument is neither a valid file, nor a path:"
+                .red()
+                .bold(),
+            path.as_os_str().to_string_lossy().bright_red().italic()
+        );
+        println!();
+        println!("{}", help_func());
+        std::process::exit(1)
     }
-    files.remove(0);
-    files
 }
 
 pub fn help_func() -> String {

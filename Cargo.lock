@@ -83,7 +83,6 @@ dependencies = [
  "lexopt",
  "nucleo-matcher",
  "ratatui",
- "sarge",
  "signal-hook",
  "tokio",
  "tokio-util",
@@ -1096,12 +1095,6 @@ checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
 ]
-
-[[package]]
-name = "sarge"
-version = "7.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2096e40214337b2293fa4c3eb63c5376b57f4247cbbaf6d0af477f1d36ac21d9"
 
 [[package]]
 name = "scoped-tls"

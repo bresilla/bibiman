@@ -77,7 +77,7 @@ pub struct Bibiman {
 impl Bibiman {
     // Constructs a new instance of [`App`].
     pub fn new(args: CLIArgs) -> Result<Self> {
-        let main_bibfiles = args.bibfilearg;
+        let main_bibfiles = args.pos_args;
         let main_biblio = BibiSetup::new(&main_bibfiles);
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();

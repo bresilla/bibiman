@@ -38,7 +38,7 @@ const TEXT_FG_COLOR_INDEX: u8 = 250;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Parse CLI arguments
-    let parsed_args = CLIArgs::new();
+    let parsed_args = CLIArgs::parse_args().unwrap();
 
     // Print help if -h/--help flag is passed and exit
     if parsed_args.helparg {
@@ -51,10 +51,6 @@ async fn main() -> Result<()> {
         println!("{}", cliargs::version_func());
         std::process::exit(0);
     }
-
-    // if !parsed_args.bibfilearg.is_file() {
-    //     panic!("No \'.bib\' file passed, aborting")
-    // }
 
     init_error_hooks()?;
 
