@@ -15,6 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+use std::path::PathBuf;
+
 use super::popup::PopupArea;
 use crate::bibiman::entries::EntryTableColumn;
 use crate::bibiman::{CurrentArea, FormerArea};
@@ -38,6 +40,7 @@ use ratatui::{
         ScrollbarOrientation, Table, Wrap,
     },
 };
+use walkdir::WalkDir;
 
 // Text colors
 const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
@@ -122,6 +125,23 @@ pub const fn color_list(list_item: i32, sel_item: i32, highlight: u8, max_diff: 
     } else {
         Color::Indexed(highlight - (list_item - sel_item) as u8)
     }
+}
+
+fn count_files(files: &[PathBuf]) -> u16 {
+    let mut count = 0;
+    for f in files {
+        if f.is_file() {
+            count += 1
+        } else if f.is_dir() {
+            for e in WalkDir::new(f) {
+                let f = e.unwrap().into_path();
+                if f.is_file() && f.extension().unwrap() == "bib" {
+                    count += 1
+                }
+            }
+        }
+    }
+    count
 }
 
 pub fn render_ui(app: &mut App, args: &CLIArgs, frame: &mut Frame) {
@@ -347,16 +367,20 @@ pub fn render_file_info(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: 
     .horizontal_margin(1)
     .areas(rect);
 
-    let file_info = Line::from(vec![
-        Span::raw("File: ").bold(),
-        Span::raw(
-            // TODO: Only for testing! Need to replace with dir or files vec
-            args.fileargs[0].file_name().unwrap().to_string_lossy(),
-        )
-        .bold(),
-    ])
-    .bg(HEADER_FOOTER_BG);
-    // .render(file_area, buf);
+    let file_info = if args.fileargs.len() == 1 {
+        Line::from(vec![
+            Span::raw("File: ").bold(),
+            Span::raw(args.fileargs[0].file_name().unwrap().to_string_lossy()).bold(),
+        ])
+        .bg(HEADER_FOOTER_BG)
+    } else {
+        Line::from(vec![
+            Span::raw("Multiple files (").bold(),
+            Span::raw(count_files(&args.fileargs).to_string()).bold(),
+            Span::raw(")"),
+        ])
+        .bg(HEADER_FOOTER_BG)
+    };
 
     let cur_keywords = Line::from(if !app.bibiman.tag_list.selected_keywords.is_empty() {
         vec![

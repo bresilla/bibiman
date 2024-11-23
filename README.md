@@ -35,14 +35,30 @@ cargo install --path=. --locked
 
 ## Usage
 
-You need to pass a single `.bib` file as first positional argument:
+`bibiman` needs bibfiles (with `.bib` extension) passed as positional arguments.
+You can pass a single file, multiple files, the path of a directory containing
+bibfiles, or mix files and directories.
 
-`bibiman /path/to/bibfile.bib`
+Directories will be searched recursively for files with the `.bib` extension and
+add them to the entry list. Other files will be ignored.Thus, be careful not to
+pass a directory with multiple subdirectories (like eg `/home/usr/`), because
+this could be to some delay while parsing GBs of data.
 
-Of course, this can be aliased if you only use one main file. E.g. in
-`.bashrc`/`.zshrc`:
+The following are valid CLI calls to run `bibiman`:
 
-`alias bibi=bibiman /path/to/bibfile.bib`
+```bash
+# single file
+bibiman bibfile-1.bib
+
+# multiple files
+bibiman bibfile-1.bib bibfile-2.bib
+
+# directory containing bibfiles
+bibman /my/cool/library/
+
+# mixed arguments
+bibiman bibfile-1.bib /my/cool/library/ bibfile-2.bib
+```
 
 ## Features
 
@@ -60,11 +76,11 @@ my personal workflow. There are more to come, the list will be updated:
 - [x] **Open related URL/DOI** with keypress.
 - [x] **Scrollbar** for better navigating.
 - [x] **Sort Entries** by each column (`Authors`, `Title`, `Year`, `Pubtype`)
+- [x] **Load multiple files** into one session.
 - [ ] **Open related notes file** for specific entry.
 - [ ] **Add Entry via DOI** as formatted code.
 - [ ] **Implement config file** for setting some default values like main
       bibfile, PDF-opener, or editor
-- [ ] **Implement logging** of important processes
 - [ ] **Support Hayagriva(`.yaml`)** format as input (_on hold for now_, because
       the Hayagriva Yaml style doesn't offer keywords; s. issue in
       [Hayagriva repo](https://github.com/typst/hayagriva/issues/240)).
