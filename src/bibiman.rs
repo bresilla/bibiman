@@ -76,8 +76,8 @@ pub struct Bibiman {
 impl Bibiman {
     // Constructs a new instance of [`App`].
     pub fn new(args: &CLIArgs) -> Result<Self> {
-        // let main_bibfiles = args.pos_args.clone();
-        let main_biblio = BibiSetup::new(&args.pos_args);
+        // let main_bibfiles = args.fileargs.clone();
+        let main_biblio = BibiSetup::new(&args.fileargs);
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
         let entry_table = EntryTable::new(&main_biblio.entry_list);
@@ -122,7 +122,7 @@ impl Bibiman {
     }
 
     pub fn update_lists(&mut self, args: &CLIArgs) {
-        self.main_biblio = BibiSetup::new(&args.pos_args);
+        self.main_biblio = BibiSetup::new(&args.fileargs);
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         self.entry_table = EntryTable::new(&self.main_biblio.entry_list);
     }
@@ -307,7 +307,10 @@ impl Bibiman {
         let saved_key = citekey.to_owned();
         // TODO: Only for testing purposes, needs better logic to find correct file
         // when using multi file approach
-        let filepath = args.pos_args[0].clone().into_os_string();
+        let filepath = args.fileargs[0].as_os_str();
+        let filepath = if args.fileargs.len() == 1 {
+            args.fileargs.first().unwrap().as_os_str()
+        };
         let filecontent: &str = &self.main_biblio.bibfilestring;
         let mut line_count = 0;
 

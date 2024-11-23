@@ -351,7 +351,7 @@ pub fn render_file_info(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: 
         Span::raw("File: ").bold(),
         Span::raw(
             // TODO: Only for testing! Need to replace with dir or files vec
-            args.pos_args[0].file_name().unwrap().to_string_lossy(),
+            args.fileargs[0].file_name().unwrap().to_string_lossy(),
         )
         .bold(),
     ])

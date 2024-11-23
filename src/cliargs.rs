@@ -28,7 +28,7 @@ use walkdir::WalkDir;
 pub struct CLIArgs {
     pub helparg: bool,
     pub versionarg: bool,
-    pub pos_args: Vec<PathBuf>,
+    pub fileargs: Vec<PathBuf>,
 }
 
 impl CLIArgs {
@@ -53,13 +53,13 @@ pub fn parse_files(args: &mut CLIArgs, pos_arg: OsString) {
     let path = PathBuf::from(pos_arg);
     // If pos arg is file, just push it to path vec
     if path.is_file() {
-        args.pos_args.push(path);
+        args.fileargs.push(path);
     // If pos arg is dir, walk dir and collect bibfiles
     } else if path.is_dir() {
         for file in WalkDir::new(path) {
             let f = file.unwrap().into_path();
             if f.is_file() && f.extension().unwrap() == "bib" {
-                args.pos_args.push(f)
+                args.fileargs.push(f)
             }
         }
     } else {
