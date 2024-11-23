@@ -25,6 +25,7 @@ use arboard::Clipboard;
 use color_eyre::eyre::{Ok, Result};
 use editor_command::EditorBuilder;
 use ratatui::widgets::ScrollbarState;
+use std::fs;
 use std::process::Command;
 use tui_input::Input;
 
@@ -302,23 +303,37 @@ impl Bibiman {
         // get filecontent and citekey for calculating line number
         let citekey: &str = &self.entry_table.entry_table_items
             [self.entry_table.entry_table_state.selected().unwrap()]
-        .citekey;
-        // create independent copy of citekey for finding entry after updating list
-        let saved_key = citekey.to_owned();
-        // TODO: Only for testing purposes, needs better logic to find correct file
-        // when using multi file approach
-        let filepath = args.fileargs[0].as_os_str();
+        .citekey
+        .clone();
+
+        // Add curly brace as prefix and comma as suffix that only
+        // main citekeys are matched, not other fields like crossref
+        let citekey_pattern: String = format!("{{{},", citekey);
+
+        // Check if multiple files were passed to bibiman and
+        // return the correct file path
         let filepath = if args.fileargs.len() == 1 {
             args.fileargs.first().unwrap().as_os_str()
+        } else {
+            let mut idx = 0;
+            for f in &args.fileargs {
+                if search::search_pattern_in_file(&citekey_pattern, &f).is_some() {
+                    break;
+                }
+                idx += 1;
+            }
+            args.fileargs[idx].as_os_str()
         };
-        let filecontent: &str = &self.main_biblio.bibfilestring;
+        let filecontent = fs::read_to_string(&filepath).unwrap();
+
+        // Search the line number to place the cursor at
         let mut line_count = 0;
 
         for line in filecontent.lines() {
             line_count += 1;
             // if reaching the citekey break the loop
             // if reaching end of lines without match, reset to 0
-            if line.contains(citekey) {
+            if line.contains(&citekey_pattern) {
                 break;
             } else if line_count == filecontent.len() {
                 eprintln!(
@@ -350,7 +365,7 @@ impl Bibiman {
         tui.terminal.clear()?;
 
         // Update the database and the lists to show changes
-        self.update_lists(args);
+        Self::update_lists(self, args);
 
         // Search for entry, selected before editing, by matching citekeys
         // Use earlier saved copy of citekey to match
@@ -358,7 +373,7 @@ impl Bibiman {
         loop {
             if self.entry_table.entry_table_items[idx_count]
                 .citekey
-                .contains(&saved_key)
+                .contains(citekey)
             {
                 break;
             }
@@ -574,5 +589,17 @@ impl Bibiman {
         } else if let Some(FormerArea::TagArea) = self.former_area {
             self.search_tags();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // use super::*;
+
+    #[test]
+    fn citekey_pattern() {
+        let citekey = format!("{{{},", "a_key_2001");
+
+        assert_eq!(citekey, "{a_key_2001,")
     }
 }

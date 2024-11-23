@@ -20,7 +20,7 @@ use nucleo_matcher::{
     pattern::{CaseMatching, Normalization, Pattern},
     Config, Matcher,
 };
-use std::collections::HashMap;
+use std::{collections::HashMap, ffi::OsStr, fs, path::PathBuf};
 
 #[derive(Debug, Default)]
 pub struct BibiSearch {
@@ -111,6 +111,16 @@ impl BibiSearch {
     }
 }
 
+pub fn search_pattern_in_file<'a>(pattern: &str, file: &'a PathBuf) -> Option<&'a OsStr> {
+    let content = fs::read_to_string(file).unwrap();
+
+    if content.contains(pattern) {
+        Some(file.as_os_str())
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -127,7 +137,7 @@ mod tests {
             citekey: "author_1999".to_string(),
             abstract_text: "An abstract with multiple sentences. Here is the second".to_string(),
             doi_url: Some("https://www.bibiman.org".to_string()),
-            filepath: Some("/home/file/path.pdf".to_string()),
+            filepath: Some("/home/file/path.pdf".to_string().into()),
             subtitle: None,
         };
 
