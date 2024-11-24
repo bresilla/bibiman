@@ -44,7 +44,7 @@ add them to the entry list. Other files will be ignored.Thus, be careful not to
 pass a directory with multiple subdirectories (like eg `/home/usr/`), because
 this could be to some delay while parsing GBs of data.
 
-The following are valid CLI calls to run `bibiman`:
+The following lines are all valid CLI calls to run `bibiman`:
 
 ```bash
 # single file
@@ -92,22 +92,22 @@ functionality.**
 
 Use the following keybindings to manage the TUI:
 
-| Key                                    | Action                                      |
-| -------------------------------------- | ------------------------------------------- |
-| `j`,`k` \| `Down`,`Up`                 | Move down/up by 1                           |
-| `Ctrl-d`,`Ctrl-u`                      | Move down/up by 5                           |
-| `g`,`G`                                | Go to first/last entry                      |
-| `h`,`k`                                | Select previous/next entry column           |
-| `s`                                    | Sort current column (toggles)               |
-| `PageDown`,`PageUp` \| `Alt-j`,`Alt-k` | Scroll Info window                          |
-| `y`                                    | Yank/copy citekey of selected entry         |
-| `e`                                    | Open editor at selected entry               |
-| `o` \| `u`                             | Open related PDF \| URL/DOI                 |
-| `TAB`                                  | Switch between entries and keywords         |
-| `/`,`Ctrl-f`                           | Enter search mode                           |
-| `Enter`                                | Filter by selected keyword / Confirm search |
-| `ESC`                                  | Abort search / Reset current list           |
-| `q`,`Ctrl-c`                           | Quit TUI                                    |
+| Key                                    | Action                                                   |
+| -------------------------------------- | -------------------------------------------------------- |
+| `j`,`k` \| `Down`,`Up`                 | Move down/up by 1                                        |
+| `Ctrl-d`,`Ctrl-u`                      | Move down/up by 5                                        |
+| `g`,`G`                                | Go to first/last entry                                   |
+| `h`,`k` \| `Left`,`Right`              | Select previous/next entry column                        |
+| `s`                                    | Sort current column (toggles)                            |
+| `PageDown`,`PageUp` \| `Alt-j`,`Alt-k` | Scroll Info window                                       |
+| `y`                                    | Yank/copy citekey of selected entry                      |
+| `e`                                    | Open editor at selected entry                            |
+| `o`                                    | Open related PDF or URL/DOI                              |
+| `TAB`                                  | Switch between entries and keywords                      |
+| `/`,`Ctrl-f`                           | Enter search mode                                        |
+| `Enter`                                | Filter by selected keyword / Confirm search or selection |
+| `ESC`                                  | Abort search / Reset current list                        |
+| `q`,`Ctrl-c`                           | Quit TUI                                                 |
 
 ## Search
 
