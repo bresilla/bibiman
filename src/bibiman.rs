@@ -78,7 +78,7 @@ impl Bibiman {
     // Constructs a new instance of [`App`].
     pub fn new(args: &CLIArgs) -> Result<Self> {
         // let main_bibfiles = args.fileargs.clone();
-        let main_biblio = BibiSetup::new(&args.fileargs);
+        let main_biblio = BibiSetup::new(&args.files);
         let tag_list = TagList::new(main_biblio.keyword_list.clone());
         let search_struct = BibiSearch::default();
         let entry_table = EntryTable::new(&main_biblio.entry_list);
@@ -123,7 +123,7 @@ impl Bibiman {
     }
 
     pub fn update_lists(&mut self, args: &CLIArgs) {
-        self.main_biblio = BibiSetup::new(&args.fileargs);
+        self.main_biblio = BibiSetup::new(&args.files);
         self.tag_list = TagList::new(self.main_biblio.keyword_list.clone());
         self.entry_table = EntryTable::new(&self.main_biblio.entry_list);
     }
@@ -312,17 +312,17 @@ impl Bibiman {
 
         // Check if multiple files were passed to bibiman and
         // return the correct file path
-        let filepath = if args.fileargs.len() == 1 {
-            args.fileargs.first().unwrap().as_os_str()
+        let filepath = if args.files.len() == 1 {
+            args.files.first().unwrap().as_os_str()
         } else {
             let mut idx = 0;
-            for f in &args.fileargs {
+            for f in &args.files {
                 if search::search_pattern_in_file(&citekey_pattern, &f).is_some() {
                     break;
                 }
                 idx += 1;
             }
-            args.fileargs[idx].as_os_str()
+            args.files[idx].as_os_str()
         };
         let filecontent = fs::read_to_string(&filepath).unwrap();
 

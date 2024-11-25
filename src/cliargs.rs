@@ -19,7 +19,6 @@ use color_eyre::eyre::Result;
 use color_eyre::owo_colors::OwoColorize;
 use lexopt::prelude::*;
 use std::env;
-use std::ffi::OsString;
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
@@ -28,7 +27,8 @@ use walkdir::WalkDir;
 pub struct CLIArgs {
     pub helparg: bool,
     pub versionarg: bool,
-    pub fileargs: Vec<PathBuf>,
+    pub pos_args: Vec<PathBuf>,
+    pub files: Vec<PathBuf>,
 }
 
 impl CLIArgs {
@@ -40,40 +40,48 @@ impl CLIArgs {
             match arg {
                 Short('h') | Long("help") => args.helparg = true,
                 Short('v') | Long("version") => args.versionarg = true,
-                Value(pos_arg) => parse_files(&mut args, pos_arg),
+                // Value(pos_arg) => parse_files(&mut args, pos_arg),
+                Value(pos_arg) => args.pos_args.push(pos_arg.into()),
                 _ => return Err(arg.unexpected()),
             }
         }
+
+        args.files = parse_files(args.pos_args.clone());
+
         Ok(args)
     }
 }
 
-pub fn parse_files(args: &mut CLIArgs, pos_arg: OsString) {
+fn parse_files(args: Vec<PathBuf>) -> Vec<PathBuf> {
     // convert to PathBuf to use methods for testing the path
-    let path = PathBuf::from(pos_arg);
+    // let path = PathBuf::from(pos_arg);
+    let mut files: Vec<PathBuf> = Vec::new();
     // If pos arg is file, just push it to path vec
-    if path.is_file() {
-        args.fileargs.push(path);
-    // If pos arg is dir, walk dir and collect bibfiles
-    } else if path.is_dir() {
-        for file in WalkDir::new(path) {
-            let f = file.unwrap().into_path();
-            if f.is_file() && f.extension().unwrap() == "bib" {
-                args.fileargs.push(f)
+    for i in args {
+        if i.is_file() {
+            files.push(i);
+        // If pos arg is dir, walk dir and collect bibfiles
+        } else if i.is_dir() {
+            for file in WalkDir::new(i) {
+                let f = file.unwrap().into_path();
+                if f.is_file() && f.extension().unwrap_or_default() == "bib" {
+                    files.push(f)
+                }
             }
+        } else {
+            println!(
+                "{}\n{}",
+                "The positional argument is neither a valid file, nor a directory:"
+                    .red()
+                    .bold(),
+                i.as_os_str().to_string_lossy().bright_red().italic()
+            );
+            println!();
+            println!("{}", help_func());
+            std::process::exit(1)
         }
-    } else {
-        println!(
-            "{}\n{}",
-            "The positional argument is neither a valid file, nor a directory:"
-                .red()
-                .bold(),
-            path.as_os_str().to_string_lossy().bright_red().italic()
-        );
-        println!();
-        println!("{}", help_func());
-        std::process::exit(1)
     }
+    files
 }
 
 pub fn help_func() -> String {

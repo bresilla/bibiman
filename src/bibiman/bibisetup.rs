@@ -83,8 +83,19 @@ impl BibiSetup {
             std::process::exit(1)
         } else {
             // Loop over all files and check for the correct extension
-            main_bibfiles.iter().for_each(|f| if f.extension().is_some() && f.extension().unwrap() != "bib" {
-                panic!("File \'{}\' has no valid extension. Please select a file with \'.bib\' extension", f.to_str().unwrap())
+            main_bibfiles.iter().for_each(|f| {
+                if f.extension().is_some() && f.extension().unwrap() != "bib" {
+                    println!(
+                        "{}\n{}",
+                        "The passed file has no valid extension. You need a \'.bib\' file:"
+                            .red()
+                            .bold(),
+                        f.as_os_str().to_string_lossy().bright_red().italic()
+                    );
+                    println!();
+                    println!("{}", cliargs::help_func());
+                    std::process::exit(1)
+                }
             });
         }
     }

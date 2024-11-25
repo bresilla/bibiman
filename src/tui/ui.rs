@@ -367,16 +367,23 @@ pub fn render_file_info(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: 
     .horizontal_margin(1)
     .areas(rect);
 
-    let file_info = if args.fileargs.len() == 1 {
+    let file_info = if args.pos_args.len() == 1 && args.pos_args.first().unwrap().is_file() {
         Line::from(vec![
             Span::raw("File: ").bold(),
-            Span::raw(args.fileargs[0].file_name().unwrap().to_string_lossy()).bold(),
+            Span::raw(args.pos_args[0].file_name().unwrap().to_string_lossy()).bold(),
+        ])
+        .bg(HEADER_FOOTER_BG)
+    } else if args.pos_args.len() == 1 && args.pos_args.first().unwrap().is_dir() {
+        Line::from(vec![
+            Span::raw("Directory: ").bold(),
+            Span::raw(args.pos_args[0].file_name().unwrap().to_string_lossy()).bold(),
+            Span::raw("/*.bib").bold(),
         ])
         .bg(HEADER_FOOTER_BG)
     } else {
         Line::from(vec![
             Span::raw("Multiple files (").bold(),
-            Span::raw(count_files(&args.fileargs).to_string()).bold(),
+            Span::raw(count_files(&args.files).to_string()).bold(),
             Span::raw(")"),
         ])
         .bg(HEADER_FOOTER_BG)
