@@ -64,7 +64,10 @@ fn parse_files(args: Vec<PathBuf>) -> Vec<PathBuf> {
         } else if i.is_dir() {
             for file in WalkDir::new(i) {
                 let f = file.unwrap().into_path();
-                if f.is_file() && f.extension().unwrap_or_default() == "bib" {
+                if f.is_file()
+                    && f.extension().is_some()
+                    && f.extension().unwrap_or_default() == "bib"
+                {
                     files.push(f)
                 }
             }
