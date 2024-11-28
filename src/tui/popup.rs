@@ -21,7 +21,7 @@ use ratatui::{
     widgets::ListState,
 };
 
-use crate::{cliargs::CLIArgs, MAIN_ENTRY_COLOR_INDEX, MAIN_KEYWORD_COLOR_INDEX};
+use crate::cliargs::CLIArgs;
 
 #[derive(Debug)]
 pub enum PopupKind {

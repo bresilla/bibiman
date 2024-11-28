@@ -42,63 +42,11 @@ use walkdir::WalkDir;
 static HEADER_FOOTER_BG: Color = Color::Indexed(235);
 static POPUP_BG: Color = Color::Indexed(234);
 
-// Box styles
-// Keyword Box
-// static KEYWORD_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
-// static KEYWORD_BOX_SELECTED_TITLE_STYLE: Style =
-//     Style::new().fg(KEYWORD_COLOR).add_modifier(Modifier::BOLD);
-// static KEYWORD_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
-// static KEYWORD_BOX_UNSELECTED_TITLE_STYLE: Style =
-//     Style::new().fg(KEYWORD_COLOR).add_modifier(Modifier::BOLD);
-// Entry box
-// static ENTRY_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
-// static ENTRY_BOX_SELECTED_TITLE_STYLE: Style =
-//     Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::BOLD);
-// static ENTRY_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
-// static ENTRY_BOX_UNSELECTED_TITLE_STYLE: Style =
-// Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::BOLD);
-// Default box
-// static BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
-// static BOX_SELECTED_TITLE_STYLE: Style = Style::new()
-//     .fg(TEXT_BRIGHT_FG_COLOR)
-//     .add_modifier(Modifier::BOLD);
-// static BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
-// static BOX_UNSELECTED_TITLE_STYLE: Style =
-// Style::new().fg(TEXT_FG_COLOR).add_modifier(Modifier::BOLD);
-// Popup box
-// static POPUP_HELP_BOX: Style = Style::new()
-//     .fg(Color::Indexed(args.colors.main_text_color))
-//     .bg(POPUP_BG);
-
-// Entry table styles
-// static ENTRY_SELECTED_ROW_STYLE: Style = Style::new()
-//     .fg(ENTRY_COLOR)
-//     .add_modifier(Modifier::BOLD)
-//     .add_modifier(Modifier::REVERSED);
-// static KEYWORD_SELECTED_ROW_STYLE: Style = Style::new()
-//     .fg(KEYWORD_COLOR)
-//     .add_modifier(Modifier::BOLD)
-//     .add_modifier(Modifier::REVERSED);
-// static SELECTION_SELECTED_ROW_STYLE: Style = Style::new()
-//     // .fg(ENTRY_COLOR)
-//     .add_modifier(Modifier::BOLD)
-//     .add_modifier(Modifier::REVERSED);
-// static SELECTED_TABLE_COL_STYLE: Style = Style::new().add_modifier(Modifier::BOLD);
-// static SELECTEC_TABLE_CELL_STYLE: Style = Style::new().add_modifier(Modifier::REVERSED);
-
 // Symbols
 static SORTED_ENTRIES: &str = "▼";
 static SORTED_ENTRIES_REVERSED: &str = "▲";
 static SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
 static SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
-
-// Info area styles
-// static INFO_STYLE_AUTHOR: Style = Style::new().fg(INFO_COLOR);
-// static INFO_STYLE_TITLE: Style = Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::ITALIC);
-// static INFO_STYLE_YEAR: Style = Style::new().fg(KEYWORD_COLOR);
-// static INFO_STYLE_DOI: Style = Style::new().fg(TEXT_FG_COLOR);
-// static INFO_STYLE_FILE: Style = Style::new().fg(TEXT_FG_COLOR);
-// static INFO_STYLE_ABSTRACT: Style = Style::new().fg(TEXT_FG_COLOR);
 
 pub const fn color_list(list_item: i32, sel_item: i32, highlight: u8, max_diff: i32) -> Color {
     if list_item == sel_item {
@@ -960,12 +908,9 @@ pub fn render_taglist(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: Re
         .collect();
 
     // Create a List from all list items and highlight the currently selected one
-    let list = List::new(items).block(block).highlight_style(
-        Style::new()
-            .fg(Color::Indexed(args.colors.keyword_color))
-            .add_modifier(Modifier::BOLD)
-            .add_modifier(Modifier::REVERSED),
-    );
+    let list = List::new(items)
+        .block(block)
+        .highlight_style(keyword_selected_row_style);
 
     // Save list length for calculating scrollbar need
     // Add 2 to compmensate lines of the block border
