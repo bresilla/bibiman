@@ -7,7 +7,7 @@ database as part of a terminal-based scientific workflow.
 
 Here's a small impression how it looks and works:
 
-[![bibiman.gif](https://i.postimg.cc/7YTMFkkn/bibiman.gif)](https://postimg.cc/Ln21PGhJ)
+[![bibiman.gif](https://i.postimg.cc/c4mcVk4n/bibiman.gif)](https://postimg.cc/56Xvz3z4)
 
 ## Installation
 
@@ -44,21 +44,26 @@ add them to the entry list. Other files will be ignored.Thus, be careful not to
 pass a directory with multiple subdirectories (like eg `/home/usr/`), because
 this could be to some delay while parsing GBs of data.
 
-The following lines are all valid CLI calls to run `bibiman`:
+The following lines are all valid CLI calls to run `bibiman` using the test
+files from the `tests` folder:
 
 ```bash
 # single file
-bibiman bibfile-1.bib
+bibiman tests/biblatex-test.bib
 
 # multiple files
-bibiman bibfile-1.bib bibfile-2.bib
+bibiman tests/multi-files/bibfile1.bib tests/multi-files/bibfile2.bib
 
 # directory containing bibfiles
-bibman /my/cool/library/
+bibman tests/multi-files/
 
 # mixed arguments
-bibiman bibfile-1.bib /my/cool/library/ bibfile-2.bib
+bibiman tests/biblatex-test.bib tests/multi-files/
 ```
+
+Here as small demo gif:
+
+[![bibiman-multifile.gif](https://i.postimg.cc/pXR13Fxp/bibiman-multifile.gif)](https://postimg.cc/DmpgXmST)
 
 ## Features
 
