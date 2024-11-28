@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /////
 
+pub mod colors;
 pub mod commands;
 pub mod popup;
 pub mod ui;

@@ -22,6 +22,8 @@ use std::env;
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
+use crate::tui::colors::AppColors;
+
 // struct for CLIArgs
 #[derive(Debug, Default, Clone)]
 pub struct CLIArgs {
@@ -29,6 +31,7 @@ pub struct CLIArgs {
     pub versionarg: bool,
     pub pos_args: Vec<PathBuf>,
     pub files: Vec<PathBuf>,
+    pub colors: AppColors,
 }
 
 impl CLIArgs {
@@ -40,6 +43,7 @@ impl CLIArgs {
             match arg {
                 Short('h') | Long("help") => args.helparg = true,
                 Short('v') | Long("version") => args.versionarg = true,
+                Long("light-theme") => AppColors::light_colors(&mut args.colors),
                 // Value(pos_arg) => parse_files(&mut args, pos_arg),
                 Value(pos_arg) => args.pos_args.push(pos_arg.into()),
                 _ => return Err(arg.unexpected()),

@@ -27,13 +27,13 @@ pub mod errorsetup;
 pub mod tui;
 
 // Color indices
-const MAIN_ENTRY_COLOR_INDEX: u8 = 36;
-const MAIN_KEYWORD_COLOR_INDEX: u8 = 101;
-const MAIN_INFO_COLOR_INDEX: u8 = 99;
-const CONFIRM_COLOR_INDEX: u8 = 47;
-const WARN_COLOR_INDEX: u8 = 124;
-const TEXT_HIGHLIGHT_COLOR_INDEX: u8 = 254;
-const TEXT_FG_COLOR_INDEX: u8 = 250;
+static MAIN_ENTRY_COLOR_INDEX: u8 = 36;
+static MAIN_KEYWORD_COLOR_INDEX: u8 = 101;
+static MAIN_INFO_COLOR_INDEX: u8 = 99;
+static CONFIRM_COLOR_INDEX: u8 = 47;
+static WARN_COLOR_INDEX: u8 = 124;
+static TEXT_HIGHLIGHT_COLOR_INDEX: u8 = 254;
+static TEXT_FG_COLOR_INDEX: u8 = 250;
 
 #[tokio::main]
 async fn main() -> Result<()> {

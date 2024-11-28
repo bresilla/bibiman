@@ -43,73 +43,73 @@ use ratatui::{
 use walkdir::WalkDir;
 
 // Text colors
-const TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
-const TEXT_BRIGHT_FG_COLOR: Color = Color::Indexed(TEXT_HIGHLIGHT_COLOR_INDEX);
-const ENTRY_COLOR: Color = Color::Indexed(MAIN_ENTRY_COLOR_INDEX);
-const KEYWORD_COLOR: Color = Color::Indexed(MAIN_KEYWORD_COLOR_INDEX);
-const CONFIRM_COLOR: Color = Color::Indexed(CONFIRM_COLOR_INDEX);
-const WARN_COLOR: Color = Color::Indexed(WARN_COLOR_INDEX);
-const INFO_COLOR: Color = Color::Indexed(MAIN_INFO_COLOR_INDEX);
+static TEXT_FG_COLOR: Color = Color::Indexed(TEXT_FG_COLOR_INDEX);
+static TEXT_BRIGHT_FG_COLOR: Color = Color::Indexed(TEXT_HIGHLIGHT_COLOR_INDEX);
+static ENTRY_COLOR: Color = Color::Indexed(MAIN_ENTRY_COLOR_INDEX);
+static KEYWORD_COLOR: Color = Color::Indexed(MAIN_KEYWORD_COLOR_INDEX);
+static CONFIRM_COLOR: Color = Color::Indexed(CONFIRM_COLOR_INDEX);
+static WARN_COLOR: Color = Color::Indexed(WARN_COLOR_INDEX);
+static INFO_COLOR: Color = Color::Indexed(MAIN_INFO_COLOR_INDEX);
 
 // Background colors
-const HEADER_FOOTER_BG: Color = Color::Indexed(235);
-const POPUP_BG: Color = Color::Indexed(234);
+static HEADER_FOOTER_BG: Color = Color::Indexed(235);
+static POPUP_BG: Color = Color::Indexed(234);
 
 // Box styles
 // Keyword Box
-const KEYWORD_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
-const KEYWORD_BOX_SELECTED_TITLE_STYLE: Style =
+static KEYWORD_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
+static KEYWORD_BOX_SELECTED_TITLE_STYLE: Style =
     Style::new().fg(KEYWORD_COLOR).add_modifier(Modifier::BOLD);
-const KEYWORD_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
-const KEYWORD_BOX_UNSELECTED_TITLE_STYLE: Style =
+static KEYWORD_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
+static KEYWORD_BOX_UNSELECTED_TITLE_STYLE: Style =
     Style::new().fg(KEYWORD_COLOR).add_modifier(Modifier::BOLD);
 // Entry box
-const ENTRY_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
-const ENTRY_BOX_SELECTED_TITLE_STYLE: Style =
+static ENTRY_BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
+static ENTRY_BOX_SELECTED_TITLE_STYLE: Style =
     Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::BOLD);
-const ENTRY_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
-const ENTRY_BOX_UNSELECTED_TITLE_STYLE: Style =
+static ENTRY_BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
+static ENTRY_BOX_UNSELECTED_TITLE_STYLE: Style =
     Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::BOLD);
 // Default box
-// const BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
-const BOX_SELECTED_TITLE_STYLE: Style = Style::new()
+// static BOX_SELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_BRIGHT_FG_COLOR);
+static BOX_SELECTED_TITLE_STYLE: Style = Style::new()
     .fg(TEXT_BRIGHT_FG_COLOR)
     .add_modifier(Modifier::BOLD);
-const BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
-// const BOX_UNSELECTED_TITLE_STYLE: Style =
+static BOX_UNSELECTED_BORDER_STYLE: Style = Style::new().fg(TEXT_FG_COLOR);
+// static BOX_UNSELECTED_TITLE_STYLE: Style =
 // Style::new().fg(TEXT_FG_COLOR).add_modifier(Modifier::BOLD);
 // Popup box
-const POPUP_HELP_BOX: Style = Style::new().fg(TEXT_FG_COLOR).bg(POPUP_BG);
+static POPUP_HELP_BOX: Style = Style::new().fg(TEXT_FG_COLOR).bg(POPUP_BG);
 
 // Entry table styles
-const ENTRY_SELECTED_ROW_STYLE: Style = Style::new()
+static ENTRY_SELECTED_ROW_STYLE: Style = Style::new()
     .fg(ENTRY_COLOR)
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
-const KEYWORD_SELECTED_ROW_STYLE: Style = Style::new()
+static KEYWORD_SELECTED_ROW_STYLE: Style = Style::new()
     .fg(KEYWORD_COLOR)
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
-const SELECTION_SELECTED_ROW_STYLE: Style = Style::new()
+static SELECTION_SELECTED_ROW_STYLE: Style = Style::new()
     // .fg(ENTRY_COLOR)
     .add_modifier(Modifier::BOLD)
     .add_modifier(Modifier::REVERSED);
-const SELECTED_TABLE_COL_STYLE: Style = Style::new().add_modifier(Modifier::BOLD);
-const SELECTEC_TABLE_CELL_STYLE: Style = Style::new().add_modifier(Modifier::REVERSED);
+static SELECTED_TABLE_COL_STYLE: Style = Style::new().add_modifier(Modifier::BOLD);
+static SELECTEC_TABLE_CELL_STYLE: Style = Style::new().add_modifier(Modifier::REVERSED);
 
 // Symbols
-const SORTED_ENTRIES: &str = "▼";
-const SORTED_ENTRIES_REVERSED: &str = "▲";
-const SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
-const SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
+static SORTED_ENTRIES: &str = "▼";
+static SORTED_ENTRIES_REVERSED: &str = "▲";
+static SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
+static SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
 
 // Info area styles
-const INFO_STYLE_AUTHOR: Style = Style::new().fg(INFO_COLOR);
-const INFO_STYLE_TITLE: Style = Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::ITALIC);
-const INFO_STYLE_YEAR: Style = Style::new().fg(KEYWORD_COLOR);
-const INFO_STYLE_DOI: Style = Style::new().fg(TEXT_FG_COLOR);
-const INFO_STYLE_FILE: Style = Style::new().fg(TEXT_FG_COLOR);
-const INFO_STYLE_ABSTRACT: Style = Style::new().fg(TEXT_FG_COLOR);
+static INFO_STYLE_AUTHOR: Style = Style::new().fg(INFO_COLOR);
+static INFO_STYLE_TITLE: Style = Style::new().fg(ENTRY_COLOR).add_modifier(Modifier::ITALIC);
+static INFO_STYLE_YEAR: Style = Style::new().fg(KEYWORD_COLOR);
+static INFO_STYLE_DOI: Style = Style::new().fg(TEXT_FG_COLOR);
+static INFO_STYLE_FILE: Style = Style::new().fg(TEXT_FG_COLOR);
+static INFO_STYLE_ABSTRACT: Style = Style::new().fg(TEXT_FG_COLOR);
 
 pub const fn color_list(list_item: i32, sel_item: i32, highlight: u8, max_diff: i32) -> Color {
     if list_item == sel_item {
