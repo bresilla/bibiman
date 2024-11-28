@@ -21,7 +21,7 @@ use ratatui::{
     widgets::ListState,
 };
 
-use crate::{MAIN_ENTRY_COLOR_INDEX, MAIN_KEYWORD_COLOR_INDEX};
+use crate::{cliargs::CLIArgs, MAIN_ENTRY_COLOR_INDEX, MAIN_KEYWORD_COLOR_INDEX};
 
 #[derive(Debug)]
 pub enum PopupKind {
@@ -42,7 +42,7 @@ pub struct PopupArea {
 }
 
 impl PopupArea {
-    pub fn popup_help<'a>() -> Text<'a> {
+    pub fn popup_help<'a>(args: &CLIArgs) -> Text<'a> {
         let help = [
             ("General", "first"),
             ("TAB: ", "Toggle areas (Entries, Keywords)"),
@@ -81,20 +81,20 @@ impl PopupArea {
                 helptext.push(Line::from(
                     Span::raw(keys)
                         .bold()
-                        .fg(Color::Indexed(MAIN_ENTRY_COLOR_INDEX)),
+                        .fg(Color::Indexed(args.colors.main_text_color)),
                 ))
             } else if help == "sub" {
                 helptext.push(Line::from(""));
                 helptext.push(Line::from(
                     Span::raw(keys)
                         .bold()
-                        .fg(Color::Indexed(MAIN_ENTRY_COLOR_INDEX)),
+                        .fg(Color::Indexed(args.colors.main_text_color)),
                 ))
             } else {
                 helptext.push(Line::from(vec![
                     Span::raw(keys)
                         .bold()
-                        .fg(Color::Indexed(MAIN_KEYWORD_COLOR_INDEX)),
+                        .fg(Color::Indexed(args.colors.keyword_color)),
                     Span::raw(help),
                 ]))
             }

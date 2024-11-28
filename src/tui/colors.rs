@@ -17,11 +17,13 @@
 
 #[derive(Debug, Clone)]
 pub struct AppColors {
-    main_text_color: u8,
-    highlight_text_color: u8,
-    entry_color: u8,
-    keyword_color: u8,
-    info_color: u8,
+    pub main_text_color: u8,
+    pub highlight_text_color: u8,
+    pub entry_color: u8,
+    pub keyword_color: u8,
+    pub info_color: u8,
+    pub confirm_color: u8,
+    pub warn_color: u8,
 }
 
 impl Default for AppColors {
@@ -32,6 +34,8 @@ impl Default for AppColors {
             entry_color: 36,
             keyword_color: 101,
             info_color: 99,
+            confirm_color: 47,
+            warn_color: 124,
         }
     }
 }
@@ -59,6 +63,14 @@ impl AppColors {
 
     pub fn info_color(&mut self, index: u8) {
         self.info_color = index
+    }
+
+    pub fn confirm_color(&mut self, index: u8) {
+        self.confirm_color = index
+    }
+
+    pub fn warn_color(&mut self, index: u8) {
+        self.warn_color = index
     }
 
     /// Activates the default color scheme for light background terminals
