@@ -52,9 +52,10 @@ impl CLIArgs {
     }
 }
 
+/// This function maps a vector containing paths to another vector containing paths.
+/// But it will walk all entries of the first vec which are directories
+/// and put only valid file paths with `.bib` ending to the resulting vec.
 fn parse_files(args: Vec<PathBuf>) -> Vec<PathBuf> {
-    // convert to PathBuf to use methods for testing the path
-    // let path = PathBuf::from(pos_arg);
     let mut files: Vec<PathBuf> = Vec::new();
     // If pos arg is file, just push it to path vec
     for i in args {
