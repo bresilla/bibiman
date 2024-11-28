@@ -23,10 +23,6 @@ use crate::bibiman::{CurrentArea, FormerArea};
 use crate::cliargs::CLIArgs;
 use crate::tui::popup::PopupKind;
 use crate::App;
-use crate::{
-    CONFIRM_COLOR_INDEX, MAIN_ENTRY_COLOR_INDEX, MAIN_INFO_COLOR_INDEX, MAIN_KEYWORD_COLOR_INDEX,
-    TEXT_FG_COLOR_INDEX, TEXT_HIGHLIGHT_COLOR_INDEX, WARN_COLOR_INDEX,
-};
 use ratatui::layout::{Direction, Position};
 use ratatui::widgets::Clear;
 use ratatui::Frame;
@@ -650,7 +646,7 @@ pub fn render_entrytable(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect:
                             .entry_table_state
                             .selected()
                             .unwrap_or(0) as i32,
-                        TEXT_HIGHLIGHT_COLOR_INDEX,
+                        args.colors.highlight_text_color,
                         20,
                     )),
                 )
@@ -953,7 +949,7 @@ pub fn render_taglist(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: Re
                     color_list(
                         i as i32,
                         app.bibiman.tag_list.tag_list_state.selected().unwrap() as i32,
-                        TEXT_HIGHLIGHT_COLOR_INDEX,
+                        args.colors.highlight_text_color,
                         20,
                     )
                 } else {
