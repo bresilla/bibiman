@@ -2,6 +2,7 @@
 # no backup files
 **/*.bak
 
-# no gif's
+# no gif's and images
 **/*.tape
 res/*.gif
+res/*.png

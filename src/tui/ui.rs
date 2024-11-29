@@ -17,6 +17,7 @@
 
 use std::path::PathBuf;
 
+use super::colors::AppColorScheme;
 use super::popup::PopupArea;
 use crate::bibiman::entries::EntryTableColumn;
 use crate::bibiman::{CurrentArea, FormerArea};
@@ -38,29 +39,50 @@ use ratatui::{
 };
 use walkdir::WalkDir;
 
-// Background colors
-static HEADER_FOOTER_BG: Color = Color::Indexed(235);
-static POPUP_BG: Color = Color::Indexed(234);
-
 // Symbols
 static SORTED_ENTRIES: &str = "▼";
 static SORTED_ENTRIES_REVERSED: &str = "▲";
 static SCROLLBAR_UPPER_CORNER: Option<&str> = Some("┓");
 static SCROLLBAR_LOWER_CORNER: Option<&str> = Some("┛");
 
-pub const fn color_list(list_item: i32, sel_item: i32, highlight: u8, max_diff: i32) -> Color {
-    if list_item == sel_item {
-        Color::Indexed(highlight)
-    } else if (list_item - sel_item) > max_diff
-        || (sel_item - list_item) > max_diff
-        || -(list_item - sel_item) > max_diff
-        || -(sel_item - list_item) > max_diff
-    {
-        Color::Indexed(highlight - max_diff as u8)
-    } else if list_item < sel_item {
-        Color::Indexed(highlight - (sel_item - list_item) as u8)
-    } else {
-        Color::Indexed(highlight - (list_item - sel_item) as u8)
+pub fn color_list(
+    args: &CLIArgs,
+    list_item: i32,
+    sel_item: i32,
+    highlight: u8,
+    max_diff: i32,
+) -> Color {
+    match args.colors.color_scheme {
+        AppColorScheme::Dark => {
+            if list_item == sel_item {
+                Color::Indexed(highlight)
+            } else if (list_item - sel_item) > max_diff
+                || (sel_item - list_item) > max_diff
+                || -(list_item - sel_item) > max_diff
+                || -(sel_item - list_item) > max_diff
+            {
+                Color::Indexed(highlight - max_diff as u8)
+            } else if list_item < sel_item {
+                Color::Indexed(highlight - (sel_item - list_item) as u8)
+            } else {
+                Color::Indexed(highlight - (list_item - sel_item) as u8)
+            }
+        }
+        AppColorScheme::Light => {
+            if list_item == sel_item {
+                Color::Indexed(highlight)
+            } else if (list_item - sel_item) > max_diff
+                || (sel_item - list_item) > max_diff
+                || -(list_item - sel_item) > max_diff
+                || -(sel_item - list_item) > max_diff
+            {
+                Color::Indexed(highlight + max_diff as u8)
+            } else if list_item < sel_item {
+                Color::Indexed(highlight + (sel_item - list_item) as u8)
+            } else {
+                Color::Indexed(highlight + (list_item - sel_item) as u8)
+            }
+        }
     }
 }
 
@@ -129,7 +151,7 @@ pub fn render_popup(app: &mut App, args: &CLIArgs, frame: &mut Frame) {
                 .style(
                     Style::new()
                         .fg(Color::Indexed(args.colors.main_text_color))
-                        .bg(POPUP_BG),
+                        .bg(Color::Indexed(args.colors.popup_bg_color)),
                 )
                 .border_set(symbols::border::THICK)
                 .border_style(Style::new().fg(Color::Indexed(args.colors.entry_color)));
@@ -172,7 +194,7 @@ pub fn render_popup(app: &mut App, args: &CLIArgs, frame: &mut Frame) {
                 .style(
                     Style::new()
                         .fg(Color::Indexed(args.colors.main_text_color))
-                        .bg(POPUP_BG),
+                        .bg(Color::Indexed(args.colors.popup_bg_color)),
                 );
 
             let content = Paragraph::new(app.bibiman.popup_area.popup_message.clone())
@@ -203,7 +225,7 @@ pub fn render_popup(app: &mut App, args: &CLIArgs, frame: &mut Frame) {
                 .style(
                     Style::new()
                         .fg(Color::Indexed(args.colors.main_text_color))
-                        .bg(POPUP_BG),
+                        .bg(Color::Indexed(args.colors.popup_bg_color)),
                 );
 
             let content = Paragraph::new(app.bibiman.popup_area.popup_message.clone())
@@ -237,7 +259,7 @@ pub fn render_popup(app: &mut App, args: &CLIArgs, frame: &mut Frame) {
                 .style(
                     Style::new()
                         .fg(Color::Indexed(args.colors.main_text_color))
-                        .bg(POPUP_BG),
+                        .bg(Color::Indexed(args.colors.popup_bg_color)),
                 )
                 .border_set(symbols::border::THICK)
                 .border_style(Style::new().fg(Color::Indexed(args.colors.keyword_color)));
@@ -281,7 +303,7 @@ pub fn render_footer(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: Rec
 
     let block = Block::new()
         .padding(Padding::horizontal(1))
-        .bg(HEADER_FOOTER_BG);
+        .bg(Color::Indexed(args.colors.bar_bg_color));
 
     let search_string = Paragraph::new(Line::from(vec![
         Span::styled(
@@ -291,14 +313,17 @@ pub fn render_footer(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: Rec
                     .fg(Color::Indexed(args.colors.entry_color))
                     .add_modifier(Modifier::BOLD)
             } else if let Some(FormerArea::TagArea) = app.bibiman.former_area {
-                Style::new().fg(Color::Indexed(args.colors.highlight_text_color))
+                Style::new()
+                    .fg(Color::Indexed(args.colors.keyword_color))
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::new()
                     .fg(Color::Indexed(args.colors.highlight_text_color))
                     .add_modifier(Modifier::BOLD)
             },
         ),
-        Span::raw(app.bibiman.search_struct.search_string.clone()),
+        Span::raw(app.bibiman.search_struct.search_string.clone())
+            .fg(Color::Indexed(args.colors.highlight_text_color)),
     ]))
     .block(block);
 
@@ -339,29 +364,45 @@ pub fn render_file_info(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: 
 
     let file_info = if args.pos_args.len() == 1 && args.pos_args.first().unwrap().is_file() {
         Line::from(vec![
-            Span::raw("File: ").bold(),
-            Span::raw(args.pos_args[0].file_name().unwrap().to_string_lossy()).bold(),
+            Span::raw("File: ")
+                .fg(Color::Indexed(args.colors.main_text_color))
+                .bold(),
+            Span::raw(args.pos_args[0].file_name().unwrap().to_string_lossy())
+                .fg(Color::Indexed(args.colors.main_text_color))
+                .bold(),
         ])
-        .bg(HEADER_FOOTER_BG)
+        .bg(Color::Indexed(args.colors.bar_bg_color))
     } else if args.pos_args.len() == 1 && args.pos_args.first().unwrap().is_dir() {
         Line::from(vec![
-            Span::raw("Directory: ").bold(),
-            Span::raw(args.pos_args[0].file_name().unwrap().to_string_lossy()).bold(),
-            Span::raw("/*.bib").bold(),
+            Span::raw("Directory: ")
+                .bold()
+                .fg(Color::Indexed(args.colors.main_text_color)),
+            Span::raw(args.pos_args[0].file_name().unwrap().to_string_lossy())
+                .fg(Color::Indexed(args.colors.main_text_color))
+                .bold(),
+            Span::raw("/*.bib")
+                .fg(Color::Indexed(args.colors.main_text_color))
+                .bold(),
         ])
-        .bg(HEADER_FOOTER_BG)
+        .bg(Color::Indexed(args.colors.bar_bg_color))
     } else {
         Line::from(vec![
-            Span::raw("Multiple files (").bold(),
-            Span::raw(count_files(&args.files).to_string()).bold(),
-            Span::raw(")"),
+            Span::raw("Multiple files (")
+                .fg(Color::Indexed(args.colors.main_text_color))
+                .bold(),
+            Span::raw(count_files(&args.files).to_string())
+                .fg(Color::Indexed(args.colors.main_text_color))
+                .bold(),
+            Span::raw(")")
+                .fg(Color::Indexed(args.colors.main_text_color))
+                .bold(),
         ])
-        .bg(HEADER_FOOTER_BG)
+        .bg(Color::Indexed(args.colors.bar_bg_color))
     };
 
     let cur_keywords = Line::from(if !app.bibiman.tag_list.selected_keywords.is_empty() {
         vec![
-            Span::raw("Selected keywords: "),
+            Span::raw("Selected keywords: ").fg(Color::Indexed(args.colors.main_text_color)),
             // Show all keywords in correct order if list is filtered
             // successively by multiple keywords
             Span::raw(app.bibiman.tag_list.selected_keywords.join(" → "))
@@ -371,7 +412,7 @@ pub fn render_file_info(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: 
     } else {
         vec![Span::raw(" ")]
     })
-    .bg(HEADER_FOOTER_BG);
+    .bg(Color::Indexed(args.colors.bar_bg_color));
     // .render(keyword_area, buf);
 
     let item_count = Line::from(
@@ -407,16 +448,18 @@ pub fn render_file_info(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: 
                         .to_string()
                     },
                 )
+                .fg(Color::Indexed(args.colors.main_text_color))
                 .bold(),
-                Span::raw("/"),
-                Span::raw(app.bibiman.entry_table.entry_table_items.len().to_string()),
+                Span::raw("/").fg(Color::Indexed(args.colors.main_text_color)),
+                Span::raw(app.bibiman.entry_table.entry_table_items.len().to_string())
+                    .fg(Color::Indexed(args.colors.main_text_color)),
             ]
         } else {
             vec![Span::raw("No entries")]
         },
     )
     .right_aligned()
-    .bg(HEADER_FOOTER_BG);
+    .bg(Color::Indexed(args.colors.bar_bg_color));
     frame.render_widget(file_info, file_area);
     frame.render_widget(cur_keywords, keyword_area);
     frame.render_widget(item_count, count_area);
@@ -467,7 +510,7 @@ pub fn render_entrytable(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect:
     let header_style = Style::default()
         .bold()
         .fg(Color::Indexed(args.colors.main_text_color))
-        .bg(HEADER_FOOTER_BG);
+        .bg(Color::Indexed(args.colors.bar_bg_color));
 
     let header = Row::new(vec![
         Cell::from(
@@ -490,9 +533,9 @@ pub fn render_entrytable(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect:
                 if let EntryTableColumn::Authors =
                     app.bibiman.entry_table.entry_table_selected_column
                 {
-                    Color::Indexed(237)
+                    Color::Indexed(args.colors.selected_row_bg_color)
                 } else {
-                    HEADER_FOOTER_BG
+                    Color::Indexed(args.colors.bar_bg_color)
                 },
             ),
         ),
@@ -514,9 +557,9 @@ pub fn render_entrytable(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect:
             .bg(
                 if let EntryTableColumn::Title = app.bibiman.entry_table.entry_table_selected_column
                 {
-                    Color::Indexed(237)
+                    Color::Indexed(args.colors.selected_row_bg_color)
                 } else {
-                    HEADER_FOOTER_BG
+                    Color::Indexed(args.colors.bar_bg_color)
                 },
             ),
         ),
@@ -538,9 +581,9 @@ pub fn render_entrytable(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect:
             .bg(
                 if let EntryTableColumn::Year = app.bibiman.entry_table.entry_table_selected_column
                 {
-                    Color::Indexed(237)
+                    Color::Indexed(args.colors.selected_row_bg_color)
                 } else {
-                    HEADER_FOOTER_BG
+                    Color::Indexed(args.colors.bar_bg_color)
                 },
             ),
         ),
@@ -564,9 +607,9 @@ pub fn render_entrytable(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect:
                 if let EntryTableColumn::Pubtype =
                     app.bibiman.entry_table.entry_table_selected_column
                 {
-                    Color::Indexed(237)
+                    Color::Indexed(args.colors.selected_row_bg_color)
                 } else {
-                    HEADER_FOOTER_BG
+                    Color::Indexed(args.colors.bar_bg_color)
                 },
             ),
         ),
@@ -588,6 +631,7 @@ pub fn render_entrytable(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect:
                 .collect::<Row>()
                 .style(
                     Style::new().fg(color_list(
+                        args,
                         i as i32,
                         app.bibiman
                             .entry_table
@@ -727,25 +771,27 @@ pub fn render_selected_item(app: &mut App, args: &CLIArgs, frame: &mut Frame, re
                 let mut content = vec![Span::styled("Keywords: ", style_value)];
                 for k in kw {
                     // Add half block highlighted in bg color to enlarge block
-                    content.push(Span::raw("▐").fg(HEADER_FOOTER_BG));
+                    content.push(Span::raw("▐").fg(Color::Indexed(args.colors.bar_bg_color)));
                     content.push(Span::styled(
                         k,
-                        Style::default().bg(HEADER_FOOTER_BG).fg(
-                            // Highlight selected keyword green
-                            if app
-                                .bibiman
-                                .tag_list
-                                .selected_keywords
-                                .iter()
-                                .any(|e| e == k)
-                            {
-                                Color::Green
-                            } else {
-                                Color::Indexed(args.colors.main_text_color)
-                            },
-                        ),
+                        Style::default()
+                            .bg(Color::Indexed(args.colors.bar_bg_color))
+                            .fg(
+                                // Highlight selected keyword green
+                                if app
+                                    .bibiman
+                                    .tag_list
+                                    .selected_keywords
+                                    .iter()
+                                    .any(|e| e == k)
+                                {
+                                    Color::Green
+                                } else {
+                                    Color::Indexed(args.colors.main_text_color)
+                                },
+                            ),
                     ));
-                    content.push(Span::raw("▌").fg(HEADER_FOOTER_BG));
+                    content.push(Span::raw("▌").fg(Color::Indexed(args.colors.bar_bg_color)));
                 }
                 lines.push(Line::from(content))
             }
@@ -895,6 +941,7 @@ pub fn render_taglist(app: &mut App, args: &CLIArgs, frame: &mut Frame, rect: Re
             ListItem::from(keyword.to_owned()).style(Style::new().fg(
                 if app.bibiman.tag_list.tag_list_state.selected().is_some() {
                     color_list(
+                        args,
                         i as i32,
                         app.bibiman.tag_list.tag_list_state.selected().unwrap() as i32,
                         args.colors.highlight_text_color,
@@ -961,8 +1008,6 @@ fn render_cursor(app: &mut App, frame: &mut Frame, area: Rect, x_offset: u16) {
 
 /// helper function to create a centered rect using up certain percentage of the available rect `r`
 fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
-    // let vertical = Layout::vertical([Constraint::Percentage(percent_y)]).flex(Flex::Center);
-    // let horizontal = Layout::horizontal([Constraint::Percentage(percent_x)]).flex(Flex::Center);
     let vertical = Layout::vertical([Constraint::Length(percent_y)]).flex(Flex::Center);
     let horizontal = Layout::horizontal([Constraint::Length(percent_x)]).flex(Flex::Center);
     let [area] = vertical.areas(area);

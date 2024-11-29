@@ -16,6 +16,12 @@
 /////
 
 #[derive(Debug, Clone)]
+pub enum AppColorScheme {
+    Light,
+    Dark,
+}
+
+#[derive(Debug, Clone)]
 pub struct AppColors {
     pub main_text_color: u8,
     pub highlight_text_color: u8,
@@ -24,6 +30,10 @@ pub struct AppColors {
     pub info_color: u8,
     pub confirm_color: u8,
     pub warn_color: u8,
+    pub bar_bg_color: u8,
+    pub popup_bg_color: u8,
+    pub selected_row_bg_color: u8,
+    pub color_scheme: AppColorScheme,
 }
 
 impl Default for AppColors {
@@ -36,14 +46,18 @@ impl Default for AppColors {
             info_color: 99,
             confirm_color: 47,
             warn_color: 124,
+            bar_bg_color: 235,
+            popup_bg_color: 234,
+            selected_row_bg_color: 237,
+            color_scheme: AppColorScheme::Dark,
         }
     }
 }
 
 impl AppColors {
-    pub fn new() -> Self {
-        Self::default()
-    }
+    // pub fn new() -> Self {
+    //     Self::default()
+    // }
 
     pub fn main_text_color(&mut self, index: u8) {
         self.main_text_color = index
@@ -73,12 +87,35 @@ impl AppColors {
         self.warn_color = index
     }
 
+    pub fn bar_bg_color(&mut self, index: u8) {
+        self.bar_bg_color = index
+    }
+
+    pub fn popup_bg_color(&mut self, index: u8) {
+        self.popup_bg_color = index
+    }
+
+    pub fn selected_row_bg_color(&mut self, index: u8) {
+        self.selected_row_bg_color = index
+    }
+
+    pub fn toggle_color_scheme(&mut self) {
+        match self.color_scheme {
+            AppColorScheme::Light => self.color_scheme = AppColorScheme::Dark,
+            AppColorScheme::Dark => self.color_scheme = AppColorScheme::Light,
+        }
+    }
+
     /// Activates the default color scheme for light background terminals
     pub fn light_colors(&mut self) {
         self.main_text_color(235);
         self.highlight_text_color(232);
         self.entry_color(23);
         self.keyword_color(58);
-        self.info_color(57)
+        self.info_color(57);
+        self.bar_bg_color(144);
+        self.popup_bg_color(187);
+        self.confirm_color(22);
+        self.selected_row_bg_color(107)
     }
 }

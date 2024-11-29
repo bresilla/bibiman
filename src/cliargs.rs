@@ -43,7 +43,10 @@ impl CLIArgs {
             match arg {
                 Short('h') | Long("help") => args.helparg = true,
                 Short('v') | Long("version") => args.versionarg = true,
-                Long("light-theme") => AppColors::light_colors(&mut args.colors),
+                Long("light-terminal") => {
+                    args.colors.light_colors();
+                    args.colors.toggle_color_scheme()
+                }
                 // Value(pos_arg) => parse_files(&mut args, pos_arg),
                 Value(pos_arg) => args.pos_args.push(pos_arg.into()),
                 _ => return Err(arg.unexpected()),
@@ -98,14 +101,18 @@ pub fn help_func() -> String {
 {} {}
 
 USAGE:
-    bibiman [FLAGS] [file]
+    bibiman [FLAGS] [files/dirs]
 
 POSITIONAL ARGS:
     <file>    Path to .bib file
+    <dir>     Path to directory containing .bib files
+
+    Both can be passed multiple times
 
 FLAGS:
-    -h, --help      Show this help and exit
-    -v, --version   Show the version and exit",
+    -h, --help          Show this help and exit
+    -v, --version       Show the version and exit
+    --light-terminal    Enable color mode for light terminal background",
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION"),
     );
