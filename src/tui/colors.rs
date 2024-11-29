@@ -55,9 +55,9 @@ impl Default for AppColors {
 }
 
 impl AppColors {
-    // pub fn new() -> Self {
-    //     Self::default()
-    // }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
     pub fn main_text_color(&mut self, index: u8) {
         self.main_text_color = index
