@@ -35,14 +35,30 @@ cargo install --path=. --locked
 
 ## Usage
 
-`bibiman` needs bibfiles (with `.bib` extension) passed as positional arguments.
-You can pass a single file, multiple files, the path of a directory containing
-bibfiles, or mix files and directories.
+The following arguments are possible:
+
+```
+USAGE:
+    bibiman [FLAGS] [files/dirs]
+
+POSITIONAL ARGS:
+    <file>    Path to .bib file
+    <dir>     Path to directory containing .bib files
+
+FLAGS:
+    -h, --help          Show this help and exit
+    -v, --version       Show the version and exit
+    --light-terminal    Enable color mode for light terminal background
+
+```
+
+As seen, you can pass a single file, multiple files, the path of a directory
+containing bibfiles, or mix files and directories.
 
 Directories will be searched recursively for files with the `.bib` extension and
 add them to the entry list. Other files will be ignored.Thus, be careful not to
 pass a directory with multiple subdirectories (like eg `/home/usr/`), because
-this could be to some delay while parsing GBs of data.
+this could lead to some delay while parsing GBs of data.
 
 The following lines are all valid CLI calls to run `bibiman` using the test
 files from the `tests` folder:
@@ -80,7 +96,7 @@ my personal workflow. There are more to come, the list will be updated:
 - [x] **Open related PDF** file (`file` BibLaTeX key) with keypress.
 - [x] **Open related URL/DOI** with keypress.
 - [x] **Scrollbar** for better navigating.
-- [x] **Sort Entries** by each column (`Authors`, `Title`, `Year`, `Pubtype`)
+- [x] **Sort Entries** by column (`Authors`, `Title`, `Year`, `Pubtype`)
 - [x] **Load multiple files** into one session.
 - [ ] **Open related notes file** for specific entry.
 - [ ] **Add Entry via DOI** as formatted code.
@@ -97,22 +113,23 @@ functionality.**
 
 Use the following keybindings to manage the TUI:
 
-| Key                                    | Action                                                   |
-| -------------------------------------- | -------------------------------------------------------- |
-| `j`,`k` \| `Down`,`Up`                 | Move down/up by 1                                        |
-| `Ctrl-d`,`Ctrl-u`                      | Move down/up by 5                                        |
-| `g`,`G`                                | Go to first/last entry                                   |
-| `h`,`k` \| `Left`,`Right`              | Select previous/next entry column                        |
-| `s`                                    | Sort current column (toggles)                            |
-| `PageDown`,`PageUp` \| `Alt-j`,`Alt-k` | Scroll Info window                                       |
-| `y`                                    | Yank/copy citekey of selected entry                      |
-| `e`                                    | Open editor at selected entry                            |
-| `o`                                    | Open related PDF or URL/DOI                              |
-| `TAB`                                  | Switch between entries and keywords                      |
-| `/`,`Ctrl-f`                           | Enter search mode                                        |
-| `Enter`                                | Filter by selected keyword / Confirm search or selection |
-| `ESC`                                  | Abort search / Reset current list                        |
-| `q`,`Ctrl-c`                           | Quit TUI                                                 |
+| Key                                      | Action                                                   |
+| ---------------------------------------- | -------------------------------------------------------- |
+| `?`                                      | Open help popup with keybindings                         |
+| `j`, `k` \| `Down`, `Up`                 | Move down/up by 1                                        |
+| `Ctrl-d`, `Ctrl-u`                       | Move down/up by 5                                        |
+| `g`, `G`                                 | Go to first/last entry                                   |
+| `h`, `k` \| `Left`, `Right`              | Select previous/next entry column                        |
+| `s`                                      | Sort current column (toggles)                            |
+| `PageDown`, `PageUp` \| `Alt-j`, `Alt-k` | Scroll Info window                                       |
+| `y`                                      | Yank/copy citekey of selected entry                      |
+| `e`                                      | Open editor at selected entry                            |
+| `o`                                      | Open related PDF or URL/DOI                              |
+| `TAB`                                    | Switch between entries and keywords                      |
+| `/`, `Ctrl-f`                            | Enter search mode                                        |
+| `Enter`                                  | Filter by selected keyword / Confirm search or selection |
+| `ESC`                                    | Abort search / Reset current list                        |
+| `q`, `Ctrl-c`                            | Quit TUI                                                 |
 
 ## Search
 
@@ -147,8 +164,8 @@ thus, there might be unexpected errors with it.
 
 ## Open connected files or links
 
-Now, `bibiman` also provides the possibility to open PDFs (as value of the
-`file` BibLaTeX field), as well as DOIs and URLs.
+`bibiman` also provides the possibility to open PDFs (as value of the `file`
+BibLaTeX field), as well as DOIs and URLs.
 
 For selecting the right program, it uses `xdg-open` on Linux, `open` on MacOS,
 and `start` on Windows. Thanks to the report from @bastislack in #2 MacOS seems
@@ -181,8 +198,7 @@ Maybe one of these might fit _your_ personal needs better:
 
 - [bibman (Haskell)](https://codeberg.org/KMIJPH/bibman): A very nice CLI
   program including a TUI I also used for some times. It has way more CLI
-  features (export etc.) at the moment. The main difference is that its based on
-  a multi file approach. If you also use a separate file per entry, look there!
+  features (export etc.) at the moment.
 - [bibman (Python)](https://github.com/ductri/bibman): A TUI written in Python
   with focus on Zotero-like functions. If you're used to Zotero, this might be a
   good fit.
@@ -193,3 +209,19 @@ Maybe one of these might fit _your_ personal needs better:
   CLI and TUI functions.
 - [papis](https://github.com/papis/papis): Powerful CLI tool for managing
   bibliographies and documents. Has also some TUI features.
+
+### Comparison
+
+I compared `bibiman` only free-hand to `bibman` (Haskell) and `bibman` (Perl),
+since there is no simple benchmark test for TUIs. At least, I couldn't find one.
+
+Loading a test file containing 25.000 dummy entries as well as a directory
+containing 25.000 single dummy `.bib` files `bibiman` was significantly faster
+on startup than both other programs. The performance also did not suffer. Only
+on a test file with more than 50.000 dummy entries a very short delay after
+keypresses was recognizable when scrolling the entry list. This is very likely
+due to the effect of the single entries being dimmed differently regarding their
+position to the selected one which needs some CPU resources.
+
+After all, `bibiman` is really fast and runs very smooth while having the most
+complex user interface by far compared to the other programs.
