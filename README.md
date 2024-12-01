@@ -77,9 +77,19 @@ bibman tests/multi-files/
 bibiman tests/biblatex-test.bib tests/multi-files/
 ```
 
-Here as small demo gif:
+Here as small demo gif which shows different ways of loading files/dirs:
 
 [![bibiman-multifile.gif](https://i.postimg.cc/pXR13Fxp/bibiman-multifile.gif)](https://postimg.cc/DmpgXmST)
+
+Furthermore, in issue #3 it was asked to enable a color customization to run
+`bibiman` also in terminal setups with light background. Thus, now it is
+possible to enable a light terminal mode with the `--light-terminal` flag. Full
+color customization is not possible right now, but maybe will be added with the
+implementation of a config file.
+
+Here is how the light terminal scheme looks:
+
+![bibiman-light-theme.png](https://codeberg.org/attachments/7fe9d58d-7e90-4043-9402-5e4664c4e22a)
 
 ## Features
 
