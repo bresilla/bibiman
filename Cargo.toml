@@ -1,6 +1,6 @@
 [package]
 name = "bibiman"
-version = "0.8.1"
+version = "0.8.2"
 authors = ["lukeflo <lukeflo_git@posteo.de>"]
 license = "GPL-3.0-or-later"
 repository = "https://codeberg.org/lukeflo/bibiman"
@@ -20,6 +20,7 @@ arboard = { version = "3.4.1", features = ["wayland-data-control"] }
 biblatex = "0.10.0"
 color-eyre = "0.6.3"
 crossterm = { version = "0.28.1", features = ["event-stream"] }
+dirs = "5.0.1"
 # doi = "0.3.0"
 editor-command = "0.1.1"
 futures = "0.3.30"

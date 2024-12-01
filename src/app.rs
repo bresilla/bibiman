@@ -24,6 +24,7 @@ use crate::tui::popup::PopupKind;
 use crate::tui::{self, Tui};
 use crate::{bibiman::Bibiman, tui::commands::CmdAction};
 use std::ffi::OsStr;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use tui::Event;
 use tui_input::backend::crossterm::EventHandler;
@@ -335,6 +336,11 @@ pub fn open_connected_file(file: &OsStr) -> Result<()> {
         }
     };
 
+    // If necessary, replace ~ with /home dir
+    let file = PathBuf::from(file);
+
+    let file = expand_home(&file);
+
     // Pass filepath as argument, pipe stdout and stderr to /dev/null
     // to keep the TUI clean (where is it piped on Windows???)
     let _ = Command::new(&cmd)
@@ -378,5 +384,35 @@ pub fn prepare_weblink(url: &str) -> String {
         "https://".to_string() + url
     } else {
         url.to_string()
+    }
+}
+
+fn expand_home(path: &PathBuf) -> PathBuf {
+    // let path = PathBuf::from(path);
+    if path.starts_with("~") {
+        let mut home = dirs::home_dir().unwrap();
+        let path = path.strip_prefix("~").unwrap();
+        home.push(path);
+        home
+    } else {
+        path.into()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_home_expansion() {
+        let path: PathBuf = "~/path/to/file.txt".into();
+
+        let path = expand_home(&path);
+
+        let home: String = dirs::home_dir().unwrap().to_str().unwrap().to_string();
+
+        let full_path = home + "/path/to/file.txt";
+
+        assert_eq!(path, PathBuf::from(full_path))
     }
 }
