@@ -31,6 +31,8 @@ pub struct CLIArgs {
     pub versionarg: bool,
     pub pos_args: Vec<PathBuf>,
     pub files: Vec<PathBuf>,
+    // INFO: AppColors struct later should be moved to config/app struct
+    // when config file is implemented
     pub colors: AppColors,
 }
 
