@@ -21,6 +21,7 @@ biblatex = "0.10.0"
 color-eyre = "0.6.3"
 crossterm = { version = "0.28.1", features = ["event-stream"] }
 dirs = "5.0.1"
+doi2bib = "0.2.0"
 # doi = "0.3.0"
 editor-command = "0.1.1"
 futures = "0.3.30"

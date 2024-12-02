@@ -6,3 +6,6 @@
 **/*.tape
 res/*.gif
 res/*.png
+.direnv
+.envrc
+devbox.json
