@@ -131,7 +131,9 @@ impl Bibiman {
 
         if let AOk(entry) = new_entry {
             // TODO: Add error handling for failed insert
-            if self.append_to_file(args, &entry.to_string()).is_err() {
+            let formatted_content = Self::format_bibtex_entry(&entry, "");
+
+            if self.append_to_file(args, &formatted_content).is_err() {
                 self.popup_area.popup_kind = Some(PopupKind::MessageError);
                 self.popup_area.popup_message = "Failed to add new entry".to_string();
             }
@@ -429,21 +431,21 @@ impl Bibiman {
         // Optionally, add a newline before the content
         file.write_all(b"\n")?;
         // Format the content
-        let formatted_content = Self::format_bibtex_entry(content);
         // Write the formatted content to the file
-        file.write_all(formatted_content.as_bytes())?;
+        file.write_all(content.as_bytes())?;
         // Update the database and the lists to reflect the new content
         self.update_lists(args);
         Ok(())
     }
 
     /// Formats a raw BibTeX entry string for better readability.
-    pub fn format_bibtex_entry(entry: &str) -> String {
+    pub fn format_bibtex_entry(entry: &str, file_path: &str) -> String {
         let mut formatted = String::new();
         // Find the position of the first '{'
         if let Some(start_brace_pos) = entry.find('{') {
             // Copy the preamble (e.g., '@article{')
             let preamble = &entry[..start_brace_pos + 1];
+            let preamble = preamble.trim_start();
             formatted.push_str(preamble);
             formatted.push('\n'); // Add newline
                                   // Now get the content inside the braces
@@ -489,6 +491,10 @@ impl Bibiman {
             if !current_field.trim().is_empty() {
                 fields.push(current_field.trim().to_string());
             }
+
+            // Add the new 'file' field
+            let file_field = format!("file = {{{}}}", file_path);
+            fields.push(file_field);
 
             // Now reconstruct the entry with proper indentation
             for (i, field) in fields.iter().enumerate() {
