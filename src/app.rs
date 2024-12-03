@@ -108,7 +108,7 @@ impl App {
                             }
                             KeyCode::Enter => {
                                 // Handle submission of the new entry
-                                self.bibiman.handle_new_entry_submission();
+                                self.bibiman.handle_new_entry_submission(args);
                                 self.bibiman.close_popup();
                                 self.input_mode = false;
                             }
