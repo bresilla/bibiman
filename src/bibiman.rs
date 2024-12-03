@@ -421,7 +421,6 @@ impl Bibiman {
         Ok(())
     }
 
-    /// Appends a string to the appropriate BibLaTeX file.
     pub fn append_to_file(&mut self, args: &CLIArgs, content: &str) -> Result<()> {
         // Determine the file path to append to
         let file_path = args.files.first().unwrap();
@@ -429,11 +428,84 @@ impl Bibiman {
         let mut file = OpenOptions::new().append(true).open(file_path).unwrap();
         // Optionally, add a newline before the content
         file.write_all(b"\n")?;
-        // Write the content to the file
-        file.write_all(content.as_bytes())?;
+        // Format the content
+        let formatted_content = Self::format_bibtex_entry(content);
+        // Write the formatted content to the file
+        file.write_all(formatted_content.as_bytes())?;
         // Update the database and the lists to reflect the new content
         self.update_lists(args);
         Ok(())
+    }
+
+    /// Formats a raw BibTeX entry string for better readability.
+    pub fn format_bibtex_entry(entry: &str) -> String {
+        let mut formatted = String::new();
+        // Find the position of the first '{'
+        if let Some(start_brace_pos) = entry.find('{') {
+            // Copy the preamble (e.g., '@article{')
+            let preamble = &entry[..start_brace_pos + 1];
+            formatted.push_str(preamble);
+            formatted.push('\n'); // Add newline
+                                  // Now get the content inside the braces
+            let rest = &entry[start_brace_pos + 1..];
+            // Remove the last '}' at the end
+            let rest = rest.trim_end();
+            let rest = if rest.ends_with('}') {
+                &rest[..rest.len() - 1]
+            } else {
+                rest
+            };
+            // Now we need to split the rest by commas, but commas can be inside braces or quotes
+            // We'll parse the fields properly
+            let mut fields = Vec::new();
+            let mut current_field = String::new();
+            let mut brace_level = 0;
+            let mut in_quotes = false;
+            for c in rest.chars() {
+                match c {
+                    '{' if !in_quotes => {
+                        brace_level += 1;
+                        current_field.push(c);
+                    }
+                    '}' if !in_quotes => {
+                        brace_level -= 1;
+                        current_field.push(c);
+                    }
+                    '"' => {
+                        in_quotes = !in_quotes;
+                        current_field.push(c);
+                    }
+                    ',' if brace_level == 0 && !in_quotes => {
+                        // Outside of braces and quotes, comma separates fields
+                        fields.push(current_field.trim().to_string());
+                        current_field.clear();
+                    }
+                    _ => {
+                        current_field.push(c);
+                    }
+                }
+            }
+            // Add the last field
+            if !current_field.trim().is_empty() {
+                fields.push(current_field.trim().to_string());
+            }
+
+            // Now reconstruct the entry with proper indentation
+            for (i, field) in fields.iter().enumerate() {
+                formatted.push_str("    ");
+                formatted.push_str(field);
+                // Add a comma if it's not the last field
+                if i < fields.len() - 1 {
+                    formatted.push(',');
+                }
+                formatted.push('\n');
+            }
+            formatted.push('}'); // Close the entry
+            formatted
+        } else {
+            // No opening brace found, return the entry as is
+            entry.to_string()
+        }
     }
 
     // Search entry list
