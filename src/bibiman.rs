@@ -23,10 +23,13 @@ use crate::tui::Tui;
 use crate::{bibiman::entries::EntryTable, bibiman::keywords::TagList};
 use arboard::Clipboard;
 use color_eyre::eyre::{Ok, Result};
+use doi2bib;
 use editor_command::EditorBuilder;
+use futures::executor::block_on;
 use ratatui::widgets::ScrollbarState;
 use std::fs;
 use std::process::Command;
+use std::result::Result::Ok as AOk;
 use tui_input::Input;
 
 pub mod bibisetup;
@@ -107,6 +110,31 @@ impl Bibiman {
         self.popup_area.popup_kind = Some(PopupKind::Help);
     }
 
+    pub fn add_entry(&mut self) {
+        if let CurrentArea::EntryArea = self.current_area {
+            self.former_area = Some(FormerArea::EntryArea);
+        } else if let CurrentArea::TagArea = self.current_area {
+            self.former_area = Some(FormerArea::TagArea);
+        }
+        self.popup_area.is_popup = true;
+        self.current_area = CurrentArea::PopupArea;
+        self.popup_area.popup_kind = Some(PopupKind::AddEntry);
+    }
+
+    pub fn handle_new_entry_submission(&mut self) {
+        let new_entry_title = self.popup_area.add_entry_input.trim();
+        let doi2bib = doi2bib::Doi2Bib::new().unwrap();
+        let new_entry_future = doi2bib.resolve_doi(new_entry_title);
+        let new_entry = block_on(new_entry_future);
+
+        if let AOk(entry) = new_entry {
+            println!("New entry: {:?}", entry);
+            // Add logic here to integrate the new entry into your application
+        } else {
+            self.popup_area.popup_kind = Some(PopupKind::MessageError);
+            self.popup_area.popup_message = "Failed to add new entry".to_string();
+        }
+    }
     pub fn close_popup(&mut self) {
         // Reset all popup fields to default values
         self.popup_area = PopupArea::default();

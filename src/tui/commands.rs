@@ -69,6 +69,8 @@ pub enum CmdAction {
     Exit,
     // Show keybindings
     ShowHelp,
+    // Add new entry
+    AddEntry,
     // Do nothing.
     Nothing,
 }
@@ -118,6 +120,8 @@ impl From<KeyEvent> for CmdAction {
             KeyCode::PageUp => Self::ScrollInfoUp,
             // Exit App
             KeyCode::Char('q') => Self::Exit,
+            // Add new entry
+            KeyCode::Char('a') => Self::AddEntry,
             KeyCode::Char('c') | KeyCode::Char('C') => {
                 if key_event.modifiers == KeyModifiers::CONTROL {
                     Self::Exit

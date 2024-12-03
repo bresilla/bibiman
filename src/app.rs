@@ -23,6 +23,7 @@ use crate::tui::commands::InputCmdAction;
 use crate::tui::popup::PopupKind;
 use crate::tui::{self, Tui};
 use crate::{bibiman::Bibiman, tui::commands::CmdAction};
+use ratatui::crossterm::event::KeyCode;
 use std::ffi::OsStr;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
@@ -78,14 +79,71 @@ impl App {
                     } else if let Some(PopupKind::MessageError) = self.bibiman.popup_area.popup_kind
                     {
                         self.bibiman.close_popup()
-                    }
-                    let command = if self.input_mode {
-                        CmdAction::Input(InputCmdAction::parse(key_event, &self.input))
+                    } else if let Some(PopupKind::AddEntry) = self.bibiman.popup_area.popup_kind {
+                        // Handle key events for AddEntry popup
+                        match key_event.code {
+                            KeyCode::Char(c) => {
+                                let index = self.bibiman.popup_area.add_entry_cursor_position;
+                                self.bibiman.popup_area.add_entry_input.insert(index, c);
+                                self.bibiman.popup_area.add_entry_cursor_position += 1;
+                            }
+                            KeyCode::Backspace => {
+                                if self.bibiman.popup_area.add_entry_cursor_position > 0 {
+                                    self.bibiman.popup_area.add_entry_cursor_position -= 1;
+                                    let index = self.bibiman.popup_area.add_entry_cursor_position;
+                                    self.bibiman.popup_area.add_entry_input.remove(index);
+                                }
+                            }
+                            KeyCode::Left => {
+                                if self.bibiman.popup_area.add_entry_cursor_position > 0 {
+                                    self.bibiman.popup_area.add_entry_cursor_position -= 1;
+                                }
+                            }
+                            KeyCode::Right => {
+                                if self.bibiman.popup_area.add_entry_cursor_position
+                                    < self.bibiman.popup_area.add_entry_input.len()
+                                {
+                                    self.bibiman.popup_area.add_entry_cursor_position += 1;
+                                }
+                            }
+                            KeyCode::Enter => {
+                                // Handle submission of the new entry
+                                self.bibiman.handle_new_entry_submission();
+                                self.bibiman.close_popup();
+                                self.input_mode = false;
+                            }
+                            KeyCode::Esc => {
+                                // Close the popup without saving
+                                self.bibiman.close_popup();
+                                self.input_mode = false;
+                            }
+                            _ => {}
+                        }
                     } else {
-                        CmdAction::from(key_event)
-                    };
-                    self.run_command(command, args, &mut tui)?
+                        let command = if self.input_mode {
+                            CmdAction::Input(InputCmdAction::parse(key_event, &self.input))
+                        } else {
+                            CmdAction::from(key_event)
+                        };
+                        self.run_command(command, args, &mut tui)?
+                    }
                 }
+                // Event::Key(key_event) => {
+                //     // Automatically close message popups on next keypress
+                //     if let Some(PopupKind::MessageConfirm) = self.bibiman.popup_area.popup_kind {
+                //         self.bibiman.close_popup()
+                //     } else if let Some(PopupKind::MessageError) = self.bibiman.popup_area.popup_kind
+                //     {
+                //         self.bibiman.close_popup()
+                //     }
+
+                //     let command = if self.input_mode {
+                //         CmdAction::Input(InputCmdAction::parse(key_event, &self.input))
+                //     } else {
+                //         CmdAction::from(key_event)
+                //     };
+                //     self.run_command(command, args, &mut tui)?
+                // }
                 Event::Mouse(mouse_event) => {
                     self.run_command(CmdAction::from(mouse_event), args, &mut tui)?
                 }
@@ -311,6 +369,9 @@ impl App {
                         )
                     }
                 }
+            }
+            CmdAction::AddEntry => {
+                self.bibiman.add_entry();
             }
             CmdAction::ShowHelp => {
                 self.bibiman.show_help();

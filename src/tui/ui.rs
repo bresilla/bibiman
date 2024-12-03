@@ -181,6 +181,55 @@ pub fn render_popup(app: &mut App, args: &CLIArgs, frame: &mut Frame) {
             frame.render_widget(Clear, popup_area);
             frame.render_widget(par, popup_area)
         }
+
+        Some(PopupKind::AddEntry) => {
+            let area = frame.area();
+
+            let block = Block::bordered()
+                .title_top(" Add Entry ".bold())
+                .title_bottom(" (ESC) ━ (ENTER) ".bold())
+                .title_alignment(Alignment::Center)
+                .style(
+                    Style::new()
+                        .fg(Color::Indexed(args.colors.main_text_color))
+                        .bg(Color::Indexed(args.colors.popup_bg_color)),
+                )
+                .border_set(symbols::border::THICK)
+                .border_style(Style::new().fg(Color::Indexed(args.colors.entry_color)));
+
+            // Prepare the input fields
+            let content = vec![
+                Line::from(vec![Span::styled(
+                    "DOI: ",
+                    Style::new().fg(Color::Indexed(args.colors.entry_color)),
+                )]),
+                Line::from(app.bibiman.popup_area.add_entry_input.clone()),
+            ];
+            let paragraph = Paragraph::new(content)
+                .block(block.clone())
+                .style(Style::new().fg(Color::Indexed(args.colors.main_text_color)))
+                .wrap(Wrap { trim: false });
+
+            // Calculate popup size
+            let popup_width = area.width / 2;
+            let popup_height = 5; // Adjust as needed
+            let popup_area = popup_area(area, popup_width, popup_height);
+
+            // Render the popup
+            frame.render_widget(Clear, popup_area);
+            frame.render_widget(paragraph, popup_area);
+
+            // Set the cursor position
+            if app.input_mode {
+                // Calculate cursor x and y
+                let input_prefix_len = "Title: ".len() as u16 + 1; // +1 for padding
+                let cursor_x = popup_area.x
+                    + input_prefix_len
+                    + app.bibiman.popup_area.add_entry_cursor_position as u16;
+                let cursor_y = popup_area.y + 1; // Line after 'Title: '
+                frame.set_cursor_position(Position::new(cursor_x, cursor_y));
+            }
+        }
         Some(PopupKind::MessageConfirm) => {
             let area = frame.area();
 

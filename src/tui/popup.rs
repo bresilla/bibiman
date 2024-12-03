@@ -29,6 +29,7 @@ pub enum PopupKind {
     MessageConfirm,
     MessageError,
     Selection,
+    AddEntry,
 }
 
 #[derive(Debug, Default)]
@@ -39,6 +40,8 @@ pub struct PopupArea {
     pub popup_scroll_pos: u16,
     pub popup_list: Vec<String>,
     pub popup_state: ListState,
+    pub add_entry_input: String,
+    pub add_entry_cursor_position: usize,
 }
 
 impl PopupArea {
@@ -48,6 +51,7 @@ impl PopupArea {
             ("TAB: ", "Toggle areas (Entries, Keywords)"),
             ("/|Ctrl+f: ", "Enter search mode"),
             ("q|Ctrl+c: ", "Quit bibiman"),
+            ("a: ", "Add new entry"),
             ("?: ", "Show help"),
             ("Entry Table", "sub"),
             ("j,k|↓,↑: ", "Select next/previous entry"),

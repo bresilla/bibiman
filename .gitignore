@@ -7,5 +7,6 @@
 res/*.gif
 res/*.png
 .direnv
+.devbox
 .envrc
 devbox.json
