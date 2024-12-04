@@ -22,7 +22,7 @@ use crate::tui::popup::{PopupArea, PopupKind};
 use crate::tui::Tui;
 use crate::{bibiman::entries::EntryTable, bibiman::keywords::TagList};
 use arboard::Clipboard;
-use color_eyre::eyre::{Ok, Result};
+use color_eyre::eyre::Result;
 use doi2bib;
 use editor_command::EditorBuilder;
 use futures::executor::block_on;
@@ -31,7 +31,7 @@ use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::process::Command;
-use std::result::Result::Ok as AOk;
+use std::result::Result::Ok;
 use tui_input::Input;
 
 pub mod bibisetup;
@@ -129,7 +129,7 @@ impl Bibiman {
         let new_entry_future = doi2bib.resolve_doi(new_entry_title);
         let new_entry = block_on(new_entry_future);
 
-        if let AOk(entry) = new_entry {
+        if let Ok(entry) = new_entry {
             // TODO: Add error handling for failed insert
             let formatted_content = Self::format_bibtex_entry(&entry, "");
 
