@@ -441,24 +441,26 @@ impl Bibiman {
     /// Formats a raw BibTeX entry string for better readability.
     pub fn format_bibtex_entry(entry: &str, file_path: &str) -> String {
         let mut formatted = String::new();
+
         // Find the position of the first '{'
         if let Some(start_brace_pos) = entry.find('{') {
-            // Copy the preamble (e.g., '@article{')
+            // Extract the preamble (e.g., '@article{')
             let preamble = &entry[..start_brace_pos + 1];
             let preamble = preamble.trim_start();
             formatted.push_str(preamble);
             formatted.push('\n'); // Add newline
-                                  // Now get the content inside the braces
+
+            // Get the content inside the braces
             let rest = &entry[start_brace_pos + 1..];
-            // Remove the last '}' at the end
+            // Remove the last '}' at the end, if present
             let rest = rest.trim_end();
             let rest = if rest.ends_with('}') {
                 &rest[..rest.len() - 1]
             } else {
                 rest
             };
-            // Now we need to split the rest by commas, but commas can be inside braces or quotes
-            // We'll parse the fields properly
+
+            // Parse the fields, considering braces and quotes
             let mut fields = Vec::new();
             let mut current_field = String::new();
             let mut brace_level = 0;
@@ -492,11 +494,41 @@ impl Bibiman {
                 fields.push(current_field.trim().to_string());
             }
 
+            // **Conditionally Clean the Citation Key**
+            if let Some(citation_key) = fields.get_mut(0) {
+                // Check if the citation key contains any non-alphanumerical characters except underscores
+                let needs_cleaning = citation_key
+                    .chars()
+                    .any(|c| !c.is_alphanumeric() && c != '_');
+                if needs_cleaning {
+                    // Retain only alphanumerical characters and underscores
+                    let cleaned_key: String = citation_key
+                        .chars()
+                        .filter(|c| c.is_alphanumeric() || *c == '_')
+                        .collect();
+                    // If the cleaned key is longer than 14 characters, retain only the last 14
+                    let limited_key = if cleaned_key.len() > 14 {
+                        cleaned_key
+                            .chars()
+                            .rev()
+                            .take(14)
+                            .collect::<String>()
+                            .chars()
+                            .rev()
+                            .collect()
+                    } else {
+                        cleaned_key
+                    };
+                    // Replace the original citation key with the cleaned and possibly limited key
+                    *citation_key = limited_key;
+                }
+            }
+
             // Add the new 'file' field
             let file_field = format!("file = {{{}}}", file_path);
             fields.push(file_field);
 
-            // Now reconstruct the entry with proper indentation
+            // Reconstruct the entry with proper indentation
             for (i, field) in fields.iter().enumerate() {
                 formatted.push_str("    ");
                 formatted.push_str(field);
@@ -513,7 +545,6 @@ impl Bibiman {
             entry.to_string()
         }
     }
-
     // Search entry list
     pub fn search_entries(&mut self) {
         // Use snapshot of entry list saved when starting the search
